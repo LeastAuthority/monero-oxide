@@ -1,0 +1,263 @@
+================================================================================
+HUMAN AUDIT ASSUMPTIONS — helioselene finite-field formalization
+================================================================================
+
+Status snapshot this list belongs to: 2026-07-07, monero-oxide commit
+6313959f906fe754909754ac642134237dae42a9, artifact crypto/helioselene/aeneas/.
+
+The Lean development proves:
+  * Fintype HField, Fintype.card HField = p          (no assumptions beyond IV/V)
+  * phiRing : HField ≃+* ZMod p  (ring isomorphism)  (sorry-free)
+  * p_prime : Nat.Prime p                            (kernel-only Pratt certificate)
+  * instFieldHField : Field HField                   (modulo assumption I.1)
+
+This file lists EVERY assumption that remains between those theorems and the
+statement "the Rust field implementation in crypto/helioselene/src/field is a
+correct finite field of order p". Each item states what is assumed, what could
+still be broken in the Rust code if the assumption is false, and where a human
+should look. Items are ordered by how much a targeted human review buys.
+
+--------------------------------------------------------------------------------
+I. OPEN PROOF OBLIGATION (the single `sorry`)
+--------------------------------------------------------------------------------
+
+I.1  HelioseleneSpec.Invert.step_congruence
+     (HelioseleneCore/Spec/Invert.lean, the only `sorry` in the tree)
+
+  ASSUMED: one iteration of the branch-free binary-GCD `step` preserves the
+  Algorithm-1 invariant (b odd; u,v <= p; a = u*y and b = v*y mod p;
+  gcd(a,b) = gcd(y,p)) and halves the potential (2*a'*b' <= a*b).
+  Everything else about `invert` IS proved: totality (no panic, all 510
+  iterations, all indexing in range), the induction assembling the 510 steps,
+  the zero-input case (invert(0) yields value 0, flag false), and flag = (a != 0).
+
+  IF FALSE: HelioseleneField::invert returns a wrong inverse for some inputs.
+  Every division/normalization built on it (e.g. point decompression flows,
+  batch inversion by callers) silently computes garbage. This is the classic
+  failure mode of optimized constant-time GCD inverses (cf. historical bugs in
+  other libraries' Bernstein-Yang implementations).
+
+  HUMAN FOCUS: crypto/helioselene/src/field/verified/invert.rs lines ~29-182,
+  specifically the mask arithmetic that (a) negates u_sub_v via XOR+carry when
+  should_negate is set (lines ~111-163), (b) adds one or two copies of the
+  modulus selected through MODULUS_XOR_TWO_MODULUS (lines ~127-165), and
+  (c) restores bit 255 via the `add_two_modulus << 63` OR (line ~164-165).
+  Cross-check: the Veridise Dafny proofs cover exactly this step
+  (https://github.com/VeridiseAuditing/helioselene-dafny-proofs,
+  helioselene/field/Base.dfy); eprint 2020/972 Algorithm 1 is the reference.
+  Mitigating evidence: 15 end-to-end invert test vectors (random + edge cases)
+  pass against independent ground truth, exercising all 510 iterations.
+
+--------------------------------------------------------------------------------
+II. FIDELITY OF THE 37 EXTERNAL MODELS (crypto-bigint 0.5.5 / subtle 2.6.1)
+--------------------------------------------------------------------------------
+
+The foreign-crate primitives were NOT translated; they were re-implemented as
+Lean definitions (HelioseleneCore/{Types,Funs}External.lean). All proofs are
+relative to these models. Fidelity evidence is 964-vector differential testing
+of the COMPOSED operations against independent big-integer semantics — strong,
+but it is testing, not proof, and it validates compositions, not each primitive
+in isolation. A wrong model that is compensated elsewhere, or only wrong on
+untested paths, would survive. Assumptions, most subtle first:
+
+II.1  Uint::sbb borrow conventions (FunsExternal: borrow-in is read from the
+      TOP bit of the borrow limb; borrow-out is 0 or Limb::MAX as a full mask).
+      IF FALSE: sub/red1/invert carry logic proofs are about different
+      functions than the crate runs.
+      HUMAN FOCUS: crypto-bigint-0.5.5 src/uint/sub.rs + call sites in
+      src/field/verified/mod.rs (sub_value, red1) — confirm conventions.
+
+II.2  Limb::mac = (a + b*c + carry) split into (low, high) 64-bit halves.
+      IF FALSE: red512 (all multiplication) proofs are vacuous w.r.t. reality.
+      HUMAN FOCUS: crypto-bigint-0.5.5 src/limb/mul.rs.
+
+II.3  ConditionallySelectable::conditional_select(a, b, choice) returns b when
+      choice = 1 (argument order!), and subtle's Choice is modeled as Bool.
+      The model identifies any nonzero Choice byte with `true`; subtle's
+      contract restricts Choice to {0,1} and the single constructing call site
+      (is_odd) masks with `& 1`. IF a future code path constructs a Choice
+      from a value outside {0,1}, model and crate diverge.
+      HUMAN FOCUS: grep the crate for Choice::from / into() conversions;
+      confirm every source is 0/1-valued.
+
+II.4  Known deliberate divergence: shl_vartime/shr_vartime are modeled as
+      PANIC for shift >= 64*LIMBS, whereas crypto-bigint 0.5.5 returns ZERO.
+      Unreachable at every translated call site (shifts by constant 1), and
+      the divergence is in the safe direction (a proof of `ok` rules it out),
+      but any new call site with a large shift would be mis-modeled.
+
+II.5  Byte/limb order conventions: little-endian limb order for Uint,
+      little-endian bytes for from_le_slice/to_le_bytes, big-endian for
+      from_be_hex. A consistent global flip would have been caught by the
+      test vectors; a localized confusion in a rarely-used path would not.
+      HUMAN FOCUS: from_repr/to_repr round-trip against the crate's
+      documented canonical encoding (used in serialization -> consensus).
+
+II.6  The remaining ~28 models (wrapping_add/sub, mul_wide, square_wide,
+      bit ops, constants ZERO/ONE/MAX/BITS/LIMBS, CtOption::new) are
+      straightforward, spec-lemma'd in Spec/Externals.lean, and covered by
+      the semantics tables in README section 5c — a systematic 1:1 read
+      against the vendored crate sources (~1-2 hours) closes this family.
+
+--------------------------------------------------------------------------------
+III. THE REDUCEDNESS INVARIANT OUTSIDE THE VERIFIED MODULE
+--------------------------------------------------------------------------------
+
+The Field theorem lives on the carrier HField = { u : U256 // u < p }.
+The proofs show the MODELED operations preserve reducedness and from_repr
+rejects non-canonical encodings. But Rust-side, HelioseleneField's inner U256
+is pub(crate): anything inside the crate can construct a raw field element,
+and elements >= p are outside every theorem we proved (and break the
+uniqueness that PartialEq/ct_eq rely on).
+
+ASSUMED: every crate-internal construction produces a value < p.
+Machine-checked for the translated ops; NOT machine-checked for:
+
+III.1  Curve constants built with the raw constructor:
+       src/point.rs:488-491 (HelioseleneField(U256::from_be_hex(...)) for the
+       Selene curve parameters) and src/field/verified/sqrt.rs:4
+       (MODULUS_PLUS_ONE_DIV_FOUR). A literal >= p here poisons everything
+       downstream while all our theorems remain true.
+       HUMAN FOCUS: check each hex literal < p (one comparison each).
+       [SPOT-CHECKED 2026-07-07: all three literals verified < p numerically
+       (Python, outside Lean); MODULUS_PLUS_ONE_DIV_FOUR == (p+1)/4 confirmed.
+       Independent re-check still recommended.]
+
+III.2  The PrimeField associated constants, src/field/mod.rs:234-245:
+       TWO_INV, MULTIPLICATIVE_GENERATOR (=2), ROOT_OF_UNITY,
+       ROOT_OF_UNITY_INV, DELTA (=4), and S=1 / NUM_BITS=255 / CAPACITY=254.
+       These are claimed values, not computed: TWO_INV must equal 2^-1 mod p,
+       ROOT_OF_UNITY must equal p-1 (order-2 root, since S=1), etc.
+       ff-group-tests exercise them at test time; nothing in Lean does.
+       HUMAN FOCUS: recompute each constant once (they are audit-relevant:
+       ff's sqrt/Tonelli machinery consumes them).
+       [SPOT-CHECKED 2026-07-07, numerically outside Lean: TWO_INV == 2^-1
+       mod p; ROOT_OF_UNITY == p-1 and is self-inverse (matching S=1);
+       2^((p-1)/2) == p-1 so 2 is a nonsquare as required of the generator;
+       DELTA == 2^(2^S) == 4; NUM_BITS == 255. All < p. Independent re-check
+       still recommended.]
+
+III.3  HelioseleneField::from_u256 (src/field/mod.rs:166-168) reduces via
+       crypto-bigint's const_rem — a NOT-translated, NOT-modeled reduction
+       path used by the curve! macro (G_X) and available crate-wide.
+       HUMAN FOCUS: confirm const_rem correctness assumptions or confine its
+       use to compile-time constants that are then checked per III.1.
+
+III.4  From<u8/u16/u32/u64> (src/field/mod.rs:28-47): trivially < p, but
+       unverified; one-glance check.
+
+--------------------------------------------------------------------------------
+IV. WHAT WAS NEVER TRANSLATED — THE FIELD THEOREM SAYS NOTHING ABOUT IT
+--------------------------------------------------------------------------------
+
+IV.1  pow (src/field/verified/pow.rs) and sqrt (src/field/verified/sqrt.rs).
+      Excluded from translation (Aeneas cannot express the bitvec iterator
+      adapters). The Lean Field instance's `^` is ZMod-transported, NOT the
+      Rust pow — a Lean theorem about x ^ n covers no Rust code. Both are in
+      the Veridise Dafny scope; treat the Dafny proofs (not this artifact)
+      as their verification story, and note both consume the III.2 constants
+      and u8_from_bool (black_box) machinery.
+      HUMAN FOCUS: windowed-exponentiation table indexing in pow.rs
+      (bits -> table[usize::from(bits)]) and sqrt.rs's final window handling.
+
+IV.2  point.rs and ciphersuite.rs entirely (group law, decompression,
+      hash-to-point): out of scope; "the field is correct" does not imply
+      "the curves are correct".
+
+IV.3  Field::random (rejection-free wide reduction of RNG output),
+      Field::sqrt_ratio (generic ff helper), PrimeFieldBits decompositions,
+      Sum/Product impls (kept opaque), ct_eq/PartialEq on HelioseleneField
+      (raw limb comparison; sound ONLY because of the reducedness invariant
+      in III), and ff::Field::ONE (never translated; Lean's `one` is the
+      literal 1, which equals the Rust constant's value by inspection).
+
+--------------------------------------------------------------------------------
+V. TOOLCHAIN AND CONFIGURATION TRUST
+--------------------------------------------------------------------------------
+
+V.1  Charon (0.1.218) + Aeneas (nightly-2026.07.06-45061fa): unverified
+     research translators. A translation bug = our theorems are about a
+     different program than the Rust source. Mitigations: the 964-vector
+     differential test exercises the FULL translated pipeline end-to-end
+     against independently computed semantics, and every generated Lean
+     definition carries source-span comments enabling line-by-line review
+     (MAPPING.md indexes them).
+
+V.2  The translation snapshot: rustc nightly-2026-06-01 MIR, --release,
+     --no-default-features, 64-BIT TARGET ONLY. Limb = u64 and LIMBS = 4 are
+     baked into the model; the crate's 32-bit configuration (u32 limbs,
+     8 limbs) is completely unverified by this artifact. If 32-bit targets
+     are deployment-relevant, that whole configuration needs its own story.
+     Also: debug_assert! blocks (e.g. invert.rs bit-length checks) are not
+     in the model.
+
+V.3  The three semantics-preserving source patches (helioselene-aeneas.patch):
+     the translation input is the PATCHED copy, not the shipped code.
+     Equivalence arguments are in README section 4 and the patched copy
+     passes the crate's full test suite, but the equivalence itself is a
+     human argument, not machine-checked.
+     HUMAN FOCUS: the three hunks are ~10 lines total; verify once.
+
+V.4  Lean 4 kernel (v4.30.0-rc2) + mathlib pin + the three standard axioms
+     (propext, Classical.choice, Quot.sound). Standard trust.
+
+V.5  Four `<const>._native.decide.ax_1` axioms attached to the generated
+     hex-string constants in Funs.lean (Aeneas toStr autoParam
+     `by decide +native`): compiler-level (not kernel) trust for four
+     string-length side conditions. The parsed VALUES are independently
+     re-proved kernel-only in Spec/Externals.lean, so exposure is minimal;
+     removable by regenerating Funs.lean.
+
+V.6  The 964-vector validation layer itself rests on native_decide
+     (= Lean compiler trust) and on the ground-truth vectors having been
+     computed correctly by an independent Python implementation. It is
+     evidence, not proof, and is quarantined in Validation.lean (not
+     imported by the library).
+
+V.7  p_prime rests on the Pratt certificate whose factorization
+     p-1 = 2 * 7451 * p36 * p37 was computed this session (msieve SIQS) and
+     is NOT otherwise published. The Lean proof verifies the certificate
+     kernel-only, so a wrong factorization cannot produce a false theorem —
+     no assumption here, only a reproducibility note (consider reporting the
+     factors to factordb for public record).
+
+--------------------------------------------------------------------------------
+VI. PROPERTIES OUTSIDE THE MODEL ENTIRELY
+--------------------------------------------------------------------------------
+
+VI.1  Constant-time execution. The model is functional. black_box, subtle's
+      volatile-read hardening, branch-freeness, memory-access patterns: all
+      erased. The Field proof neither supports nor threatens the crate's
+      constant-time claims — those remain a purely human/tooling audit item
+      (e.g. dudect/ctgrind-style analysis on compiled artifacts).
+
+VI.2  Zeroization (zeroize-on-drop of secrets): not representable in a pure
+      model; unverified here.
+
+VI.3  Anything the compiler does after MIR (LLVM optimization correctness,
+      target codegen).
+
+--------------------------------------------------------------------------------
+VII. FOR ORIENTATION: WHAT IS *NOT* ASSUMED (do not re-audit these by hand)
+--------------------------------------------------------------------------------
+
+Machine-checked, sorry-free, kernel-only (modulo II + V trust):
+  - red256 and red512 (full Crandall reduction) compute x mod p — including
+    the 384th/256th-bit carry arguments spelled out in red.rs comments.
+  - add, sub, neg, double, mul, square: correct mod-p arithmetic, outputs
+    reduced, no panics, loops terminate.
+  - from_repr accepts exactly the canonical encodings (< p) and to_repr
+    round-trips; is_zero/is_odd correct.
+  - invert: total (no panic), flag correct, zero-case correct; ONLY the
+    per-step congruence (I.1) is open.
+  - p is prime; |HField| = p; HField ≃+* ZMod p as rings.
+  - The Field-instance core ops (+, -, *, ⁻¹) are literally the translated
+    Rust functions (traced by rfl during the Phase-D audit), not transported
+    stand-ins.
+
+================================================================================
+Suggested review order for maximal risk reduction per hour:
+  III.1/III.2 (constants; minutes) -> I.1 via Dafny cross-read (invert step)
+  -> II.1-II.3 (model conventions vs crate sources) -> V.3 (patch hunks)
+  -> IV.1 (pow/sqrt, with Dafny) -> VI.1 (constant-time, separate tooling).
+================================================================================

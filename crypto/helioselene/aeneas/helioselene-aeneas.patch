@@ -1,0 +1,87 @@
+diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/crypto/helioselene/Cargo.toml /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/Cargo.toml
+--- /home/user/monero-oxide/crypto/helioselene/Cargo.toml	2026-07-06 09:17:37.989700023 +0000
++++ /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/Cargo.toml	2026-07-06 12:24:31.902705445 +0000
+@@ -13,8 +13,7 @@
+ all-features = true
+ rustdoc-args = ["--cfg", "docsrs"]
+ 
+-[lints]
+-workspace = true
++[workspace]
+ 
+ [dependencies]
+ std-shims = { version = "0.1.4", default-features = false, optional = true }
+@@ -32,7 +31,7 @@
+ 
+ dalek-ff-group = { version = "0.5", default-features = false }
+ 
+-ec-divisors = { path = "../divisors", default-features = false, optional = true }
++ec-divisors = { path = "/home/user/monero-oxide/crypto/divisors", default-features = false, optional = true }
+ ciphersuite = { version = "0.4.2", default-features = false }
+ 
+ [dev-dependencies]
+diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/crypto/helioselene/src/field/verified/invert.rs /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/invert.rs
+--- /home/user/monero-oxide/crypto/helioselene/src/field/verified/invert.rs	2026-07-06 09:17:37.990700055 +0000
++++ /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/invert.rs	2026-07-06 12:24:12.030065629 +0000
+@@ -12,7 +12,8 @@
+ fn sub_with_bounded_overflow(a: Limb, b: Limb, c: Limb) -> (Limb, Limb) {
+   let (limb, borrow1) = a.0.overflowing_sub(b.0);
+   let (limb, borrow2) = limb.overflowing_sub(c.0);
+-  (Limb(limb), Limb(Word::from(borrow1 | borrow2)))
++  // AENEAS: `bool | bool` is unsupported by Aeneas; lift to `Word` before the OR
++  (Limb(limb), Limb(Word::from(borrow1) | Word::from(borrow2)))
+ }
+ 
+ /// Binary GCD Algorithm 1, https://eprint.iacr.org/2020/972.
+diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/crypto/helioselene/src/field/verified/mod.rs /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/mod.rs
+--- /home/user/monero-oxide/crypto/helioselene/src/field/verified/mod.rs	2026-07-06 09:17:37.990700055 +0000
++++ /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/mod.rs	2026-07-06 12:24:12.029065597 +0000
+@@ -35,7 +35,8 @@
+ fn add_with_bounded_overflow(a: Limb, b: Limb, c: Limb) -> (Limb, Limb) {
+   let (limb, carry1) = a.0.overflowing_add(b.0);
+   let (limb, carry2) = limb.overflowing_add(c.0);
+-  (Limb(limb), Limb(Word::from(carry1 | carry2)))
++  // AENEAS: `bool | bool` is unsupported by Aeneas; lift to `Word` before the OR
++  (Limb(limb), Limb(Word::from(carry1) | Word::from(carry2)))
+ }
+ 
+ // The following methods correspond to the explicit "Additional verified methods"
+@@ -141,12 +142,14 @@
+   // Check if a U256 contains a value less than the modulus.
+   #[inline(always)]
+   fn reduced(a: U256) -> Choice {
+-    let mut b_limbs = MODULUS_255_DISTANCE.as_limbs().iter();
++    // AENEAS: index the limbs directly instead of `iter()`/`unwrap_or(&...)`, which Aeneas
++    // cannot translate
+     let mut last = Limb::ZERO;
+     let mut carry = Limb::ZERO;
+-    for a in a.as_limbs() {
+-      let b = b_limbs.next().unwrap_or(&Limb::ZERO);
+-      (last, carry) = add_with_bounded_overflow(*a, *b, carry);
++    for i in 0 .. U256::LIMBS {
++      let b =
++        if i < U128::LIMBS { MODULUS_255_DISTANCE.as_limbs()[i] } else { Limb::ZERO };
++      (last, carry) = add_with_bounded_overflow(a.as_limbs()[i], b, carry);
+     }
+     ((last & (Limb::ONE << (Limb::BITS - 1))) | carry).ct_eq(&Limb::ZERO)
+   }
+diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/crypto/helioselene/src/field/verified/sqrt.rs /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/sqrt.rs
+--- /home/user/monero-oxide/crypto/helioselene/src/field/verified/sqrt.rs	2026-07-06 09:17:37.990700055 +0000
++++ /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/sqrt.rs	2026-07-07 11:25:05.844040885 +0000
+@@ -57,9 +57,14 @@
+   res *= old_res;
+ 
+   let mut bits = 0;
+-  for bit in MODULUS_PLUS_ONE_DIV_FOUR.to_le_bits().iter().take(253).rev().skip(128) {
++  // AENEAS: iterate the exponent's bit indices directly instead of the bitvec iterator
++  // adapters (`.iter().take(253).rev().skip(128)`), which Aeneas cannot translate. The
++  // original chain yields exactly bits 124, 123, .., 0 of the (public, constant) exponent.
++  for k in 0 .. 125 {
++    let i = 124 - k;
+     bits <<= 1;
+-    let bit = u8::from(*bit);
++    #[allow(clippy::as_conversions, clippy::cast_possible_truncation)]
++    let bit = ((MODULUS_PLUS_ONE_DIV_FOUR.0.as_limbs()[i / 64].0 >> (i % 64)) & 1) as u8;
+     bits |= bit;
+ 
+     res = res.square();
