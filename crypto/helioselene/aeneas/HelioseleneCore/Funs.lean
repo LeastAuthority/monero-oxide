@@ -65,6 +65,566 @@ def crypto_bigint.limb.Limb.Insts.CoreMarkerCopy : core.marker.Copy
   cloneInst := crypto_bigint.limb.Limb.Insts.CoreCloneClone
 }
 
+/-- Trait implementation: [crypto_bigint::uint::{impl core::fmt::Debug for crypto_bigint::uint::Uint<LIMBS>}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/uint.rs', lines 238:0-238:51
+    Name pattern: [core::fmt::Debug<crypto_bigint::uint::Uint<@LIMBS>>] -/
+@[reducible, rust_trait_impl
+  "core::fmt::Debug<crypto_bigint::uint::Uint<@LIMBS>>"]
+def crypto_bigint.uint.Uint.Insts.CoreFmtDebug (LIMBS : Std.Usize) :
+  core.fmt.Debug (crypto_bigint.uint.Uint LIMBS) := {
+  fmt := crypto_bigint.uint.Uint.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::clone::Clone for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:9-38:14
+    Name pattern: [core::clone::Clone<dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::clone::Clone<dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreCloneClone : core.clone.Clone
+  dalek_ff_group.field.FieldElement := {
+  clone := dalek_ff_group.field.FieldElement.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::marker::Copy for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:16-38:20
+    Name pattern: [core::marker::Copy<dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::marker::Copy<dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreMarkerCopy : core.marker.Copy
+  dalek_ff_group.field.FieldElement := {
+  cloneInst := dalek_ff_group.field.FieldElement.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::cmp::PartialEq<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:22-38:31
+    Name pattern: [core::cmp::PartialEq<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::PartialEq<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreCmpPartialEqFieldElement :
+  core.cmp.PartialEq dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  eq := dalek_ff_group.field.FieldElement.Insts.CoreCmpPartialEqFieldElement.eq
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::cmp::Eq for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:33-38:35
+    Name pattern: [core::cmp::Eq<dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::cmp::Eq<dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreCmpEq : core.cmp.Eq
+  dalek_ff_group.field.FieldElement := {
+  partialEqInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreCmpPartialEqFieldElement
+  assert_fields_are_eq :=
+    dalek_ff_group.field.FieldElement.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::default::Default for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:37-38:44
+    Name pattern: [core::default::Default<dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::default::Default<dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreDefaultDefault :
+  core.default.Default dalek_ff_group.field.FieldElement := {
+  default := dalek_ff_group.field.FieldElement.Insts.CoreDefaultDefault.default
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::fmt::Debug for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:46-38:51
+    Name pattern: [core::fmt::Debug<dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::fmt::Debug<dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreFmtDebug : core.fmt.Debug
+  dalek_ff_group.field.FieldElement := {
+  fmt := dalek_ff_group.field.FieldElement.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::convert::From<u64> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 75:4-75:37
+    Name pattern: [core::convert::From<dalek_ff_group::field::FieldElement, u64>] -/
+@[reducible, rust_trait_impl
+  "core::convert::From<dalek_ff_group::field::FieldElement, u64>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreConvertFromU64 :
+  core.convert.From dalek_ff_group.field.FieldElement Std.U64 := {
+  «from» := dalek_ff_group.field.FieldElement.Insts.CoreConvertFromU64.from
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::Neg<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 89:0-89:25
+    Name pattern: [core::ops::arith::Neg<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::Neg<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithNegFieldElement :
+  core.ops.arith.Neg dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  neg :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithNegFieldElement.neg
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::MulAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 158:4-158:43
+    Name pattern: [core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignSharedAFieldElement
+  : core.ops.arith.MulAssign dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  mul_assign :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignSharedAFieldElement.mul_assign
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::SubAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 158:4-158:43
+    Name pattern: [core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignSharedAFieldElement
+  : core.ops.arith.SubAssign dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  sub_assign :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignSharedAFieldElement.sub_assign
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::AddAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 158:4-158:43
+    Name pattern: [core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignSharedAFieldElement
+  : core.ops.arith.AddAssign dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  add_assign :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignSharedAFieldElement.add_assign
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::Mul<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 152:4-152:39
+    Name pattern: [core::ops::arith::Mul<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::Mul<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulSharedAFieldElementFieldElement
+  : core.ops.arith.Mul dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement dalek_ff_group.field.FieldElement := {
+  mul :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulSharedAFieldElementFieldElement.mul
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::Sub<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 152:4-152:39
+    Name pattern: [core::ops::arith::Sub<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::Sub<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubSharedAFieldElementFieldElement
+  : core.ops.arith.Sub dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement dalek_ff_group.field.FieldElement := {
+  sub :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubSharedAFieldElementFieldElement.sub
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::Add<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 152:4-152:39
+    Name pattern: [core::ops::arith::Add<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::Add<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddSharedAFieldElementFieldElement
+  : core.ops.arith.Add dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement dalek_ff_group.field.FieldElement := {
+  add :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddSharedAFieldElementFieldElement.add
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 147:4-147:35
+    Name pattern: [core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignFieldElement :
+  core.ops.arith.MulAssign dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  mul_assign :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignFieldElement.mul_assign
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 147:4-147:35
+    Name pattern: [core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignFieldElement :
+  core.ops.arith.SubAssign dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  sub_assign :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignFieldElement.sub_assign
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 147:4-147:35
+    Name pattern: [core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignFieldElement :
+  core.ops.arith.AddAssign dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  add_assign :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignFieldElement.add_assign
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 141:4-141:31
+    Name pattern: [core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulFieldElementFieldElement
+  : core.ops.arith.Mul dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement dalek_ff_group.field.FieldElement := {
+  mul :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulFieldElementFieldElement.mul
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 141:4-141:31
+    Name pattern: [core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubFieldElementFieldElement
+  : core.ops.arith.Sub dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement dalek_ff_group.field.FieldElement := {
+  sub :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubFieldElementFieldElement.sub
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 141:4-141:31
+    Name pattern: [core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddFieldElementFieldElement
+  : core.ops.arith.Add dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement dalek_ff_group.field.FieldElement := {
+  add :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddFieldElementFieldElement.add
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl subtle::ConditionallySelectable for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 87:4-87:43
+    Name pattern: [subtle::ConditionallySelectable<dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "subtle::ConditionallySelectable<dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.SubtleConditionallySelectable :
+  subtle.ConditionallySelectable dalek_ff_group.field.FieldElement := {
+  coremarkerCopyInst := dalek_ff_group.field.FieldElement.Insts.CoreMarkerCopy
+  conditional_select :=
+    dalek_ff_group.field.FieldElement.Insts.SubtleConditionallySelectable.conditional_select
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl subtle::ConstantTimeEq for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 81:4-81:34
+    Name pattern: [subtle::ConstantTimeEq<dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "subtle::ConstantTimeEq<dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.SubtleConstantTimeEq :
+  subtle.ConstantTimeEq dalek_ff_group.field.FieldElement := {
+  ct_eq := dalek_ff_group.field.FieldElement.Insts.SubtleConstantTimeEq.ct_eq
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::iter::traits::accum::Product<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 341:0-341:51
+    Name pattern: [core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductSharedAFieldElement
+  : core.iter.traits.accum.Product dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  product := fun {I : Type}
+    (coreitertraitsiteratorIteratorPSharedFieldElementInst :
+    core.iter.traits.iterator.Iterator I dalek_ff_group.field.FieldElement) =>
+    dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductSharedAFieldElement.product
+    coreitertraitsiteratorIteratorPSharedFieldElementInst
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 331:0-331:43
+    Name pattern: [core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductFieldElement
+  : core.iter.traits.accum.Product dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  product := fun {I : Type} (coreitertraitsiteratorIteratorPFieldElementInst :
+    core.iter.traits.iterator.Iterator I dalek_ff_group.field.FieldElement) =>
+    dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductFieldElement.product
+    coreitertraitsiteratorIteratorPFieldElementInst
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::iter::traits::accum::Sum<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 325:0-325:47
+    Name pattern: [core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>"]
+def
+  dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumSharedAFieldElement
+  : core.iter.traits.accum.Sum dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  sum := fun {I : Type} (coreitertraitsiteratorIteratorPSharedFieldElementInst
+    : core.iter.traits.iterator.Iterator I dalek_ff_group.field.FieldElement)
+    =>
+    dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumSharedAFieldElement.sum
+    coreitertraitsiteratorIteratorPSharedFieldElementInst
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 315:0-315:39
+    Name pattern: [core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl
+  "core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumFieldElement
+  : core.iter.traits.accum.Sum dalek_ff_group.field.FieldElement
+  dalek_ff_group.field.FieldElement := {
+  sum := fun {I : Type} (coreitertraitsiteratorIteratorPFieldElementInst :
+    core.iter.traits.iterator.Iterator I dalek_ff_group.field.FieldElement) =>
+    dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumFieldElement.sum
+    coreitertraitsiteratorIteratorPFieldElementInst
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 103:0-103:27
+    Name pattern: [ff::Field<dalek_ff_group::field::FieldElement>] -/
+@[reducible, rust_trait_impl "ff::Field<dalek_ff_group::field::FieldElement>"]
+def dalek_ff_group.field.FieldElement.Insts.FfField : ff.Field
+  dalek_ff_group.field.FieldElement := {
+  ZERO := dalek_ff_group.field.FieldElement.Insts.FfField.ZERO
+  ONE := dalek_ff_group.field.FieldElement.Insts.FfField.ONE
+  corecmpEqInst := dalek_ff_group.field.FieldElement.Insts.CoreCmpEq
+  coremarkerCopyInst := dalek_ff_group.field.FieldElement.Insts.CoreMarkerCopy
+  corecloneCloneInst := dalek_ff_group.field.FieldElement.Insts.CoreCloneClone
+  coredefaultDefaultInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreDefaultDefault
+  corefmtDebugInst := dalek_ff_group.field.FieldElement.Insts.CoreFmtDebug
+  subtleConditionallySelectableInst :=
+    dalek_ff_group.field.FieldElement.Insts.SubtleConditionallySelectable
+  subtleConstantTimeEqInst :=
+    dalek_ff_group.field.FieldElement.Insts.SubtleConstantTimeEq
+  coreopsarithNegInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithNegFieldElement
+  coreopsarithAddInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddFieldElementFieldElement
+  coreopsarithSubInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubFieldElementFieldElement
+  coreopsarithMulInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulFieldElementFieldElement
+  coreitertraitsaccumSumInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumFieldElement
+  coreitertraitsaccumProductInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductFieldElement
+  coreopsarithAddSelfSharedSelfSelfInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddSharedAFieldElementFieldElement
+  coreopsarithSubSelfSharedSelfSelfInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubSharedAFieldElementFieldElement
+  coreopsarithMulSelfSharedSelfSelfInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulSharedAFieldElementFieldElement
+  coreitertraitsaccumSumSelfSharedSelfInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumSharedAFieldElement
+  coreitertraitsaccumProductSelfSharedSelfInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductSharedAFieldElement
+  coreopsarithAddAssignInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignFieldElement
+  coreopsarithSubAssignInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignFieldElement
+  coreopsarithMulAssignInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignFieldElement
+  coreopsarithAddAssignSelfSharedSelfInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignSharedAFieldElement
+  coreopsarithSubAssignSelfSharedSelfInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignSharedAFieldElement
+  coreopsarithMulAssignSelfSharedSelfInst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignSharedAFieldElement
+  random := fun {T0 : Type} (rand_coreRngCoreInst : rand_core.RngCore T0) =>
+    dalek_ff_group.field.FieldElement.Insts.FfField.random rand_coreRngCoreInst
+  is_zero := dalek_ff_group.field.FieldElement.Insts.FfField.is_zero
+  square := dalek_ff_group.field.FieldElement.Insts.FfField.square
+  double := dalek_ff_group.field.FieldElement.Insts.FfField.double
+  invert := dalek_ff_group.field.FieldElement.Insts.FfField.invert
+  sqrt_ratio := dalek_ff_group.field.FieldElement.Insts.FfField.sqrt_ratio
+  sqrt := dalek_ff_group.field.FieldElement.Insts.FfField.sqrt
+}
+
+/-- Trait implementation: [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 158:0-158:32
+    Name pattern: [ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>] -/
+@[reducible, rust_trait_impl
+  "ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>"]
+def dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832 :
+  ff.PrimeField dalek_ff_group.field.FieldElement (Array Std.U8 32#usize) := {
+  MODULUS :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.MODULUS
+  NUM_BITS :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.NUM_BITS
+  CAPACITY :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.CAPACITY
+  TWO_INV :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.TWO_INV
+  MULTIPLICATIVE_GENERATOR :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.MULTIPLICATIVE_GENERATOR
+  S := dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.S
+  ROOT_OF_UNITY :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.ROOT_OF_UNITY
+  ROOT_OF_UNITY_INV :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.ROOT_OF_UNITY_INV
+  DELTA := dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.DELTA
+  FieldInst := dalek_ff_group.field.FieldElement.Insts.FfField
+  coreconvertFromSelfU64Inst :=
+    dalek_ff_group.field.FieldElement.Insts.CoreConvertFromU64
+  coremarkerCopyInst := Array.Insts.CoreMarkerCopy 32#usize core.marker.CopyU8
+  coredefaultDefaultInst := core.default.DefaultArray 32#usize
+    core.default.DefaultU8
+  coreconvertAsRefSelf_ReprSliceU8Inst := Array.Insts.CoreConvertAsRefSlice
+    Std.U8 32#usize
+  coreconvertAsMutSelf_ReprSliceU8Inst := Array.Insts.CoreConvertAsMutSlice
+    Std.U8 32#usize
+  from_repr :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.from_repr
+  to_repr :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.to_repr
+  is_odd :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.is_odd
+}
+
+/-- Trait implementation: [group::{impl group::GroupOps<Rhs, Output> for T}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs', lines 35:0-36:94
+    Name pattern: [group::GroupOps<@T, @Rhs, @Output>] -/
+@[reducible, rust_trait_impl "group::GroupOps<@T, @Rhs, @Output>"]
+def group.GroupOps.Blanket {T : Type} {Rhs : Type} {Output : Type}
+  (coreopsarithAddInst1 : core.ops.arith.Add T Rhs Output)
+  (coreopsarithSubInst1 : core.ops.arith.Sub T Rhs Output)
+  (coreopsarithAddAssignInst1 : core.ops.arith.AddAssign T Rhs)
+  (coreopsarithSubAssignInst1 : core.ops.arith.SubAssign T Rhs) :
+  group.GroupOps T Rhs Output := {
+  coreopsarithAddInst := coreopsarithAddInst1
+  coreopsarithSubInst := coreopsarithSubInst1
+  coreopsarithAddAssignInst := coreopsarithAddAssignInst1
+  coreopsarithSubAssignInst := coreopsarithSubAssignInst1
+}
+
+/-- Trait implementation: [group::{impl group::GroupOpsOwned<Rhs, Output> for T}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs', lines 42:0-42:96
+    Name pattern: [group::GroupOpsOwned<@T, @Rhs, @Output>] -/
+@[reducible, rust_trait_impl "group::GroupOpsOwned<@T, @Rhs, @Output>"]
+def group.GroupOpsOwned.Blanket {T : Type} {Rhs : Type} {Output : Type}
+  (GroupOpsTSharedRhsOutputInst : group.GroupOps T Rhs Output) :
+  group.GroupOpsOwned T Rhs Output := {
+  GroupOpsSelfSharedRhsOutputInst := GroupOpsTSharedRhsOutputInst
+}
+
+/-- Trait implementation: [group::{impl group::ScalarMul<Rhs, Output> for T}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs', lines 47:0-47:101
+    Name pattern: [group::ScalarMul<@T, @Rhs, @Output>] -/
+@[reducible, rust_trait_impl "group::ScalarMul<@T, @Rhs, @Output>"]
+def group.ScalarMul.Blanket {T : Type} {Rhs : Type} {Output : Type}
+  (coreopsarithMulInst1 : core.ops.arith.Mul T Rhs Output)
+  (coreopsarithMulAssignInst1 : core.ops.arith.MulAssign T Rhs) :
+  group.ScalarMul T Rhs Output := {
+  coreopsarithMulInst := coreopsarithMulInst1
+  coreopsarithMulAssignInst := coreopsarithMulAssignInst1
+}
+
+/-- Trait implementation: [group::{impl group::ScalarMulOwned<Rhs, Output> for T}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs', lines 52:0-52:98
+    Name pattern: [group::ScalarMulOwned<@T, @Rhs, @Output>] -/
+@[reducible, rust_trait_impl "group::ScalarMulOwned<@T, @Rhs, @Output>"]
+def group.ScalarMulOwned.Blanket {T : Type} {Rhs : Type} {Output : Type}
+  (ScalarMulTSharedRhsOutputInst : group.ScalarMul T Rhs Output) :
+  group.ScalarMulOwned T Rhs Output := {
+  ScalarMulSelfSharedRhsOutputInst := ScalarMulTSharedRhsOutputInst
+}
+
+/-- Trait implementation: [subtle::{impl core::convert::From<subtle::Choice> for bool}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subtle-2.6.1/src/lib.rs', lines 138:0-138:26
+    Name pattern: [core::convert::From<bool, subtle::Choice>] -/
+@[reducible, rust_trait_impl "core::convert::From<bool, subtle::Choice>"]
+def Bool.Insts.CoreConvertFromChoice : core.convert.From Bool subtle.Choice
+  := {
+  «from» := Bool.Insts.CoreConvertFromChoice.from
+}
+
+/-- Trait implementation: [subtle::{impl core::convert::From<u8> for subtle::Choice}]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subtle-2.6.1/src/lib.rs', lines 236:0-236:24
+    Name pattern: [core::convert::From<subtle::Choice, u8>] -/
+@[reducible, rust_trait_impl "core::convert::From<subtle::Choice, u8>"]
+def subtle.Choice.Insts.CoreConvertFromU8 : core.convert.From subtle.Choice
+  Std.U8 := {
+  «from» := subtle.Choice.Insts.CoreConvertFromU8.from
+}
+
+/-- [helioselene::field::{impl core::clone::Clone for helioselene::field::HelioseleneField}::clone]:
+    Source: 'src/field/mod.rs', lines 20:9-20:14
+    Visibility: public -/
+def field.HelioseleneField.Insts.CoreCloneClone.clone
+  (self : field.HelioseleneField) : Result field.HelioseleneField := do
+  ok self
+
+/-- Trait implementation: [helioselene::field::{impl core::clone::Clone for helioselene::field::HelioseleneField}]
+    Source: 'src/field/mod.rs', lines 20:9-20:14 -/
+@[reducible]
+def field.HelioseleneField.Insts.CoreCloneClone : core.clone.Clone
+  field.HelioseleneField := {
+  clone := field.HelioseleneField.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [helioselene::field::{impl core::marker::Copy for helioselene::field::HelioseleneField}]
+    Source: 'src/field/mod.rs', lines 20:16-20:20 -/
+@[reducible]
+def field.HelioseleneField.Insts.CoreMarkerCopy : core.marker.Copy
+  field.HelioseleneField := {
+  cloneInst := field.HelioseleneField.Insts.CoreCloneClone
+}
+
+/-- [helioselene::field::{impl core::default::Default for helioselene::field::HelioseleneField}::default]:
+    Source: 'src/field/mod.rs', lines 20:37-20:44
+    Visibility: public -/
+def field.HelioseleneField.Insts.CoreDefaultDefault.default
+  : Result field.HelioseleneField := do
+  let u ← crypto_bigint.uint.Uint.Insts.CoreDefaultDefault.default 4#usize
+  ok u
+
+/-- Trait implementation: [helioselene::field::{impl core::default::Default for helioselene::field::HelioseleneField}]
+    Source: 'src/field/mod.rs', lines 20:37-20:44 -/
+@[reducible]
+def field.HelioseleneField.Insts.CoreDefaultDefault : core.default.Default
+  field.HelioseleneField := {
+  default := field.HelioseleneField.Insts.CoreDefaultDefault.default
+}
+
+/-- [helioselene::field::{impl core::fmt::Debug for helioselene::field::HelioseleneField}::fmt]:
+    Source: 'src/field/mod.rs', lines 20:46-20:51
+    Visibility: public -/
+def field.HelioseleneField.Insts.CoreFmtDebug.fmt
+  (self : field.HelioseleneField) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn :=
+    Dyn.mk _ (core.fmt.DebugShared (crypto_bigint.uint.Uint.Insts.CoreFmtDebug
+      4#usize)) self
+  core.fmt.Formatter.debug_tuple_field1_finish f (toStr "HelioseleneField") dyn
+
+/-- Trait implementation: [helioselene::field::{impl core::fmt::Debug for helioselene::field::HelioseleneField}]
+    Source: 'src/field/mod.rs', lines 20:46-20:51 -/
+@[reducible]
+def field.HelioseleneField.Insts.CoreFmtDebug : core.fmt.Debug
+  field.HelioseleneField := {
+  fmt := field.HelioseleneField.Insts.CoreFmtDebug.fmt
+}
+
 /-- **Rust:** `helioselene::field::MODULUS` — constant
     crypto/helioselene/src/field/mod.rs:25-26 in this repository:
     https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/mod.rs#L25-L26
@@ -87,6 +647,15 @@ def crypto_bigint.limb.Limb.Insts.CoreMarkerCopy : core.marker.Copy
 def field.MODULUS : Result (crypto_bigint.uint.Uint 4#usize) :=
   crypto_bigint.uint.encoding.Uint.from_be_hex 4#usize (toStr
     "7ffffffffffffffffffffffffffffffff735481d1969f317f9850b68df11df53")
+
+/-- [helioselene::field::{impl subtle::ConstantTimeEq for helioselene::field::HelioseleneField}::ct_eq]:
+    Source: 'src/field/mod.rs', lines 53:2-55:3
+    Visibility: public -/
+def field.HelioseleneField.Insts.SubtleConstantTimeEq.ct_eq
+  (self : field.HelioseleneField) (b : field.HelioseleneField) :
+  Result subtle.Choice
+  := do
+  crypto_bigint.uint.Uint.Insts.SubtleConstantTimeEq.ct_eq self b
 
 /-- **Rust:** `<HelioseleneField as subtle::ConditionallySelectable>::conditional_select` —
     trait method
@@ -118,25 +687,15 @@ def
       a b choice
   ok u
 
-/-- **Rust:** `<HelioseleneField as ff::Field>::ZERO` — associated constant
-    crypto/helioselene/src/field/mod.rs:184 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/mod.rs#L184
-
-    The additive identity of the field: `Self(U256::ZERO)`, the element whose four 64-bit limbs
-    are all zero (also the canonical representation of 0 mod p). Aeneas models the associated
-    `const` of the `ff::Field` impl as a `Result`-valued definition built from `U256::ZERO`.
-
-    Role: within this translation it is called only by `Neg::neg`, which conditionally selects
-    `ZERO` over `p - a` so that `-0 = 0` (rather than the non-canonical value p).
-
-    Aeneas metadata:
-    [helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::ZERO]
-    Source: 'src/field/mod.rs', lines 184:2-184:38 (patched copy) -/
-@[global_simps, irreducible]
-def field.HelioseleneField.Insts.FfField.ZERO
-  : Result field.HelioseleneField := do
-  let u ← crypto_bigint.uint.Uint.ZERO 4#usize
-  ok u
+/-- Trait implementation: [helioselene::field::{impl subtle::ConditionallySelectable for helioselene::field::HelioseleneField}]
+    Source: 'src/field/mod.rs', lines 58:0-63:1 -/
+@[reducible]
+def field.HelioseleneField.Insts.SubtleConditionallySelectable :
+  subtle.ConditionallySelectable field.HelioseleneField := {
+  coremarkerCopyInst := field.HelioseleneField.Insts.CoreMarkerCopy
+  conditional_select :=
+    field.HelioseleneField.Insts.SubtleConditionallySelectable.conditional_select
+}
 
 /-- **Rust:** `helioselene::field::verified::is_zero` — loop body (one iteration)
     crypto/helioselene/src/field/verified/mod.rs:125-127 in this repository:
@@ -247,39 +806,65 @@ def field.HelioseleneField.Insts.FfField.is_zero
   (self : field.HelioseleneField) : Result subtle.Choice := do
   field.verified.is_zero self
 
-/-- **Rust:** `helioselene::field::verified::invert::sub_with_bounded_overflow` — function
-    crypto/helioselene/src/field/verified/invert.rs:12-16 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L12-L16
+/-- **Rust:** `<HelioseleneField as ff::Field>::ZERO` — associated constant
+    crypto/helioselene/src/field/mod.rs:184 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/mod.rs#L184
 
-    Full-subtractor limb primitive: computes `a - b - c` on 64-bit limbs with two
-    `overflowing_sub`s and returns `(difference, borrow_out)` where the borrow is normalized to
-    `0` or `1` — unlike crypto-bigint's `sbb`, whose borrow is `0` or `Limb::MAX`. Since `c` is
-    always a previous borrow (`0` or `1`), at most one of the two subtractions can underflow, so
-    OR-ing the two borrow flags is exact ("bounded overflow").
+    The additive identity of the field: `Self(U256::ZERO)`, the element whose four 64-bit limbs
+    are all zero (also the canonical representation of 0 mod p). Aeneas models the associated
+    `const` of the `ff::Field` impl as a `Result`-valued definition built from `U256::ZERO`.
 
-    Role: used only inside `invert`'s binary-GCD `step`, for its two limb-wise borrow chains:
-    computing `a - b` (invert.rs line 43; the final borrow also yields the `a < b` flag) and
-    computing `u - (v & a_is_odd)` (invert.rs line 94).
-
-    This item was translated from the patched copy (see helioselene-aeneas.patch): the canonical
-    `Limb(Word::from(borrow1 | borrow2))` was rewritten as
-    `Limb(Word::from(borrow1) | Word::from(borrow2))` because Aeneas cannot translate
-    `bool | bool`; both forms compute the same value.
+    Role: within this translation it is called only by `Neg::neg`, which conditionally selects
+    `ZERO` over `p - a` so that `-0 = 0` (rather than the non-canonical value p).
 
     Aeneas metadata:
-    [helioselene::field::verified::invert::sub_with_bounded_overflow]:
-    Source: 'src/field/verified/invert.rs', lines 12:0-17:1 (patched copy) -/
-def field.verified.invert.sub_with_bounded_overflow
-  (a : crypto_bigint.limb.Limb) (b : crypto_bigint.limb.Limb)
-  (c : crypto_bigint.limb.Limb) :
-  Result (crypto_bigint.limb.Limb × crypto_bigint.limb.Limb)
-  := do
-  let (limb, borrow1) ← lift (core.num.U64.overflowing_sub a b)
-  let (limb1, borrow2) ← lift (core.num.U64.overflowing_sub limb c)
-  let i ← lift (core.convert.num.FromU64Bool.from borrow1)
-  let i1 ← lift (core.convert.num.FromU64Bool.from borrow2)
-  let i2 ← lift (i ||| i1)
-  ok (limb1, i2)
+    [helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::ZERO]
+    Source: 'src/field/mod.rs', lines 184:2-184:38 (patched copy) -/
+@[global_simps, irreducible]
+def field.HelioseleneField.Insts.FfField.ZERO
+  : Result field.HelioseleneField := do
+  let u ← crypto_bigint.uint.Uint.ZERO 4#usize
+  ok u
+
+/-- **Rust:** `<HelioseleneField as Neg>::neg` — function (trait method behind unary `-`)
+    crypto/helioselene/src/field/verified/mod.rs:94-100 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L94-L100
+
+    Field negation: computes p - self with a wrapping 256-bit subtraction — which cannot
+    underflow, as self < p — and then constant-time-selects the canonical ZERO when self == 0,
+    because p - 0 = p would be a non-reduced representative of zero. The zero test (`is_zero`)
+    ORs all limbs together and compares against zero with subtle's constant-time equality, and
+    `conditional_select` is subtle's masked select, so nothing branches on the value.
+
+    Rust's unary `-` on `HelioseleneField` dispatches to this method; it is bundled into the
+    trait-instance record `field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField`.
+
+    Aeneas metadata:
+    [helioselene::field::verified::{impl core::ops::arith::Neg<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::neg]:
+    Source: 'src/field/verified/mod.rs', lines 95:2-101:3 (patched copy) -/
+def field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg
+  (self : field.HelioseleneField) : Result field.HelioseleneField := do
+  let u ← field.MODULUS
+  let u1 ← crypto_bigint.uint.sub.Uint.wrapping_sub u self
+  let hf ← field.HelioseleneField.Insts.FfField.ZERO
+  let c ← field.HelioseleneField.Insts.FfField.is_zero self
+  field.HelioseleneField.Insts.SubtleConditionallySelectable.conditional_select
+    u1 hf c
+
+/-- [helioselene::field::{impl core::ops::arith::Neg<helioselene::field::HelioseleneField> for &'_0 helioselene::field::HelioseleneField}::neg]:
+    Source: 'src/field/mod.rs', lines 102:2-104:3
+    Visibility: public -/
+def Shared0HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg
+  (self : field.HelioseleneField) : Result field.HelioseleneField := do
+  field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg self
+
+/-- Trait implementation: [helioselene::field::{impl core::ops::arith::Neg<helioselene::field::HelioseleneField> for &'_0 helioselene::field::HelioseleneField}]
+    Source: 'src/field/mod.rs', lines 99:0-105:1 -/
+@[reducible]
+def Shared0HelioseleneField.Insts.CoreOpsArithNegHelioseleneField :
+  core.ops.arith.Neg field.HelioseleneField field.HelioseleneField := {
+  neg := Shared0HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg
+}
 
 /-- **Rust:** `helioselene::field::verified::sub_value` — function
     crypto/helioselene/src/field/verified/mod.rs:53-55 in this repository:
@@ -468,884 +1053,6 @@ def field.verified.add_with_bounded_overflow
   let i2 ← lift (i ||| i1)
   ok (limb1, i2)
 
-/-- **Rust:** `helioselene::field::verified::invert::invert::step::MODULUS_XOR_TWO_MODULUS`
-    — constant
-    crypto/helioselene/src/field/verified/invert.rs:127-128 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L127-L128
-
-    The 256-bit constant MODULUS XOR (2 * MODULUS), where the field modulus is
-    p = 2^255 - 0x8cab7e2e6960ce8067af49720ee20ad. When updating the Bezout accumulator `u`,
-    `step` must add 0, 1 or 2 copies of p to make the intermediate result nonnegative and even
-    before it is halved. Each limb of that addend is formed branchlessly as
-    (MODULUS[l] & add_one_modulus) ^ (MODULUS_XOR_TWO_MODULUS[l] & add_two_modulus): with only
-    the first mask set this yields p's limb, and with both set it yields p ^ (p ^ 2p) = 2p's
-    limb (add_two_modulus is only ever set together with add_one_modulus). Storing the XOR'd
-    constant rather than 2p itself means the two masks need not be mutually exclusive, which
-    makes it harder for the compiler to legally rewrite the constant-time selection into a
-    branch.
-
-    Used only by `step_loop3` (limbs 0 .. U128::LIMBS); in the high half p ^ 2p is just the top
-    bit 2^255, which `step` ORs into the last limb separately after `step_loop4`.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step::MODULUS_XOR_TWO_MODULUS]
-    Source: 'src/field/verified/invert.rs', lines 128:4-129:92 (patched copy) -/
-@[global_simps, irreducible]
-def field.verified.invert.invert.step.MODULUS_XOR_TWO_MODULUS
-  : Result (crypto_bigint.uint.Uint 4#usize) :=
-  crypto_bigint.uint.encoding.Uint.from_be_hex 4#usize (toStr
-    "80000000000000000000000000000000195fd8272bba15380a8f1db9613261f5")
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step::select` — loop body of `select`
-    crypto/helioselene/src/field/verified/invert.rs:54-56 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L54-L56
-
-    One iteration of the Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 54-56) inside
-    the `select` helper nested in `step`. It computes
-    res[l] = select_word(a[l], b[l], choice) = a[l] ^ ((a[l] ^ b[l]) & choice); `choice` is an
-    all-zero or all-one 64-bit mask, so the limb is taken from `b` when the mask is set and
-    from `a` otherwise — a constant-time select with no branch on secret data.
-
-    Loop state (iter, res): `iter` is the remaining limb-index range and `res` the
-    partially-written output. Returns `cont <next-state>` to continue, or `done res` once all
-    four limbs have been processed.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step::select]: loop body 0
-    Source: 'src/field/verified/invert.rs', lines 55:6-57:7 (patched copy) -/
-@[rust_loop_body]
-def field.verified.invert.invert.step.select_loop.body
-  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
-  (choice : crypto_bigint.limb.Limb) (iter : core.ops.range.Range Std.Usize)
-  (res : crypto_bigint.uint.Uint 4#usize) :
-  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
-    (crypto_bigint.uint.Uint 4#usize)) (crypto_bigint.uint.Uint 4#usize))
-  := do
-  let (o, iter1) ←
-    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
-  match o with
-  | none => ok (done res)
-  | some l =>
-    let a1 ← crypto_bigint.uint.Uint.as_limbs a
-    let l1 ← Array.index_usize a1 l
-    let a2 ← crypto_bigint.uint.Uint.as_limbs b
-    let l2 ← Array.index_usize a2 l
-    let l3 ← field.verified.select_word l1 l2 choice
-    let (a3, as_limbs_mut_back) ← crypto_bigint.uint.Uint.as_limbs_mut res
-    let a4 ← Array.update a3 l l3
-    let u := as_limbs_mut_back a4
-    ok (cont (iter1, u))
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step::select` — loop of `select`
-    crypto/helioselene/src/field/verified/invert.rs:54-56 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L54-L56
-
-    The Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 54-56) of the `select` helper:
-    iterates `select_loop.body` over the four 64-bit limbs, overwriting each limb of `res` with
-    select_word(a[l], b[l], choice), i.e. with b's limb when `choice` is the all-one mask and
-    with a's limb when it is zero. Runs the loop-state tuple (iter, res) to completion and
-    returns the finished U256.
-
-    Called only by `select`, which supplies res = U256::ZERO and the range 0 .. U256::LIMBS.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step::select]: loop 0
-    Source: 'src/field/verified/invert.rs', lines 55:6-57:7 (patched copy) -/
-@[rust_loop]
-def field.verified.invert.invert.step.select_loop
-  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
-  (b : crypto_bigint.uint.Uint 4#usize) (choice : crypto_bigint.limb.Limb)
-  (res : crypto_bigint.uint.Uint 4#usize) :
-  Result (crypto_bigint.uint.Uint 4#usize)
-  := do
-  loop
-    (fun (iter1, res1) => field.verified.invert.invert.step.select_loop.body a
-      b choice iter1 res1)
-    (iter, res)
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step::select` — helper function
-    crypto/helioselene/src/field/verified/invert.rs:52-58 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L52-L58
-
-    Constant-time conditional selection of a whole U256: returns `b` if `choice` is the all-one
-    64-bit mask and `a` if it is all-zero, building the result limb by limb with `select_word`
-    (a masked-XOR select) so that no branch or memory access depends on `choice`.
-
-    Helper nested inside `step`, called three times per GCD iteration: `select(b, a, both)`
-    (the b half of the conditional swap), `select(a, a_diff_b, a_is_odd)` (keep a if it is
-    even, else replace it by |a - b|), and `select(v, u_start, both)` (the v half of the swap).
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step::select]:
-    Source: 'src/field/verified/invert.rs', lines 53:4-59:5 (patched copy) -/
-def field.verified.invert.invert.step.select
-  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
-  (choice : crypto_bigint.limb.Limb) :
-  Result (crypto_bigint.uint.Uint 4#usize)
-  := do
-  let res ← crypto_bigint.uint.Uint.ZERO 4#usize
-  let i ← crypto_bigint.uint.Uint.LIMBS_1 4#usize
-  field.verified.invert.invert.step.select_loop
-    { start := 0#usize, «end» := i } a b choice res
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop body (a - b loop)
-    crypto/helioselene/src/field/verified/invert.rs:41-44 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L41-L44
-
-    One iteration of the Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 41-44), the
-    limb-wise subtraction a - b: it computes
-    (a_sub_b[l], borrow) = sub_with_bounded_overflow(a[l], b[l], borrow), a borrow chain whose
-    borrow is normalised to 0 or 1 (not 0 or Limb::MAX as with `sbb`). The subtraction serves
-    two purposes at once: it produces the difference a - b (mod 2^256) and, through the final
-    borrow, the constant-time comparison a < b.
-
-    Loop state (iter, borrow, a_sub_b): remaining limb range, running borrow (0 or 1), and the
-    partially-written difference. Returns `cont <next-state>` or, when the range is exhausted,
-    `done (borrow, a_sub_b)`; `step` turns the final borrow into the all-one/all-zero mask
-    `a_lt_b` by wrapping negation.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]: loop body 0
-    Source: 'src/field/verified/invert.rs', lines 42:4-45:5 (patched copy) -/
-@[rust_loop_body]
-def field.verified.invert.invert.step_loop0.body
-  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
-  (iter : core.ops.range.Range Std.Usize) (borrow : crypto_bigint.limb.Limb)
-  (a_sub_b : crypto_bigint.uint.Uint 4#usize) :
-  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
-    crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize))
-    (crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize)))
-  := do
-  let (o, iter1) ←
-    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
-  match o with
-  | none => ok (done (borrow, a_sub_b))
-  | some l =>
-    let a1 ← crypto_bigint.uint.Uint.as_limbs a
-    let l1 ← Array.index_usize a1 l
-    let a2 ← crypto_bigint.uint.Uint.as_limbs b
-    let l2 ← Array.index_usize a2 l
-    let (l3, borrow1) ←
-      field.verified.invert.sub_with_bounded_overflow l1 l2 borrow
-    let (a3, as_limbs_mut_back) ←
-      crypto_bigint.uint.Uint.as_limbs_mut a_sub_b
-    let a4 ← Array.update a3 l l3
-    let u := as_limbs_mut_back a4
-    ok (cont (iter1, borrow1, u))
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop (a - b subtraction)
-    crypto/helioselene/src/field/verified/invert.rs:41-44 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L41-L44
-
-    The Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 41-44) of `step`: runs
-    `step_loop0.body` over the four limbs, subtracting b from a with
-    `sub_with_bounded_overflow` (borrows normalised to 0 or 1). Loop state
-    (iter, borrow, a_sub_b); returns the pair (borrow, a_sub_b) where
-    a_sub_b = a - b (mod 2^256) and borrow = 1 exactly when a < b.
-
-    Called once per `step` with borrow = 0 and a_sub_b = U256::ZERO; the returned borrow is
-    wrapping-negated into the `a_lt_b` mask that drives the constant-time swap logic.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]: loop 0
-    Source: 'src/field/verified/invert.rs', lines 42:4-45:5 (patched copy) -/
-@[rust_loop]
-def field.verified.invert.invert.step_loop0
-  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
-  (b : crypto_bigint.uint.Uint 4#usize) (borrow : crypto_bigint.limb.Limb)
-  (a_sub_b : crypto_bigint.uint.Uint 4#usize) :
-  Result (crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize))
-  := do
-  loop
-    (fun (iter1, borrow1, a_sub_b1) =>
-      field.verified.invert.invert.step_loop0.body a b iter1 borrow1 a_sub_b1)
-    (iter, borrow, a_sub_b)
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop body (negation loop)
-    crypto/helioselene/src/field/verified/invert.rs:68-74 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L68-L74
-
-    One iteration of the Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 68-74), the
-    conditional two's-complement negation of a_sub_b: each limb is XORed with the `a_lt_b`
-    mask (a bitwise NOT when the mask is all-one, a no-op when it is zero) and a carry — seeded
-    by `step` with Limb::ONE & a_lt_b, the "+ 1" of two's-complement negation — is propagated
-    with `overflowing_add`. The result a_diff_b equals b - a when a < b and a - b otherwise,
-    i.e. |a - b|, computed without branching on the comparison.
-
-    Loop state (iter, carry, a_diff_b): remaining limb range, carry (0 or 1), and the
-    partially-written result. Returns `cont <next-state>` to continue or `done a_diff_b` when
-    the four limbs are done.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]: loop body 1
-    Source: 'src/field/verified/invert.rs', lines 69:6-75:7 (patched copy) -/
-@[rust_loop_body]
-def field.verified.invert.invert.step_loop1.body
-  (a_sub_b : crypto_bigint.uint.Uint 4#usize)
-  (a_lt_b : crypto_bigint.limb.Limb) (iter : core.ops.range.Range Std.Usize)
-  (carry : crypto_bigint.limb.Limb)
-  (a_diff_b : crypto_bigint.uint.Uint 4#usize) :
-  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
-    crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize))
-    (crypto_bigint.uint.Uint 4#usize))
-  := do
-  let (o, iter1) ←
-    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
-  match o with
-  | none => ok (done a_diff_b)
-  | some l =>
-    let a ← crypto_bigint.uint.Uint.as_limbs a_sub_b
-    let l1 ← Array.index_usize a l
-    let l2 ←
-      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitXorLimbLimb.bitxor l1 a_lt_b
-    let (limb, carry_bool) ← lift (core.num.U64.overflowing_add l2 carry)
-    let i ← lift (core.convert.num.FromU64Bool.from carry_bool)
-    let (a1, as_limbs_mut_back) ←
-      crypto_bigint.uint.Uint.as_limbs_mut a_diff_b
-    let a2 ← Array.update a1 l limb
-    let u := as_limbs_mut_back a2
-    ok (cont (iter1, i, u))
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop (conditional negation)
-    crypto/helioselene/src/field/verified/invert.rs:68-74 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L68-L74
-
-    The Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 68-74) of `step`: runs
-    `step_loop1.body` over the four limbs to compute a_diff_b, the conditional
-    two's-complement negation of a_sub_b under the `a_lt_b` mask (XOR with the mask plus a
-    propagated +1 carry). Loop state (iter, carry, a_diff_b); returns the finished
-    a_diff_b = |a - b|.
-
-    Called once per `step` with carry = Limb::ONE & a_lt_b; the result replaces `a` (via
-    `select`) whenever a is odd.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]: loop 1
-    Source: 'src/field/verified/invert.rs', lines 69:6-75:7 (patched copy) -/
-@[rust_loop]
-def field.verified.invert.invert.step_loop1
-  (iter : core.ops.range.Range Std.Usize)
-  (a_sub_b : crypto_bigint.uint.Uint 4#usize)
-  (a_lt_b : crypto_bigint.limb.Limb) (carry : crypto_bigint.limb.Limb)
-  (a_diff_b : crypto_bigint.uint.Uint 4#usize) :
-  Result (crypto_bigint.uint.Uint 4#usize)
-  := do
-  loop
-    (fun (iter1, carry1, a_diff_b1) =>
-      field.verified.invert.invert.step_loop1.body a_sub_b a_lt_b iter1 carry1
-      a_diff_b1)
-    (iter, carry, a_diff_b)
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop body (u - v loop)
-    crypto/helioselene/src/field/verified/invert.rs:92-95 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L92-L95
-
-    One iteration of the Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 92-95), which
-    subtracts the masked accumulator v from u:
-    (u_sub_v[l], borrow) = sub_with_bounded_overflow(u[l], v[l] & a_is_odd, borrow). Masking
-    v's limbs with the `a_is_odd` mask computes u - v when a is odd and leaves u unchanged when
-    a is even, mirroring — without a branch — the update applied to `a` itself.
-
-    Loop state (iter, borrow, u_sub_v): remaining limb range, running borrow (0 or 1), and the
-    partially-written difference. Returns `cont <next-state>` or `done (borrow, u_sub_v)`; the
-    final borrow tells `step` whether the subtraction underflowed (i.e. u - (v & a_is_odd) is
-    negative as an integer); `step` XORs the derived mask with `should_negate` before deciding
-    whether copies of the modulus must be added back.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]: loop body 2
-    Source: 'src/field/verified/invert.rs', lines 93:4-96:5 (patched copy) -/
-@[rust_loop_body]
-def field.verified.invert.invert.step_loop2.body
-  (u : crypto_bigint.uint.Uint 4#usize) (v : crypto_bigint.uint.Uint 4#usize)
-  (a_is_odd : crypto_bigint.limb.Limb) (iter : core.ops.range.Range Std.Usize)
-  (borrow : crypto_bigint.limb.Limb)
-  (u_sub_v : crypto_bigint.uint.Uint 4#usize) :
-  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
-    crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize))
-    (crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize)))
-  := do
-  let (o, iter1) ←
-    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
-  match o with
-  | none => ok (done (borrow, u_sub_v))
-  | some l =>
-    let a ← crypto_bigint.uint.Uint.as_limbs u
-    let l1 ← Array.index_usize a l
-    let a1 ← crypto_bigint.uint.Uint.as_limbs v
-    let l2 ← Array.index_usize a1 l
-    let l3 ←
-      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l2 a_is_odd
-    let (l4, borrow1) ←
-      field.verified.invert.sub_with_bounded_overflow l1 l3 borrow
-    let (a2, as_limbs_mut_back) ←
-      crypto_bigint.uint.Uint.as_limbs_mut u_sub_v
-    let a3 ← Array.update a2 l l4
-    let u1 := as_limbs_mut_back a3
-    ok (cont (iter1, borrow1, u1))
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop (u - v subtraction)
-    crypto/helioselene/src/field/verified/invert.rs:92-95 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L92-L95
-
-    The Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 92-95) of `step`: runs
-    `step_loop2.body` over the four limbs computing u_sub_v = u - (v & a_is_odd), i.e. u - v if
-    a is odd, else u. Loop state (iter, borrow, u_sub_v); returns (borrow, u_sub_v), the final
-    borrow indicating underflow. `step` wrapping-negates that borrow into the `u_sub_v_neg`
-    mask used to decide how many copies of the modulus must be added back.
-
-    Called once per `step` with borrow = 0 and u_sub_v initialised to U256::ZERO.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]: loop 2
-    Source: 'src/field/verified/invert.rs', lines 93:4-96:5 (patched copy) -/
-@[rust_loop]
-def field.verified.invert.invert.step_loop2
-  (iter : core.ops.range.Range Std.Usize) (u : crypto_bigint.uint.Uint 4#usize)
-  (v : crypto_bigint.uint.Uint 4#usize) (a_is_odd : crypto_bigint.limb.Limb)
-  (borrow : crypto_bigint.limb.Limb)
-  (u_sub_v : crypto_bigint.uint.Uint 4#usize) :
-  Result (crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize))
-  := do
-  loop
-    (fun (iter1, borrow1, u_sub_v1) =>
-      field.verified.invert.invert.step_loop2.body u v a_is_odd iter1 borrow1
-      u_sub_v1)
-    (iter, borrow, u_sub_v)
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop body (low half)
-    crypto/helioselene/src/field/verified/invert.rs:140-156 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L140-L156
-
-    One iteration of the Rust loop "for l in 0 .. U128::LIMBS" (invert.rs lines 140-156), the
-    low half of the fused negate-and-add-modulus carry chain that turns u_sub_v into the new u.
-    Per limb it selects modulus_instances =
-    (MODULUS[l] & add_one_modulus) ^ (MODULUS_XOR_TWO_MODULUS[l] & add_two_modulus) — zero, one
-    or two copies of the modulus, chosen branchlessly by the XOR trick — and computes
-    (u_sub_v[l] ^ should_negate) + modulus_instances + carry. The XOR with the `should_negate`
-    mask is the NOT half of a conditional two's-complement negation (its +1 arrives as the
-    initial carry), and `modulus_instances.wrapping_add(carry)` cannot overflow because
-    carry <= 1 and no low-128-bit limb of either p or 2p (the two possible nonzero values of
-    modulus_instances) is all-ones.
-
-    Loop state (iter, u, carry): remaining limb range (limbs 0 and 1), the accumulator u with
-    its low limbs progressively rewritten, and the running carry. Returns `cont <next-state>`
-    or `done (u, carry)`, the final carry flowing on into the high-half loop `step_loop4`.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]: loop body 3
-    Source: 'src/field/verified/invert.rs', lines 141:13-141:29 (patched copy) -/
-@[rust_loop_body]
-def field.verified.invert.invert.step_loop3.body
-  (u_sub_v : crypto_bigint.uint.Uint 4#usize)
-  (should_negate : crypto_bigint.limb.Limb)
-  (add_two_modulus : crypto_bigint.limb.Limb)
-  (add_one_modulus : crypto_bigint.limb.Limb)
-  (iter : core.ops.range.Range Std.Usize) (u : crypto_bigint.uint.Uint 4#usize)
-  (carry : crypto_bigint.limb.Limb) :
-  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
-    (crypto_bigint.uint.Uint 4#usize) × crypto_bigint.limb.Limb)
-    ((crypto_bigint.uint.Uint 4#usize) × crypto_bigint.limb.Limb))
-  := do
-  let (o, iter1) ←
-    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
-  match o with
-  | none => ok (done (u, carry))
-  | some l =>
-    let u1 ← field.MODULUS
-    let a ← crypto_bigint.uint.Uint.as_limbs u1
-    let l1 ← Array.index_usize a l
-    let l2 ←
-      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l1
-        add_one_modulus
-    let u2 ← field.verified.invert.invert.step.MODULUS_XOR_TWO_MODULUS
-    let a1 ← crypto_bigint.uint.Uint.as_limbs u2
-    let l3 ← Array.index_usize a1 l
-    let l4 ←
-      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l3
-        add_two_modulus
-    let modulus_instances ←
-      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitXorLimbLimb.bitxor l2 l4
-    let a2 ← crypto_bigint.uint.Uint.as_limbs u_sub_v
-    let l5 ← Array.index_usize a2 l
-    let l6 ←
-      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitXorLimbLimb.bitxor l5
-        should_negate
-    let l7 ← crypto_bigint.limb.add.Limb.wrapping_add modulus_instances carry
-    let (limb, carry_bool) ← lift (core.num.U64.overflowing_add l6 l7)
-    let i ← lift (core.convert.num.FromU64Bool.from carry_bool)
-    let (a3, as_limbs_mut_back) ← crypto_bigint.uint.Uint.as_limbs_mut u
-    let a4 ← Array.update a3 l limb
-    let u3 := as_limbs_mut_back a4
-    ok (cont (iter1, u3, i))
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop (low half)
-    crypto/helioselene/src/field/verified/invert.rs:140-156 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L140-L156
-
-    The Rust loop "for l in 0 .. U128::LIMBS" (invert.rs lines 140-156) of `step`: runs
-    `step_loop3.body` over the two low limbs, conditionally negating u_sub_v (XOR with the
-    `should_negate` mask, +1 seeded via the initial carry) while simultaneously adding 0, 1 or
-    2 copies of the modulus, selected per limb from MODULUS and MODULUS_XOR_TWO_MODULUS by the
-    add_one_modulus/add_two_modulus masks. Loop state (iter, u, carry); returns (u, carry) with
-    u's low half updated and the carry to be consumed by `step_loop4`.
-
-    Called once per `step` with carry = Limb::ONE & should_negate over the range
-    0 .. U128::LIMBS; the modulus additions make the eventual u nonnegative and even, so the
-    closing shift u >>= 1 is an exact division by 2 modulo p.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]: loop 3
-    Source: 'src/field/verified/invert.rs', lines 141:13-141:29 (patched copy) -/
-@[rust_loop]
-def field.verified.invert.invert.step_loop3
-  (iter : core.ops.range.Range Std.Usize) (u : crypto_bigint.uint.Uint 4#usize)
-  (u_sub_v : crypto_bigint.uint.Uint 4#usize)
-  (should_negate : crypto_bigint.limb.Limb)
-  (add_two_modulus : crypto_bigint.limb.Limb)
-  (add_one_modulus : crypto_bigint.limb.Limb) (carry : crypto_bigint.limb.Limb)
-  :
-  Result ((crypto_bigint.uint.Uint 4#usize) × crypto_bigint.limb.Limb)
-  := do
-  loop
-    (fun (iter1, u1, carry1) => field.verified.invert.invert.step_loop3.body
-      u_sub_v should_negate add_two_modulus add_one_modulus iter1 u1 carry1)
-    (iter, u, carry)
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop body (high half)
-    crypto/helioselene/src/field/verified/invert.rs:158-163 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L158-L163
-
-    One iteration of the Rust loop "for l in U128::LIMBS .. U256::LIMBS" (invert.rs lines
-    158-163), the high-half continuation of the negate-and-add-modulus chain: per limb it
-    computes add_with_bounded_overflow(u_sub_v[l] ^ should_negate,
-    MODULUS[l] & add_one_modulus, carry) and stores the sum in u[l]. Only `add_one_modulus`
-    appears here: in the high 128 bits, twice the modulus differs from the modulus in the top
-    bit alone (MODULUS_XOR_TWO_MODULUS is 0x8000...0 there), so the add_two_modulus
-    contribution reduces to the single-bit OR that `step` performs right after this loop
-    (invert.rs lines 164-165).
-
-    Loop state (iter, u, carry): remaining limb range (limbs 2 and 3), the accumulator u, and
-    the running carry (0 or 1). Returns `cont <next-state>` or `done u` once the range is
-    exhausted.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]: loop body 4
-    Source: 'src/field/verified/invert.rs', lines 159:13-159:39 (patched copy) -/
-@[rust_loop_body]
-def field.verified.invert.invert.step_loop4.body
-  (u_sub_v : crypto_bigint.uint.Uint 4#usize)
-  (should_negate : crypto_bigint.limb.Limb)
-  (add_one_modulus : crypto_bigint.limb.Limb)
-  (iter : core.ops.range.Range Std.Usize) (u : crypto_bigint.uint.Uint 4#usize)
-  (carry : crypto_bigint.limb.Limb) :
-  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
-    (crypto_bigint.uint.Uint 4#usize) × crypto_bigint.limb.Limb)
-    (crypto_bigint.uint.Uint 4#usize))
-  := do
-  let (o, iter1) ←
-    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
-  match o with
-  | none => ok (done u)
-  | some l =>
-    let u1 ← field.MODULUS
-    let a ← crypto_bigint.uint.Uint.as_limbs u1
-    let l1 ← Array.index_usize a l
-    let modulus_instances ←
-      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l1
-        add_one_modulus
-    let a1 ← crypto_bigint.uint.Uint.as_limbs u_sub_v
-    let l2 ← Array.index_usize a1 l
-    let l3 ←
-      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitXorLimbLimb.bitxor l2
-        should_negate
-    let (l4, carry1) ←
-      field.verified.add_with_bounded_overflow l3 modulus_instances carry
-    let (a2, as_limbs_mut_back) ← crypto_bigint.uint.Uint.as_limbs_mut u
-    let a3 ← Array.update a2 l l4
-    let u2 := as_limbs_mut_back a3
-    ok (cont (iter1, u2, carry1))
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop (high half)
-    crypto/helioselene/src/field/verified/invert.rs:158-163 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L158-L163
-
-    The Rust loop "for l in U128::LIMBS .. U256::LIMBS" (invert.rs lines 158-163) of `step`:
-    runs `step_loop4.body` over the two high limbs, finishing the conditional negation of
-    u_sub_v and the masked addition of the modulus with `add_with_bounded_overflow` (carries
-    normalised to 0 or 1). Loop state (iter, u, carry); returns the updated u.
-
-    Called once per `step` with the carry produced by the low-half loop `step_loop3`;
-    afterwards `step` ORs add_two_modulus << (Limb::BITS - 1) into the top limb, the only high
-    bit in which 2p differs from p.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]: loop 4
-    Source: 'src/field/verified/invert.rs', lines 159:13-159:39 (patched copy) -/
-@[rust_loop]
-def field.verified.invert.invert.step_loop4
-  (iter : core.ops.range.Range Std.Usize) (u : crypto_bigint.uint.Uint 4#usize)
-  (u_sub_v : crypto_bigint.uint.Uint 4#usize)
-  (should_negate : crypto_bigint.limb.Limb)
-  (add_one_modulus : crypto_bigint.limb.Limb) (carry : crypto_bigint.limb.Limb)
-  :
-  Result (crypto_bigint.uint.Uint 4#usize)
-  := do
-  loop
-    (fun (iter1, u1, carry1) => field.verified.invert.invert.step_loop4.body
-      u_sub_v should_negate add_one_modulus iter1 u1 carry1)
-    (iter, u, carry)
-
-/-- **Rust:** `helioselene::field::verified::invert::invert::step` — function nested in `invert`
-    crypto/helioselene/src/field/verified/invert.rs:30-182 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L30-L182
-
-    One iteration of the constant-time binary GCD (Algorithm 1 of "Optimized Binary GCD for
-    Modular Inversion", https://eprint.iacr.org/2020/972). State: a and b are the values being
-    reduced (b stays odd and gcd(a, b) is invariant), while u and v are Bezout-style
-    accumulators tied to them by the invariants a ≡ u * value and b ≡ v * value (mod p), so
-    that once a reaches 0 and b = gcd = 1, v holds the inverse of value. Logically the
-    iteration is: if a is odd and a < b, swap (a, b) and (u, v); if a is odd, a -= b and
-    u -= v; then halve a and u (u's halving is an exact division by 2 mod p thanks to the
-    modulus additions).
-
-    Everything is branch-free: the masks a_is_odd, a_lt_b (from the borrow of a - b in
-    `step_loop0`) and both = a_is_odd & a_lt_b drive `select` calls for b and v, a conditional
-    negation (`step_loop1`) yielding |a - b| for a, and a fused negate-and-add-modulus chain
-    (`step_loop2`, `step_loop3`, `step_loop4` plus a final top-bit OR) that adds 0, 1 or 2
-    copies of p so the new u is nonnegative and even before the closing shifts a >>= 1,
-    u >>= 1. Aeneas rewrites the Rust `&mut` parameters into the returned tuple (a, b, u, v).
-    The debug-only bit-length bookkeeping and assertions of the Rust source (lines 31-33 and
-    174-181) are compiled out and therefore absent from this translation.
-
-    Called 510 times per inversion, via `invert_loop0` (384 iterations) and `invert_loop1`
-    (126 iterations).
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert::step]:
-    Source: 'src/field/verified/invert.rs', lines 31:2-183:3 (patched copy) -/
-def field.verified.invert.invert.step
-  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
-  (u : crypto_bigint.uint.Uint 4#usize) (v : crypto_bigint.uint.Uint 4#usize) :
-  Result ((crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
-    4#usize) × (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
-    4#usize))
-  := do
-  let a1 ← crypto_bigint.uint.Uint.as_limbs a
-  let l ← Array.index_usize a1 0#usize
-  let a_is_odd ← lift (l &&& 1#u64)
-  let a_is_odd1 ← crypto_bigint.limb.neg.Limb.wrapping_neg a_is_odd
-  let borrow ← crypto_bigint.limb.Limb.ZERO
-  let a_sub_b ← crypto_bigint.uint.Uint.ZERO 4#usize
-  let i ← crypto_bigint.uint.Uint.LIMBS_1 4#usize
-  let (borrow1, a_sub_b1) ←
-    field.verified.invert.invert.step_loop0 { start := 0#usize, «end» := i }
-      a b borrow a_sub_b
-  let a_lt_b ← crypto_bigint.limb.neg.Limb.wrapping_neg borrow1
-  let both ←
-    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand a_is_odd1
-      a_lt_b
-  let b1 ← field.verified.invert.invert.step.select b a both
-  let l1 ← crypto_bigint.limb.Limb.ONE
-  let carry ←
-    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l1 a_lt_b
-  let a_diff_b ←
-    field.verified.invert.invert.step_loop1 { start := 0#usize, «end» := i }
-      a_sub_b1 a_lt_b carry a_sub_b
-  let a2 ← field.verified.invert.invert.step.select a a_diff_b a_is_odd1
-  let (borrow2, u_sub_v) ←
-    field.verified.invert.invert.step_loop2 { start := 0#usize, «end» := i }
-      u v a_is_odd1 borrow a_sub_b
-  let u_sub_v_neg ← crypto_bigint.limb.neg.Limb.wrapping_neg borrow2
-  let should_negate ←
-    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand a_is_odd1
-      a_lt_b
-  let v_u_sub_u_v_neg ←
-    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitXorLimbLimb.bitxor u_sub_v_neg
-      should_negate
-  let a3 ← crypto_bigint.uint.Uint.as_limbs u_sub_v
-  let l2 ← Array.index_usize a3 0#usize
-  let l3 ←
-    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l2 l1
-  let result_is_odd ← crypto_bigint.limb.neg.Limb.wrapping_neg l3
-  let l4 ← crypto_bigint.limb.Limb.Insts.CoreOpsBitNotLimb.not result_is_odd
-  let add_two_modulus ←
-    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand
-      v_u_sub_u_v_neg l4
-  let add_one_modulus ←
-    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitOrLimbLimb.bitor v_u_sub_u_v_neg
-      result_is_odd
-  let carry1 ←
-    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l1
-      should_negate
-  let i1 ← crypto_bigint.uint.Uint.LIMBS_1 2#usize
-  let (u1, carry2) ←
-    field.verified.invert.invert.step_loop3 { start := 0#usize, «end» := i1 }
-      u u_sub_v should_negate add_two_modulus add_one_modulus carry1
-  let u2 ←
-    field.verified.invert.invert.step_loop4 { start := i1, «end» := i } u1
-      u_sub_v should_negate add_one_modulus carry2
-  let a4 ← crypto_bigint.uint.Uint.as_limbs u2
-  let i2 ← lift (Std.Usize.wrapping_sub i 1#usize)
-  let l5 ← Array.index_usize a4 i2
-  let i3 ← crypto_bigint.limb.Limb.BITS
-  let i4 ← lift (Std.Usize.wrapping_sub i3 1#usize)
-  let l6 ←
-    crypto_bigint.limb.Limb.Insts.CoreOpsBitShlUsizeLimb.shl add_two_modulus i4
-  let l7 ← crypto_bigint.limb.Limb.Insts.CoreOpsBitBitOrLimbLimb.bitor l5 l6
-  let (a5, as_limbs_mut_back) ← crypto_bigint.uint.Uint.as_limbs_mut u2
-  let i5 ← lift (Std.Usize.wrapping_sub i 1#usize)
-  let a6 ← Array.update a5 i5 l7
-  let v1 ← field.verified.invert.invert.step.select v u both
-  let a7 ← crypto_bigint.uint.shr.Uint.shr_vartime a2 1#usize
-  let u3 := as_limbs_mut_back a6
-  let u4 ← crypto_bigint.uint.shr.Uint.shr_vartime u3 1#usize
-  ok (a7, b1, u4, v1)
-
-/-- **Rust:** `helioselene::field::verified::invert::invert` — loop body (inner step loop)
-    crypto/helioselene/src/field/verified/invert.rs:186-188 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L186-L188
-
-    One iteration of the inner Rust loop "for _ in 0 .. (2 * Limb::BITS)" (invert.rs lines
-    186-188): the loop counter is discarded and the GCD state is simply threaded through one
-    call of `step`. With 64-bit limbs the enclosing loop runs this 128 times per pass of the
-    outer "for _ in 2 ..= U256::LIMBS" loop.
-
-    Loop state (iter, a, b, u, v): the remaining counter range plus the four working values of
-    the binary GCD (a, b: values being reduced toward the gcd; u, v: Bezout accumulators with
-    a ≡ u * value and b ≡ v * value (mod p)). Returns `cont <next-state>` after a `step`, or
-    `done (a, b, u, v)` when the counter is exhausted.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert]: loop body 1
-    Source: 'src/field/verified/invert.rs', lines 187:4-189:5 (patched copy) -/
-@[rust_loop_body]
-def field.verified.invert.invert_loop0_loop0.body
-  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
-  (b : crypto_bigint.uint.Uint 4#usize) (u : crypto_bigint.uint.Uint 4#usize)
-  (v : crypto_bigint.uint.Uint 4#usize) :
-  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
-    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize) ×
-    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize))
-    ((crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize) ×
-    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize)))
-  := do
-  let (o, iter1) ←
-    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
-  match o with
-  | none => ok (done (a, b, u, v))
-  | some _ =>
-    let (a1, b1, u1, v1) ← field.verified.invert.invert.step a b u v
-    ok (cont (iter1, a1, b1, u1, v1))
-
-/-- **Rust:** `helioselene::field::verified::invert::invert` — loop (inner step loop)
-    crypto/helioselene/src/field/verified/invert.rs:186-188 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L186-L188
-
-    The inner Rust loop "for _ in 0 .. (2 * Limb::BITS)" (invert.rs lines 186-188): applies
-    `step` 2 * 64 = 128 times to the GCD state. Note that despite the Lean name suffix, Aeneas
-    labels this "loop 1" of `invert` (see the metadata below); it is the loop nested inside
-    `invert_loop0` ("loop 0"). Loop state (iter, a, b, u, v); returns the updated (a, b, u, v).
-
-    Called by `invert_loop0.body` once per iteration of the outer "for _ in 2 ..= U256::LIMBS"
-    loop, i.e. three times, contributing 384 of the 510 total `step` iterations.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert]: loop 1
-    Source: 'src/field/verified/invert.rs', lines 187:4-189:5 (patched copy) -/
-@[rust_loop]
-def field.verified.invert.invert_loop0_loop0
-  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
-  (b : crypto_bigint.uint.Uint 4#usize) (u : crypto_bigint.uint.Uint 4#usize)
-  (v : crypto_bigint.uint.Uint 4#usize) :
-  Result ((crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
-    4#usize) × (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
-    4#usize))
-  := do
-  loop
-    (fun (iter1, a1, b1, u1, v1) =>
-      field.verified.invert.invert_loop0_loop0.body iter1 a1 b1 u1 v1)
-    (iter, a, b, u, v)
-
-/-- **Rust:** `helioselene::field::verified::invert::invert` — loop body (outer pass loop)
-    crypto/helioselene/src/field/verified/invert.rs:185-189 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L185-L189
-
-    One iteration of the outer Rust loop "for _ in 2 ..= U256::LIMBS" (invert.rs lines
-    185-189): it recomputes the bound 2 * Limb::BITS = 128 and hands the GCD state to the
-    inner loop `invert_loop0_loop0`, which performs 128 `step` iterations. The inclusive range
-    2 ..= 4 gives three such passes; the pass index itself is never used.
-
-    Loop state (iter, a, b, u, v): a RangeInclusive iterator plus the binary-GCD working
-    values (a, b: values being reduced; u, v: Bezout accumulators). Returns
-    `cont <next-state>` after a full inner pass, or `done (a, b, u, v)` when the range is
-    exhausted.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert]: loop body 0
-    Source: 'src/field/verified/invert.rs', lines 186:2-190:3 (patched copy) -/
-@[rust_loop_body]
-def field.verified.invert.invert_loop0.body
-  (iter : core.ops.range.RangeInclusive Std.Usize)
-  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
-  (u : crypto_bigint.uint.Uint 4#usize) (v : crypto_bigint.uint.Uint 4#usize) :
-  Result (ControlFlow ((core.ops.range.RangeInclusive Std.Usize) ×
-    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize) ×
-    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize))
-    ((crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize) ×
-    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize)))
-  := do
-  let (o, iter1) ←
-    core.ops.range.RangeInclusive.Insts.CoreIterTraitsIteratorIterator.next
-      core.iter.range.StepUsize iter
-  match o with
-  | none => ok (done (a, b, u, v))
-  | some _ =>
-    let i ← crypto_bigint.limb.Limb.BITS
-    let i1 ← lift (Std.Usize.wrapping_mul 2#usize i)
-    let (a1, b1, u1, v1) ←
-      field.verified.invert.invert_loop0_loop0
-        { start := 0#usize, «end» := i1 } a b u v
-    ok (cont (iter1, a1, b1, u1, v1))
-
-/-- **Rust:** `helioselene::field::verified::invert::invert` — loop (outer pass loop)
-    crypto/helioselene/src/field/verified/invert.rs:185-189 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L185-L189
-
-    The outer Rust loop "for _ in 2 ..= U256::LIMBS" (invert.rs lines 185-189) of `invert`:
-    three passes (counter values 2, 3, 4), each running the nested `invert_loop0_loop0` for
-    2 * Limb::BITS = 128 `step` iterations, i.e. 384 iterations in total. Loop state
-    (iter, a, b, u, v); returns the updated (a, b, u, v), which `invert` then feeds to the
-    trailing loop `invert_loop1`.
-
-    Together with `invert_loop1`'s 126 iterations this yields the fixed, input-independent
-    count of 510 = 2 * 255 `step` iterations used for the 255-bit modulus.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert]: loop 0
-    Source: 'src/field/verified/invert.rs', lines 186:2-190:3 (patched copy) -/
-@[rust_loop]
-def field.verified.invert.invert_loop0
-  (iter : core.ops.range.RangeInclusive Std.Usize)
-  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
-  (u : crypto_bigint.uint.Uint 4#usize) (v : crypto_bigint.uint.Uint 4#usize) :
-  Result ((crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
-    4#usize) × (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
-    4#usize))
-  := do
-  loop
-    (fun (iter1, a1, b1, u1, v1) => field.verified.invert.invert_loop0.body
-      iter1 a1 b1 u1 v1)
-    (iter, a, b, u, v)
-
-/-- **Rust:** `helioselene::field::verified::invert::invert` — loop body (trailing step loop)
-    crypto/helioselene/src/field/verified/invert.rs:190-192 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L190-L192
-
-    One iteration of the trailing Rust loop "for _ in 0 .. ((2 * Limb::BITS) - 2)" (invert.rs
-    lines 190-192): it discards the counter and applies `step` once to the GCD state, exactly
-    like `invert_loop0_loop0.body`. The difference is the exit value: when the counter is
-    exhausted this returns `done v` — only the Bezout accumulator v, which at that point holds
-    a representative of the inverse for nonzero value (for value = 0 the loop returns v = 0
-    and `invert` clears the CtOption validity flag) — rather than the whole state.
-
-    Loop state (iter, a, b, u, v). Returns `cont <next-state>` to continue, or `done v` when
-    the 2 * 64 - 2 = 126 iterations are complete.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert]: loop body 2
-    Source: 'src/field/verified/invert.rs', lines 191:2-193:3 (patched copy) -/
-@[rust_loop_body]
-def field.verified.invert.invert_loop1.body
-  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
-  (b : crypto_bigint.uint.Uint 4#usize) (u : crypto_bigint.uint.Uint 4#usize)
-  (v : crypto_bigint.uint.Uint 4#usize) :
-  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
-    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize) ×
-    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize))
-    (crypto_bigint.uint.Uint 4#usize))
-  := do
-  let (o, iter1) ←
-    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
-  match o with
-  | none => ok (done v)
-  | some _ =>
-    let (a1, b1, u1, v1) ← field.verified.invert.invert.step a b u v
-    ok (cont (iter1, a1, b1, u1, v1))
-
-/-- **Rust:** `helioselene::field::verified::invert::invert` — loop (trailing step loop)
-    crypto/helioselene/src/field/verified/invert.rs:190-192 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L190-L192
-
-    The trailing Rust loop "for _ in 0 .. ((2 * Limb::BITS) - 2)" (invert.rs lines 190-192) of
-    `invert`: applies `step` a further 2 * 64 - 2 = 126 times after `invert_loop0`'s 384,
-    reaching the fixed total of 510 = 2 * 255 iterations used for the 255-bit modulus. Loop
-    state (iter, a, b, u, v); unlike the earlier loops it returns only v, the Bezout
-    accumulator that, for nonzero value, then satisfies v ≡ value^-1 (mod p) with v in [0, p];
-    `red1` then canonicalises it into [0, p) (for value = 0 the loop returns v = 0 and
-    `invert` clears the CtOption validity flag).
-
-    Called once by `invert`; its result is passed to `red1` for the final reduction into
-    the range [0, p).
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert]: loop 2
-    Source: 'src/field/verified/invert.rs', lines 191:2-193:3 (patched copy) -/
-@[rust_loop]
-def field.verified.invert.invert_loop1
-  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
-  (b : crypto_bigint.uint.Uint 4#usize) (u : crypto_bigint.uint.Uint 4#usize)
-  (v : crypto_bigint.uint.Uint 4#usize) :
-  Result (crypto_bigint.uint.Uint 4#usize)
-  := do
-  loop
-    (fun (iter1, a1, b1, u1, v1) => field.verified.invert.invert_loop1.body
-      iter1 a1 b1 u1 v1)
-    (iter, a, b, u, v)
-
-/-- **Rust:** `helioselene::field::verified::invert::invert` — function
-    crypto/helioselene/src/field/verified/invert.rs:23-195 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L23-L195
-
-    Constant-time modular inversion over the Helioselene field, whose modulus is
-    p = 2^255 - 0x8cab7e2e6960ce8067af49720ee20ad, implementing Algorithm 1 of "Optimized
-    Binary GCD for Modular Inversion" (https://eprint.iacr.org/2020/972). It initialises
-    a = value, b = p, u = 1, v = 0 — maintaining the invariants a ≡ u * value and
-    b ≡ v * value (mod p) — and runs the branch-free `step` a fixed 510 = 2 * 255 times
-    (384 via `invert_loop0`, then 126 via `invert_loop1`), after which (for nonzero value)
-    a = 0 and b = gcd(value, p) = 1, so v represents value^-1. Since the iterations keep v
-    only in the range [0, p], `red1` performs one final conditional subtraction of p.
-
-    The result is wrapped as CtOption::new(HelioseleneField(red1(v)), !value.is_zero()): the
-    validity flag is cleared for the non-invertible input 0. In Rust this function backs
-    `<HelioseleneField as ff::Field>::invert` (src/field/mod.rs lines 212-214); in this
-    translation `field.HelioseleneField` is definitionally `Uint 4`, so `value` feeds the
-    limb-level loops directly.
-
-    Aeneas metadata:
-    [helioselene::field::verified::invert::invert]:
-    Source: 'src/field/verified/invert.rs', lines 24:0-196:1 (patched copy) -/
-def field.verified.invert.invert
-  (value : field.HelioseleneField) :
-  Result (subtle.CtOption field.HelioseleneField)
-  := do
-  let b ← field.MODULUS
-  let u ← crypto_bigint.uint.Uint.ONE 4#usize
-  let v ← crypto_bigint.uint.Uint.ZERO 4#usize
-  let i ← crypto_bigint.uint.Uint.LIMBS_1 4#usize
-  let iter ← core.ops.range.RangeInclusive.new 2#usize i
-  let (a, b1, u1, v1) ← field.verified.invert.invert_loop0 iter value b u v
-  let i1 ← crypto_bigint.limb.Limb.BITS
-  let i2 ← lift (Std.Usize.wrapping_mul 2#usize i1)
-  let i3 ← lift (Std.Usize.wrapping_sub i2 2#usize)
-  let v2 ←
-    field.verified.invert.invert_loop1 { start := 0#usize, «end» := i3 } a b1
-      u1 v1
-  let u2 ← field.verified.red1 v2
-  let c ← field.HelioseleneField.Insts.FfField.is_zero value
-  let c1 ← subtle.Choice.Insts.CoreOpsBitNotChoice.not c
-  subtle.CtOption.new u2 c1
-
 /-- **Rust:** `helioselene::field::verified::MODULUS_255_DISTANCE` — constant
     crypto/helioselene/src/field/verified/mod.rs:26 in this repository:
     https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L26
@@ -1369,253 +1076,6 @@ def field.verified.MODULUS_255_DISTANCE
   : Result (crypto_bigint.uint.Uint 2#usize) :=
   crypto_bigint.uint.encoding.Uint.from_be_hex 2#usize (toStr
     "08cab7e2e6960ce8067af49720ee20ad")
-
-/-- **Rust:** `<HelioseleneField as Add>::add` — function (trait method behind the `+` operator)
-    crypto/helioselene/src/field/verified/mod.rs:71-73 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L71-L73
-
-    Field addition modulo p = 2^255 - 0x8cab7e2e6960ce8067af49720ee20ad. The two reduced operands
-    (each < p < 2^255) are summed with a plain 256-bit wrapping add, which cannot actually wrap
-    since the sum is < 2p < 2^256. The sum is then passed to `red1`, which performs at most one
-    reduction step: it subtracts p and constant-time-selects, limb by limb via the borrow-derived
-    all-zeros/all-ones mask, between the difference and the unsubtracted sum.
-
-    Rust's `+` operator on `HelioseleneField` dispatches to this method; it is bundled into the
-    trait-instance record
-    `field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField`.
-
-    Aeneas metadata:
-    [helioselene::field::verified::{impl core::ops::arith::Add<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::add]:
-    Source: 'src/field/verified/mod.rs', lines 72:2-74:3 (patched copy) -/
-def
-  field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
-  (self : field.HelioseleneField) (b : field.HelioseleneField) :
-  Result field.HelioseleneField
-  := do
-  let u ← crypto_bigint.uint.add.Uint.wrapping_add self b
-  let u1 ← field.verified.red1 u
-  ok u1
-
-/-- **Rust:** `impl Add<HelioseleneField> for HelioseleneField` — trait-instance record
-    crypto/helioselene/src/field/verified/mod.rs:68-74 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L68-L74
-
-    Trait-instance record for `impl Add for HelioseleneField`: it bundles the impl's single
-    method, `add` (modular addition: wrapping 256-bit add followed by one conditional subtraction
-    of the modulus via `red1`). Whenever Rust code writes `a + b` on field elements, the call
-    resolves through this instance to
-    `field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add`.
-
-    Aeneas metadata:
-    Trait implementation: [helioselene::field::verified::{impl core::ops::arith::Add<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}]
-    Source: 'src/field/verified/mod.rs', lines 69:0-75:1 (patched copy) -/
-@[reducible]
-def
-  field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField
-  : core.ops.arith.Add field.HelioseleneField field.HelioseleneField
-  field.HelioseleneField := {
-  add :=
-    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
-}
-
-/-- **Rust:** `<HelioseleneField as Sub>::sub` — loop body (one iteration of the select loop)
-    crypto/helioselene/src/field/verified/mod.rs:83-86 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L83-L86
-
-    One iteration of the limb-selection loop of field subtraction, `for j in 0 .. U256::LIMBS`
-    (mod.rs lines 83-86). For limb index j it selects between `candidate[j]` (the raw borrow-chain
-    difference self - b) and `plus_modulus[j]` (that difference plus p) using the mask
-    `underflowed` — Limb::ZERO when the subtraction did not borrow, Limb::MAX when it did — via
-    the constant-time select `select_word(a, b, m) = a ^ ((a ^ b) & m)`, writing the chosen limb
-    into `out[j]`.
-
-    Loop state is `(iter, out)`: the remaining `0 .. 4` limb range and the output word array
-    filled in so far. This `.body` def performs ONE iteration, returning `cont (iter', out')` to
-    continue or `done out` once the range is exhausted. `candidate`, `underflowed` and
-    `plus_modulus` are loop-invariant values computed by `sub` before the loop.
-
-    Aeneas metadata:
-    [helioselene::field::verified::{impl core::ops::arith::Sub<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sub]: loop body 0:
-    Source: 'src/field/verified/mod.rs', lines 84:4-87:5 (patched copy) -/
-@[rust_loop_body]
-def
-  field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub_loop.body
-  (candidate : crypto_bigint.uint.Uint 4#usize)
-  (underflowed : crypto_bigint.limb.Limb)
-  (plus_modulus : crypto_bigint.uint.Uint 4#usize)
-  (iter : core.ops.range.Range Std.Usize)
-  (out : crypto_bigint.uint.Uint 4#usize) :
-  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
-    (crypto_bigint.uint.Uint 4#usize)) (crypto_bigint.uint.Uint 4#usize))
-  := do
-  let (o, iter1) ←
-    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
-  match o with
-  | none => ok (done out)
-  | some j =>
-    let a ← crypto_bigint.uint.Uint.as_limbs candidate
-    let l ← Array.index_usize a j
-    let a1 ← crypto_bigint.uint.Uint.as_limbs plus_modulus
-    let l1 ← Array.index_usize a1 j
-    let l2 ← field.verified.select_word l l1 underflowed
-    let (a2, as_limbs_mut_back) ← crypto_bigint.uint.Uint.as_limbs_mut out
-    let a3 ← Array.update a2 j l2
-    let u := as_limbs_mut_back a3
-    ok (cont (iter1, u))
-
-/-- **Rust:** `<HelioseleneField as Sub>::sub` — loop of function
-    crypto/helioselene/src/field/verified/mod.rs:83-86 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L83-L86
-
-    Encodes the whole `for j in 0 .. U256::LIMBS` loop of field subtraction (mod.rs lines 83-86):
-    for every limb it constant-time-selects, under the borrow mask `underflowed`, between the raw
-    difference `candidate` and `plus_modulus = candidate + p`, assembling the properly reduced
-    result. It repeatedly applies `sub_loop.body` to the state `(iter, out)` — remaining limb
-    range and partially filled output — until the range is exhausted, and returns the final
-    256-bit `out`, which `sub` returns as the field element.
-
-    Only used by
-    `field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub`;
-    `candidate`, `underflowed` and `plus_modulus` are fixed (loop-invariant) arguments.
-
-    Aeneas metadata:
-    [helioselene::field::verified::{impl core::ops::arith::Sub<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sub]: loop 0:
-    Source: 'src/field/verified/mod.rs', lines 84:4-87:5 (patched copy) -/
-@[rust_loop]
-def
-  field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub_loop
-  (iter : core.ops.range.Range Std.Usize)
-  (candidate : crypto_bigint.uint.Uint 4#usize)
-  (underflowed : crypto_bigint.limb.Limb)
-  (plus_modulus : crypto_bigint.uint.Uint 4#usize)
-  (out : crypto_bigint.uint.Uint 4#usize) :
-  Result (crypto_bigint.uint.Uint 4#usize)
-  := do
-  loop
-    (fun (iter1, out1) =>
-      field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub_loop.body
-      candidate underflowed plus_modulus iter1 out1)
-    (iter, out)
-
-/-- **Rust:** `<HelioseleneField as Sub>::sub` — function (trait method behind the `-` operator)
-    crypto/helioselene/src/field/verified/mod.rs:79-88 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L79-L88
-
-    Field subtraction modulo p. First computes `(candidate, underflowed) = self - b` with a
-    borrow (sbb) chain (`sub_value`); `underflowed` is Limb::ZERO on success or Limb::MAX if the
-    difference went negative. It also computes `plus_modulus = candidate + p` (wrapping), then
-    runs `sub_loop`, which per limb constant-time-selects `candidate` when no borrow occurred and
-    `plus_modulus` — the correct add-back of the modulus — when it did. This is the standard
-    constant-time modular subtraction: no branch or memory access depends on the secret borrow.
-
-    Rust's `-` operator on `HelioseleneField` dispatches to this method; it is bundled into the
-    trait-instance record
-    `field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField`.
-
-    Aeneas metadata:
-    [helioselene::field::verified::{impl core::ops::arith::Sub<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sub]:
-    Source: 'src/field/verified/mod.rs', lines 80:2-89:3 (patched copy) -/
-def
-  field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
-  (self : field.HelioseleneField) (b : field.HelioseleneField) :
-  Result field.HelioseleneField
-  := do
-  let p ← field.verified.sub_value self b
-  let u ← field.MODULUS
-  let (candidate, underflowed) := p
-  let plus_modulus ← crypto_bigint.uint.add.Uint.wrapping_add candidate u
-  let out ← crypto_bigint.uint.Uint.ZERO 4#usize
-  let i ← crypto_bigint.uint.Uint.LIMBS_1 4#usize
-  let out1 ←
-    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub_loop
-      { start := 0#usize, «end» := i } candidate underflowed plus_modulus out
-  ok out1
-
-/-- **Rust:** `impl Sub<HelioseleneField> for HelioseleneField` — trait-instance record
-    crypto/helioselene/src/field/verified/mod.rs:76-89 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L76-L89
-
-    Trait-instance record for `impl Sub for HelioseleneField`: it bundles the impl's single
-    method, `sub` (modular subtraction: borrow-chain difference with a constant-time, masked
-    add-back of p on underflow). Whenever Rust code writes `a - b` on field elements, the call
-    resolves through this instance to
-    `field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub`.
-
-    Aeneas metadata:
-    Trait implementation: [helioselene::field::verified::{impl core::ops::arith::Sub<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}]
-    Source: 'src/field/verified/mod.rs', lines 77:0-90:1 (patched copy) -/
-@[reducible]
-def
-  field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField
-  : core.ops.arith.Sub field.HelioseleneField field.HelioseleneField
-  field.HelioseleneField := {
-  sub :=
-    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
-}
-
-/-- **Rust:** `<HelioseleneField as Neg>::neg` — function (trait method behind unary `-`)
-    crypto/helioselene/src/field/verified/mod.rs:94-100 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L94-L100
-
-    Field negation: computes p - self with a wrapping 256-bit subtraction — which cannot
-    underflow, as self < p — and then constant-time-selects the canonical ZERO when self == 0,
-    because p - 0 = p would be a non-reduced representative of zero. The zero test (`is_zero`)
-    ORs all limbs together and compares against zero with subtle's constant-time equality, and
-    `conditional_select` is subtle's masked select, so nothing branches on the value.
-
-    Rust's unary `-` on `HelioseleneField` dispatches to this method; it is bundled into the
-    trait-instance record `field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField`.
-
-    Aeneas metadata:
-    [helioselene::field::verified::{impl core::ops::arith::Neg<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::neg]:
-    Source: 'src/field/verified/mod.rs', lines 95:2-101:3 (patched copy) -/
-def field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg
-  (self : field.HelioseleneField) : Result field.HelioseleneField := do
-  let u ← field.MODULUS
-  let u1 ← crypto_bigint.uint.sub.Uint.wrapping_sub u self
-  let hf ← field.HelioseleneField.Insts.FfField.ZERO
-  let c ← field.HelioseleneField.Insts.FfField.is_zero self
-  field.HelioseleneField.Insts.SubtleConditionallySelectable.conditional_select
-    u1 hf c
-
-/-- **Rust:** `impl Neg for HelioseleneField` — trait-instance record
-    crypto/helioselene/src/field/verified/mod.rs:91-101 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L91-L101
-
-    Trait-instance record for `impl Neg for HelioseleneField`: it bundles the impl's single
-    method, `neg` (modular negation p - x with a constant-time select of zero for x == 0).
-    Whenever Rust code writes unary `-a` on a field element, the call resolves through this
-    instance to `field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg`.
-
-    Aeneas metadata:
-    Trait implementation: [helioselene::field::verified::{impl core::ops::arith::Neg<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}]
-    Source: 'src/field/verified/mod.rs', lines 92:0-102:1 (patched copy) -/
-@[reducible]
-def field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField :
-  core.ops.arith.Neg field.HelioseleneField field.HelioseleneField := {
-  neg := field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg
-}
-
-/-- **Rust:** `helioselene::field::verified::double` — function
-    crypto/helioselene/src/field/verified/mod.rs:104-107 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L104-L107
-
-    Field doubling: shifts the value left by one bit with `shl_vartime(1)` — variable-time only
-    with respect to the shift amount, which here is the public constant 1, not to the value being
-    shifted — then reduces once with `red1` (a single constant-time conditional subtraction of
-    p). Since the input is reduced (< p < 2^255), the shift cannot overflow 256 bits and the
-    doubled value is < 2p, so one conditional subtraction fully reduces it.
-
-    Helper used by `<HelioseleneField as ff::Field>::double` (src/field/mod.rs lines 200-203).
-
-    Aeneas metadata:
-    [helioselene::field::verified::double]:
-    Source: 'src/field/verified/mod.rs', lines 105:0-108:1 (patched copy) -/
-def field.verified.double
-  (value : field.HelioseleneField) : Result field.HelioseleneField := do
-  let u ← crypto_bigint.uint.shl.Uint.shl_vartime value 1#usize
-  let u1 ← field.verified.red1 u
-  ok u1
 
 /-- **Rust:** `helioselene::field::verified::red::red256` — loop body of function
     crypto/helioselene/src/field/verified/red.rs:13-19 in this repository:
@@ -2701,26 +2161,85 @@ def
   let p ← crypto_bigint.uint.mul.Uint.mul_wide self b
   field.verified.red.red512 p
 
-/-- **Rust:** `impl Mul<HelioseleneField> for HelioseleneField` — trait-instance record
-    crypto/helioselene/src/field/verified/mod.rs:109-115 in this repository:
-    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L109-L115
+/-- [helioselene::field::{impl core::ops::arith::Mul<&'_0 helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::mul]:
+    Source: 'src/field/mod.rs', lines 130:2-132:3
+    Visibility: public -/
+def
+  field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+  (self : field.HelioseleneField) (b : field.HelioseleneField) :
+  Result field.HelioseleneField
+  := do
+  field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+    self b
 
-    Trait-instance record for `impl Mul for HelioseleneField`: it bundles the impl's single
-    method, `mul` (512-bit wide multiplication followed by Crandall reduction via `red512`).
-    Whenever Rust code writes `a * b` on field elements, the call resolves through this instance
-    to `field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul`.
+/-- [helioselene::field::{impl core::ops::arith::MulAssign<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::mul_assign]:
+    Source: 'src/field/mod.rs', lines 136:2-138:3
+    Visibility: public -/
+def
+  field.HelioseleneField.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign
+  (self : field.HelioseleneField) (b : field.HelioseleneField) :
+  Result field.HelioseleneField
+  := do
+  field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+    self b
+
+/-- [helioselene::field::{impl core::ops::arith::MulAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::mul_assign]:
+    Source: 'src/field/mod.rs', lines 142:2-144:3
+    Visibility: public -/
+def
+  field.HelioseleneField.Insts.CoreOpsArithMulAssignShared0HelioseleneField.mul_assign
+  (self : field.HelioseleneField) (b : field.HelioseleneField) :
+  Result field.HelioseleneField
+  := do
+  field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+    self b
+
+/-- [helioselene::field::{helioselene::field::HelioseleneField}::from_u256]:
+    Source: 'src/field/mod.rs', lines 166:2-168:3 -/
+def field.HelioseleneField.from_u256
+  (value : crypto_bigint.uint.Uint 4#usize) :
+  Result field.HelioseleneField
+  := do
+  let u ← field.MODULUS
+  let (u1, _) ← crypto_bigint.uint.div.Uint.const_rem value u
+  ok u1
+
+/-- [helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::ONE]
+    Source: 'src/field/mod.rs', lines 185:2-185:36
+    Visibility: public -/
+@[global_simps, irreducible]
+def field.HelioseleneField.Insts.FfField.ONE
+  : Result field.HelioseleneField := do
+  let u ← crypto_bigint.uint.Uint.ONE 4#usize
+  ok u
+
+/-- **Rust:** `helioselene::field::verified::double` — function
+    crypto/helioselene/src/field/verified/mod.rs:104-107 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L104-L107
+
+    Field doubling: shifts the value left by one bit with `shl_vartime(1)` — variable-time only
+    with respect to the shift amount, which here is the public constant 1, not to the value being
+    shifted — then reduces once with `red1` (a single constant-time conditional subtraction of
+    p). Since the input is reduced (< p < 2^255), the shift cannot overflow 256 bits and the
+    doubled value is < 2p, so one conditional subtraction fully reduces it.
+
+    Helper used by `<HelioseleneField as ff::Field>::double` (src/field/mod.rs lines 200-203).
 
     Aeneas metadata:
-    Trait implementation: [helioselene::field::verified::{impl core::ops::arith::Mul<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}]
-    Source: 'src/field/verified/mod.rs', lines 110:0-116:1 (patched copy) -/
-@[reducible]
-def
-  field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField
-  : core.ops.arith.Mul field.HelioseleneField field.HelioseleneField
-  field.HelioseleneField := {
-  mul :=
-    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
-}
+    [helioselene::field::verified::double]:
+    Source: 'src/field/verified/mod.rs', lines 105:0-108:1 (patched copy) -/
+def field.verified.double
+  (value : field.HelioseleneField) : Result field.HelioseleneField := do
+  let u ← crypto_bigint.uint.shl.Uint.shl_vartime value 1#usize
+  let u1 ← field.verified.red1 u
+  ok u1
+
+/-- [helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::double]:
+    Source: 'src/field/mod.rs', lines 201:2-203:3
+    Visibility: public -/
+def field.HelioseleneField.Insts.FfField.double
+  (self : field.HelioseleneField) : Result field.HelioseleneField := do
+  field.verified.double self
 
 /-- **Rust:** `helioselene::field::verified::square` — function
     crypto/helioselene/src/field/verified/mod.rs:118-120 in this repository:
@@ -2741,6 +2260,944 @@ def field.verified.square
   (value : field.HelioseleneField) : Result field.HelioseleneField := do
   let p ← crypto_bigint.uint.mul.Uint.square_wide value
   field.verified.red.red512 p
+
+/-- [helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::square]:
+    Source: 'src/field/mod.rs', lines 206:2-208:3
+    Visibility: public -/
+def field.HelioseleneField.Insts.FfField.square
+  (self : field.HelioseleneField) : Result field.HelioseleneField := do
+  field.verified.square self
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step::MODULUS_XOR_TWO_MODULUS`
+    — constant
+    crypto/helioselene/src/field/verified/invert.rs:127-128 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L127-L128
+
+    The 256-bit constant MODULUS XOR (2 * MODULUS), where the field modulus is
+    p = 2^255 - 0x8cab7e2e6960ce8067af49720ee20ad. When updating the Bezout accumulator `u`,
+    `step` must add 0, 1 or 2 copies of p to make the intermediate result nonnegative and even
+    before it is halved. Each limb of that addend is formed branchlessly as
+    (MODULUS[l] & add_one_modulus) ^ (MODULUS_XOR_TWO_MODULUS[l] & add_two_modulus): with only
+    the first mask set this yields p's limb, and with both set it yields p ^ (p ^ 2p) = 2p's
+    limb (add_two_modulus is only ever set together with add_one_modulus). Storing the XOR'd
+    constant rather than 2p itself means the two masks need not be mutually exclusive, which
+    makes it harder for the compiler to legally rewrite the constant-time selection into a
+    branch.
+
+    Used only by `step_loop3` (limbs 0 .. U128::LIMBS); in the high half p ^ 2p is just the top
+    bit 2^255, which `step` ORs into the last limb separately after `step_loop4`.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step::MODULUS_XOR_TWO_MODULUS]
+    Source: 'src/field/verified/invert.rs', lines 128:4-129:92 (patched copy) -/
+@[global_simps, irreducible]
+def field.verified.invert.invert.step.MODULUS_XOR_TWO_MODULUS
+  : Result (crypto_bigint.uint.Uint 4#usize) :=
+  crypto_bigint.uint.encoding.Uint.from_be_hex 4#usize (toStr
+    "80000000000000000000000000000000195fd8272bba15380a8f1db9613261f5")
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step::select` — loop body of `select`
+    crypto/helioselene/src/field/verified/invert.rs:54-56 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L54-L56
+
+    One iteration of the Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 54-56) inside
+    the `select` helper nested in `step`. It computes
+    res[l] = select_word(a[l], b[l], choice) = a[l] ^ ((a[l] ^ b[l]) & choice); `choice` is an
+    all-zero or all-one 64-bit mask, so the limb is taken from `b` when the mask is set and
+    from `a` otherwise — a constant-time select with no branch on secret data.
+
+    Loop state (iter, res): `iter` is the remaining limb-index range and `res` the
+    partially-written output. Returns `cont <next-state>` to continue, or `done res` once all
+    four limbs have been processed.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step::select]: loop body 0
+    Source: 'src/field/verified/invert.rs', lines 55:6-57:7 (patched copy) -/
+@[rust_loop_body]
+def field.verified.invert.invert.step.select_loop.body
+  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
+  (choice : crypto_bigint.limb.Limb) (iter : core.ops.range.Range Std.Usize)
+  (res : crypto_bigint.uint.Uint 4#usize) :
+  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
+    (crypto_bigint.uint.Uint 4#usize)) (crypto_bigint.uint.Uint 4#usize))
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done res)
+  | some l =>
+    let a1 ← crypto_bigint.uint.Uint.as_limbs a
+    let l1 ← Array.index_usize a1 l
+    let a2 ← crypto_bigint.uint.Uint.as_limbs b
+    let l2 ← Array.index_usize a2 l
+    let l3 ← field.verified.select_word l1 l2 choice
+    let (a3, as_limbs_mut_back) ← crypto_bigint.uint.Uint.as_limbs_mut res
+    let a4 ← Array.update a3 l l3
+    let u := as_limbs_mut_back a4
+    ok (cont (iter1, u))
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step::select` — loop of `select`
+    crypto/helioselene/src/field/verified/invert.rs:54-56 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L54-L56
+
+    The Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 54-56) of the `select` helper:
+    iterates `select_loop.body` over the four 64-bit limbs, overwriting each limb of `res` with
+    select_word(a[l], b[l], choice), i.e. with b's limb when `choice` is the all-one mask and
+    with a's limb when it is zero. Runs the loop-state tuple (iter, res) to completion and
+    returns the finished U256.
+
+    Called only by `select`, which supplies res = U256::ZERO and the range 0 .. U256::LIMBS.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step::select]: loop 0
+    Source: 'src/field/verified/invert.rs', lines 55:6-57:7 (patched copy) -/
+@[rust_loop]
+def field.verified.invert.invert.step.select_loop
+  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
+  (b : crypto_bigint.uint.Uint 4#usize) (choice : crypto_bigint.limb.Limb)
+  (res : crypto_bigint.uint.Uint 4#usize) :
+  Result (crypto_bigint.uint.Uint 4#usize)
+  := do
+  loop
+    (fun (iter1, res1) => field.verified.invert.invert.step.select_loop.body a
+      b choice iter1 res1)
+    (iter, res)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step::select` — helper function
+    crypto/helioselene/src/field/verified/invert.rs:52-58 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L52-L58
+
+    Constant-time conditional selection of a whole U256: returns `b` if `choice` is the all-one
+    64-bit mask and `a` if it is all-zero, building the result limb by limb with `select_word`
+    (a masked-XOR select) so that no branch or memory access depends on `choice`.
+
+    Helper nested inside `step`, called three times per GCD iteration: `select(b, a, both)`
+    (the b half of the conditional swap), `select(a, a_diff_b, a_is_odd)` (keep a if it is
+    even, else replace it by |a - b|), and `select(v, u_start, both)` (the v half of the swap).
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step::select]:
+    Source: 'src/field/verified/invert.rs', lines 53:4-59:5 (patched copy) -/
+def field.verified.invert.invert.step.select
+  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
+  (choice : crypto_bigint.limb.Limb) :
+  Result (crypto_bigint.uint.Uint 4#usize)
+  := do
+  let res ← crypto_bigint.uint.Uint.ZERO 4#usize
+  let i ← crypto_bigint.uint.Uint.LIMBS_1 4#usize
+  field.verified.invert.invert.step.select_loop
+    { start := 0#usize, «end» := i } a b choice res
+
+/-- **Rust:** `helioselene::field::verified::invert::sub_with_bounded_overflow` — function
+    crypto/helioselene/src/field/verified/invert.rs:12-16 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L12-L16
+
+    Full-subtractor limb primitive: computes `a - b - c` on 64-bit limbs with two
+    `overflowing_sub`s and returns `(difference, borrow_out)` where the borrow is normalized to
+    `0` or `1` — unlike crypto-bigint's `sbb`, whose borrow is `0` or `Limb::MAX`. Since `c` is
+    always a previous borrow (`0` or `1`), at most one of the two subtractions can underflow, so
+    OR-ing the two borrow flags is exact ("bounded overflow").
+
+    Role: used only inside `invert`'s binary-GCD `step`, for its two limb-wise borrow chains:
+    computing `a - b` (invert.rs line 43; the final borrow also yields the `a < b` flag) and
+    computing `u - (v & a_is_odd)` (invert.rs line 94).
+
+    This item was translated from the patched copy (see helioselene-aeneas.patch): the canonical
+    `Limb(Word::from(borrow1 | borrow2))` was rewritten as
+    `Limb(Word::from(borrow1) | Word::from(borrow2))` because Aeneas cannot translate
+    `bool | bool`; both forms compute the same value.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::sub_with_bounded_overflow]:
+    Source: 'src/field/verified/invert.rs', lines 12:0-17:1 (patched copy) -/
+def field.verified.invert.sub_with_bounded_overflow
+  (a : crypto_bigint.limb.Limb) (b : crypto_bigint.limb.Limb)
+  (c : crypto_bigint.limb.Limb) :
+  Result (crypto_bigint.limb.Limb × crypto_bigint.limb.Limb)
+  := do
+  let (limb, borrow1) ← lift (core.num.U64.overflowing_sub a b)
+  let (limb1, borrow2) ← lift (core.num.U64.overflowing_sub limb c)
+  let i ← lift (core.convert.num.FromU64Bool.from borrow1)
+  let i1 ← lift (core.convert.num.FromU64Bool.from borrow2)
+  let i2 ← lift (i ||| i1)
+  ok (limb1, i2)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop body (a - b loop)
+    crypto/helioselene/src/field/verified/invert.rs:41-44 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L41-L44
+
+    One iteration of the Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 41-44), the
+    limb-wise subtraction a - b: it computes
+    (a_sub_b[l], borrow) = sub_with_bounded_overflow(a[l], b[l], borrow), a borrow chain whose
+    borrow is normalised to 0 or 1 (not 0 or Limb::MAX as with `sbb`). The subtraction serves
+    two purposes at once: it produces the difference a - b (mod 2^256) and, through the final
+    borrow, the constant-time comparison a < b.
+
+    Loop state (iter, borrow, a_sub_b): remaining limb range, running borrow (0 or 1), and the
+    partially-written difference. Returns `cont <next-state>` or, when the range is exhausted,
+    `done (borrow, a_sub_b)`; `step` turns the final borrow into the all-one/all-zero mask
+    `a_lt_b` by wrapping negation.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]: loop body 0
+    Source: 'src/field/verified/invert.rs', lines 42:4-45:5 (patched copy) -/
+@[rust_loop_body]
+def field.verified.invert.invert.step_loop0.body
+  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
+  (iter : core.ops.range.Range Std.Usize) (borrow : crypto_bigint.limb.Limb)
+  (a_sub_b : crypto_bigint.uint.Uint 4#usize) :
+  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
+    crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize))
+    (crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize)))
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done (borrow, a_sub_b))
+  | some l =>
+    let a1 ← crypto_bigint.uint.Uint.as_limbs a
+    let l1 ← Array.index_usize a1 l
+    let a2 ← crypto_bigint.uint.Uint.as_limbs b
+    let l2 ← Array.index_usize a2 l
+    let (l3, borrow1) ←
+      field.verified.invert.sub_with_bounded_overflow l1 l2 borrow
+    let (a3, as_limbs_mut_back) ←
+      crypto_bigint.uint.Uint.as_limbs_mut a_sub_b
+    let a4 ← Array.update a3 l l3
+    let u := as_limbs_mut_back a4
+    ok (cont (iter1, borrow1, u))
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop (a - b subtraction)
+    crypto/helioselene/src/field/verified/invert.rs:41-44 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L41-L44
+
+    The Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 41-44) of `step`: runs
+    `step_loop0.body` over the four limbs, subtracting b from a with
+    `sub_with_bounded_overflow` (borrows normalised to 0 or 1). Loop state
+    (iter, borrow, a_sub_b); returns the pair (borrow, a_sub_b) where
+    a_sub_b = a - b (mod 2^256) and borrow = 1 exactly when a < b.
+
+    Called once per `step` with borrow = 0 and a_sub_b = U256::ZERO; the returned borrow is
+    wrapping-negated into the `a_lt_b` mask that drives the constant-time swap logic.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]: loop 0
+    Source: 'src/field/verified/invert.rs', lines 42:4-45:5 (patched copy) -/
+@[rust_loop]
+def field.verified.invert.invert.step_loop0
+  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
+  (b : crypto_bigint.uint.Uint 4#usize) (borrow : crypto_bigint.limb.Limb)
+  (a_sub_b : crypto_bigint.uint.Uint 4#usize) :
+  Result (crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize))
+  := do
+  loop
+    (fun (iter1, borrow1, a_sub_b1) =>
+      field.verified.invert.invert.step_loop0.body a b iter1 borrow1 a_sub_b1)
+    (iter, borrow, a_sub_b)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop body (negation loop)
+    crypto/helioselene/src/field/verified/invert.rs:68-74 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L68-L74
+
+    One iteration of the Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 68-74), the
+    conditional two's-complement negation of a_sub_b: each limb is XORed with the `a_lt_b`
+    mask (a bitwise NOT when the mask is all-one, a no-op when it is zero) and a carry — seeded
+    by `step` with Limb::ONE & a_lt_b, the "+ 1" of two's-complement negation — is propagated
+    with `overflowing_add`. The result a_diff_b equals b - a when a < b and a - b otherwise,
+    i.e. |a - b|, computed without branching on the comparison.
+
+    Loop state (iter, carry, a_diff_b): remaining limb range, carry (0 or 1), and the
+    partially-written result. Returns `cont <next-state>` to continue or `done a_diff_b` when
+    the four limbs are done.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]: loop body 1
+    Source: 'src/field/verified/invert.rs', lines 69:6-75:7 (patched copy) -/
+@[rust_loop_body]
+def field.verified.invert.invert.step_loop1.body
+  (a_sub_b : crypto_bigint.uint.Uint 4#usize)
+  (a_lt_b : crypto_bigint.limb.Limb) (iter : core.ops.range.Range Std.Usize)
+  (carry : crypto_bigint.limb.Limb)
+  (a_diff_b : crypto_bigint.uint.Uint 4#usize) :
+  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
+    crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize))
+    (crypto_bigint.uint.Uint 4#usize))
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done a_diff_b)
+  | some l =>
+    let a ← crypto_bigint.uint.Uint.as_limbs a_sub_b
+    let l1 ← Array.index_usize a l
+    let l2 ←
+      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitXorLimbLimb.bitxor l1 a_lt_b
+    let (limb, carry_bool) ← lift (core.num.U64.overflowing_add l2 carry)
+    let i ← lift (core.convert.num.FromU64Bool.from carry_bool)
+    let (a1, as_limbs_mut_back) ←
+      crypto_bigint.uint.Uint.as_limbs_mut a_diff_b
+    let a2 ← Array.update a1 l limb
+    let u := as_limbs_mut_back a2
+    ok (cont (iter1, i, u))
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop (conditional negation)
+    crypto/helioselene/src/field/verified/invert.rs:68-74 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L68-L74
+
+    The Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 68-74) of `step`: runs
+    `step_loop1.body` over the four limbs to compute a_diff_b, the conditional
+    two's-complement negation of a_sub_b under the `a_lt_b` mask (XOR with the mask plus a
+    propagated +1 carry). Loop state (iter, carry, a_diff_b); returns the finished
+    a_diff_b = |a - b|.
+
+    Called once per `step` with carry = Limb::ONE & a_lt_b; the result replaces `a` (via
+    `select`) whenever a is odd.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]: loop 1
+    Source: 'src/field/verified/invert.rs', lines 69:6-75:7 (patched copy) -/
+@[rust_loop]
+def field.verified.invert.invert.step_loop1
+  (iter : core.ops.range.Range Std.Usize)
+  (a_sub_b : crypto_bigint.uint.Uint 4#usize)
+  (a_lt_b : crypto_bigint.limb.Limb) (carry : crypto_bigint.limb.Limb)
+  (a_diff_b : crypto_bigint.uint.Uint 4#usize) :
+  Result (crypto_bigint.uint.Uint 4#usize)
+  := do
+  loop
+    (fun (iter1, carry1, a_diff_b1) =>
+      field.verified.invert.invert.step_loop1.body a_sub_b a_lt_b iter1 carry1
+      a_diff_b1)
+    (iter, carry, a_diff_b)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop body (u - v loop)
+    crypto/helioselene/src/field/verified/invert.rs:92-95 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L92-L95
+
+    One iteration of the Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 92-95), which
+    subtracts the masked accumulator v from u:
+    (u_sub_v[l], borrow) = sub_with_bounded_overflow(u[l], v[l] & a_is_odd, borrow). Masking
+    v's limbs with the `a_is_odd` mask computes u - v when a is odd and leaves u unchanged when
+    a is even, mirroring — without a branch — the update applied to `a` itself.
+
+    Loop state (iter, borrow, u_sub_v): remaining limb range, running borrow (0 or 1), and the
+    partially-written difference. Returns `cont <next-state>` or `done (borrow, u_sub_v)`; the
+    final borrow tells `step` whether the subtraction underflowed (i.e. u - (v & a_is_odd) is
+    negative as an integer); `step` XORs the derived mask with `should_negate` before deciding
+    whether copies of the modulus must be added back.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]: loop body 2
+    Source: 'src/field/verified/invert.rs', lines 93:4-96:5 (patched copy) -/
+@[rust_loop_body]
+def field.verified.invert.invert.step_loop2.body
+  (u : crypto_bigint.uint.Uint 4#usize) (v : crypto_bigint.uint.Uint 4#usize)
+  (a_is_odd : crypto_bigint.limb.Limb) (iter : core.ops.range.Range Std.Usize)
+  (borrow : crypto_bigint.limb.Limb)
+  (u_sub_v : crypto_bigint.uint.Uint 4#usize) :
+  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
+    crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize))
+    (crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize)))
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done (borrow, u_sub_v))
+  | some l =>
+    let a ← crypto_bigint.uint.Uint.as_limbs u
+    let l1 ← Array.index_usize a l
+    let a1 ← crypto_bigint.uint.Uint.as_limbs v
+    let l2 ← Array.index_usize a1 l
+    let l3 ←
+      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l2 a_is_odd
+    let (l4, borrow1) ←
+      field.verified.invert.sub_with_bounded_overflow l1 l3 borrow
+    let (a2, as_limbs_mut_back) ←
+      crypto_bigint.uint.Uint.as_limbs_mut u_sub_v
+    let a3 ← Array.update a2 l l4
+    let u1 := as_limbs_mut_back a3
+    ok (cont (iter1, borrow1, u1))
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop (u - v subtraction)
+    crypto/helioselene/src/field/verified/invert.rs:92-95 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L92-L95
+
+    The Rust loop "for l in 0 .. U256::LIMBS" (invert.rs lines 92-95) of `step`: runs
+    `step_loop2.body` over the four limbs computing u_sub_v = u - (v & a_is_odd), i.e. u - v if
+    a is odd, else u. Loop state (iter, borrow, u_sub_v); returns (borrow, u_sub_v), the final
+    borrow indicating underflow. `step` wrapping-negates that borrow into the `u_sub_v_neg`
+    mask used to decide how many copies of the modulus must be added back.
+
+    Called once per `step` with borrow = 0 and u_sub_v initialised to U256::ZERO.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]: loop 2
+    Source: 'src/field/verified/invert.rs', lines 93:4-96:5 (patched copy) -/
+@[rust_loop]
+def field.verified.invert.invert.step_loop2
+  (iter : core.ops.range.Range Std.Usize) (u : crypto_bigint.uint.Uint 4#usize)
+  (v : crypto_bigint.uint.Uint 4#usize) (a_is_odd : crypto_bigint.limb.Limb)
+  (borrow : crypto_bigint.limb.Limb)
+  (u_sub_v : crypto_bigint.uint.Uint 4#usize) :
+  Result (crypto_bigint.limb.Limb × (crypto_bigint.uint.Uint 4#usize))
+  := do
+  loop
+    (fun (iter1, borrow1, u_sub_v1) =>
+      field.verified.invert.invert.step_loop2.body u v a_is_odd iter1 borrow1
+      u_sub_v1)
+    (iter, borrow, u_sub_v)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop body (low half)
+    crypto/helioselene/src/field/verified/invert.rs:140-156 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L140-L156
+
+    One iteration of the Rust loop "for l in 0 .. U128::LIMBS" (invert.rs lines 140-156), the
+    low half of the fused negate-and-add-modulus carry chain that turns u_sub_v into the new u.
+    Per limb it selects modulus_instances =
+    (MODULUS[l] & add_one_modulus) ^ (MODULUS_XOR_TWO_MODULUS[l] & add_two_modulus) — zero, one
+    or two copies of the modulus, chosen branchlessly by the XOR trick — and computes
+    (u_sub_v[l] ^ should_negate) + modulus_instances + carry. The XOR with the `should_negate`
+    mask is the NOT half of a conditional two's-complement negation (its +1 arrives as the
+    initial carry), and `modulus_instances.wrapping_add(carry)` cannot overflow because
+    carry <= 1 and no low-128-bit limb of either p or 2p (the two possible nonzero values of
+    modulus_instances) is all-ones.
+
+    Loop state (iter, u, carry): remaining limb range (limbs 0 and 1), the accumulator u with
+    its low limbs progressively rewritten, and the running carry. Returns `cont <next-state>`
+    or `done (u, carry)`, the final carry flowing on into the high-half loop `step_loop4`.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]: loop body 3
+    Source: 'src/field/verified/invert.rs', lines 141:13-141:29 (patched copy) -/
+@[rust_loop_body]
+def field.verified.invert.invert.step_loop3.body
+  (u_sub_v : crypto_bigint.uint.Uint 4#usize)
+  (should_negate : crypto_bigint.limb.Limb)
+  (add_two_modulus : crypto_bigint.limb.Limb)
+  (add_one_modulus : crypto_bigint.limb.Limb)
+  (iter : core.ops.range.Range Std.Usize) (u : crypto_bigint.uint.Uint 4#usize)
+  (carry : crypto_bigint.limb.Limb) :
+  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
+    (crypto_bigint.uint.Uint 4#usize) × crypto_bigint.limb.Limb)
+    ((crypto_bigint.uint.Uint 4#usize) × crypto_bigint.limb.Limb))
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done (u, carry))
+  | some l =>
+    let u1 ← field.MODULUS
+    let a ← crypto_bigint.uint.Uint.as_limbs u1
+    let l1 ← Array.index_usize a l
+    let l2 ←
+      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l1
+        add_one_modulus
+    let u2 ← field.verified.invert.invert.step.MODULUS_XOR_TWO_MODULUS
+    let a1 ← crypto_bigint.uint.Uint.as_limbs u2
+    let l3 ← Array.index_usize a1 l
+    let l4 ←
+      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l3
+        add_two_modulus
+    let modulus_instances ←
+      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitXorLimbLimb.bitxor l2 l4
+    let a2 ← crypto_bigint.uint.Uint.as_limbs u_sub_v
+    let l5 ← Array.index_usize a2 l
+    let l6 ←
+      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitXorLimbLimb.bitxor l5
+        should_negate
+    let l7 ← crypto_bigint.limb.add.Limb.wrapping_add modulus_instances carry
+    let (limb, carry_bool) ← lift (core.num.U64.overflowing_add l6 l7)
+    let i ← lift (core.convert.num.FromU64Bool.from carry_bool)
+    let (a3, as_limbs_mut_back) ← crypto_bigint.uint.Uint.as_limbs_mut u
+    let a4 ← Array.update a3 l limb
+    let u3 := as_limbs_mut_back a4
+    ok (cont (iter1, u3, i))
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop (low half)
+    crypto/helioselene/src/field/verified/invert.rs:140-156 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L140-L156
+
+    The Rust loop "for l in 0 .. U128::LIMBS" (invert.rs lines 140-156) of `step`: runs
+    `step_loop3.body` over the two low limbs, conditionally negating u_sub_v (XOR with the
+    `should_negate` mask, +1 seeded via the initial carry) while simultaneously adding 0, 1 or
+    2 copies of the modulus, selected per limb from MODULUS and MODULUS_XOR_TWO_MODULUS by the
+    add_one_modulus/add_two_modulus masks. Loop state (iter, u, carry); returns (u, carry) with
+    u's low half updated and the carry to be consumed by `step_loop4`.
+
+    Called once per `step` with carry = Limb::ONE & should_negate over the range
+    0 .. U128::LIMBS; the modulus additions make the eventual u nonnegative and even, so the
+    closing shift u >>= 1 is an exact division by 2 modulo p.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]: loop 3
+    Source: 'src/field/verified/invert.rs', lines 141:13-141:29 (patched copy) -/
+@[rust_loop]
+def field.verified.invert.invert.step_loop3
+  (iter : core.ops.range.Range Std.Usize) (u : crypto_bigint.uint.Uint 4#usize)
+  (u_sub_v : crypto_bigint.uint.Uint 4#usize)
+  (should_negate : crypto_bigint.limb.Limb)
+  (add_two_modulus : crypto_bigint.limb.Limb)
+  (add_one_modulus : crypto_bigint.limb.Limb) (carry : crypto_bigint.limb.Limb)
+  :
+  Result ((crypto_bigint.uint.Uint 4#usize) × crypto_bigint.limb.Limb)
+  := do
+  loop
+    (fun (iter1, u1, carry1) => field.verified.invert.invert.step_loop3.body
+      u_sub_v should_negate add_two_modulus add_one_modulus iter1 u1 carry1)
+    (iter, u, carry)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop body (high half)
+    crypto/helioselene/src/field/verified/invert.rs:158-163 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L158-L163
+
+    One iteration of the Rust loop "for l in U128::LIMBS .. U256::LIMBS" (invert.rs lines
+    158-163), the high-half continuation of the negate-and-add-modulus chain: per limb it
+    computes add_with_bounded_overflow(u_sub_v[l] ^ should_negate,
+    MODULUS[l] & add_one_modulus, carry) and stores the sum in u[l]. Only `add_one_modulus`
+    appears here: in the high 128 bits, twice the modulus differs from the modulus in the top
+    bit alone (MODULUS_XOR_TWO_MODULUS is 0x8000...0 there), so the add_two_modulus
+    contribution reduces to the single-bit OR that `step` performs right after this loop
+    (invert.rs lines 164-165).
+
+    Loop state (iter, u, carry): remaining limb range (limbs 2 and 3), the accumulator u, and
+    the running carry (0 or 1). Returns `cont <next-state>` or `done u` once the range is
+    exhausted.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]: loop body 4
+    Source: 'src/field/verified/invert.rs', lines 159:13-159:39 (patched copy) -/
+@[rust_loop_body]
+def field.verified.invert.invert.step_loop4.body
+  (u_sub_v : crypto_bigint.uint.Uint 4#usize)
+  (should_negate : crypto_bigint.limb.Limb)
+  (add_one_modulus : crypto_bigint.limb.Limb)
+  (iter : core.ops.range.Range Std.Usize) (u : crypto_bigint.uint.Uint 4#usize)
+  (carry : crypto_bigint.limb.Limb) :
+  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
+    (crypto_bigint.uint.Uint 4#usize) × crypto_bigint.limb.Limb)
+    (crypto_bigint.uint.Uint 4#usize))
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done u)
+  | some l =>
+    let u1 ← field.MODULUS
+    let a ← crypto_bigint.uint.Uint.as_limbs u1
+    let l1 ← Array.index_usize a l
+    let modulus_instances ←
+      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l1
+        add_one_modulus
+    let a1 ← crypto_bigint.uint.Uint.as_limbs u_sub_v
+    let l2 ← Array.index_usize a1 l
+    let l3 ←
+      crypto_bigint.limb.Limb.Insts.CoreOpsBitBitXorLimbLimb.bitxor l2
+        should_negate
+    let (l4, carry1) ←
+      field.verified.add_with_bounded_overflow l3 modulus_instances carry
+    let (a2, as_limbs_mut_back) ← crypto_bigint.uint.Uint.as_limbs_mut u
+    let a3 ← Array.update a2 l l4
+    let u2 := as_limbs_mut_back a3
+    ok (cont (iter1, u2, carry1))
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — loop (high half)
+    crypto/helioselene/src/field/verified/invert.rs:158-163 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L158-L163
+
+    The Rust loop "for l in U128::LIMBS .. U256::LIMBS" (invert.rs lines 158-163) of `step`:
+    runs `step_loop4.body` over the two high limbs, finishing the conditional negation of
+    u_sub_v and the masked addition of the modulus with `add_with_bounded_overflow` (carries
+    normalised to 0 or 1). Loop state (iter, u, carry); returns the updated u.
+
+    Called once per `step` with the carry produced by the low-half loop `step_loop3`;
+    afterwards `step` ORs add_two_modulus << (Limb::BITS - 1) into the top limb, the only high
+    bit in which 2p differs from p.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]: loop 4
+    Source: 'src/field/verified/invert.rs', lines 159:13-159:39 (patched copy) -/
+@[rust_loop]
+def field.verified.invert.invert.step_loop4
+  (iter : core.ops.range.Range Std.Usize) (u : crypto_bigint.uint.Uint 4#usize)
+  (u_sub_v : crypto_bigint.uint.Uint 4#usize)
+  (should_negate : crypto_bigint.limb.Limb)
+  (add_one_modulus : crypto_bigint.limb.Limb) (carry : crypto_bigint.limb.Limb)
+  :
+  Result (crypto_bigint.uint.Uint 4#usize)
+  := do
+  loop
+    (fun (iter1, u1, carry1) => field.verified.invert.invert.step_loop4.body
+      u_sub_v should_negate add_one_modulus iter1 u1 carry1)
+    (iter, u, carry)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert::step` — function nested in `invert`
+    crypto/helioselene/src/field/verified/invert.rs:30-182 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L30-L182
+
+    One iteration of the constant-time binary GCD (Algorithm 1 of "Optimized Binary GCD for
+    Modular Inversion", https://eprint.iacr.org/2020/972). State: a and b are the values being
+    reduced (b stays odd and gcd(a, b) is invariant), while u and v are Bezout-style
+    accumulators tied to them by the invariants a ≡ u * value and b ≡ v * value (mod p), so
+    that once a reaches 0 and b = gcd = 1, v holds the inverse of value. Logically the
+    iteration is: if a is odd and a < b, swap (a, b) and (u, v); if a is odd, a -= b and
+    u -= v; then halve a and u (u's halving is an exact division by 2 mod p thanks to the
+    modulus additions).
+
+    Everything is branch-free: the masks a_is_odd, a_lt_b (from the borrow of a - b in
+    `step_loop0`) and both = a_is_odd & a_lt_b drive `select` calls for b and v, a conditional
+    negation (`step_loop1`) yielding |a - b| for a, and a fused negate-and-add-modulus chain
+    (`step_loop2`, `step_loop3`, `step_loop4` plus a final top-bit OR) that adds 0, 1 or 2
+    copies of p so the new u is nonnegative and even before the closing shifts a >>= 1,
+    u >>= 1. Aeneas rewrites the Rust `&mut` parameters into the returned tuple (a, b, u, v).
+    The debug-only bit-length bookkeeping and assertions of the Rust source (lines 31-33 and
+    174-181) are compiled out and therefore absent from this translation.
+
+    Called 510 times per inversion, via `invert_loop0` (384 iterations) and `invert_loop1`
+    (126 iterations).
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert::step]:
+    Source: 'src/field/verified/invert.rs', lines 31:2-183:3 (patched copy) -/
+def field.verified.invert.invert.step
+  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
+  (u : crypto_bigint.uint.Uint 4#usize) (v : crypto_bigint.uint.Uint 4#usize) :
+  Result ((crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
+    4#usize) × (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
+    4#usize))
+  := do
+  let a1 ← crypto_bigint.uint.Uint.as_limbs a
+  let l ← Array.index_usize a1 0#usize
+  let a_is_odd ← lift (l &&& 1#u64)
+  let a_is_odd1 ← crypto_bigint.limb.neg.Limb.wrapping_neg a_is_odd
+  let borrow ← crypto_bigint.limb.Limb.ZERO
+  let a_sub_b ← crypto_bigint.uint.Uint.ZERO 4#usize
+  let i ← crypto_bigint.uint.Uint.LIMBS_1 4#usize
+  let (borrow1, a_sub_b1) ←
+    field.verified.invert.invert.step_loop0 { start := 0#usize, «end» := i }
+      a b borrow a_sub_b
+  let a_lt_b ← crypto_bigint.limb.neg.Limb.wrapping_neg borrow1
+  let both ←
+    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand a_is_odd1
+      a_lt_b
+  let b1 ← field.verified.invert.invert.step.select b a both
+  let l1 ← crypto_bigint.limb.Limb.ONE
+  let carry ←
+    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l1 a_lt_b
+  let a_diff_b ←
+    field.verified.invert.invert.step_loop1 { start := 0#usize, «end» := i }
+      a_sub_b1 a_lt_b carry a_sub_b
+  let a2 ← field.verified.invert.invert.step.select a a_diff_b a_is_odd1
+  let (borrow2, u_sub_v) ←
+    field.verified.invert.invert.step_loop2 { start := 0#usize, «end» := i }
+      u v a_is_odd1 borrow a_sub_b
+  let u_sub_v_neg ← crypto_bigint.limb.neg.Limb.wrapping_neg borrow2
+  let should_negate ←
+    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand a_is_odd1
+      a_lt_b
+  let v_u_sub_u_v_neg ←
+    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitXorLimbLimb.bitxor u_sub_v_neg
+      should_negate
+  let a3 ← crypto_bigint.uint.Uint.as_limbs u_sub_v
+  let l2 ← Array.index_usize a3 0#usize
+  let l3 ←
+    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l2 l1
+  let result_is_odd ← crypto_bigint.limb.neg.Limb.wrapping_neg l3
+  let l4 ← crypto_bigint.limb.Limb.Insts.CoreOpsBitNotLimb.not result_is_odd
+  let add_two_modulus ←
+    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand
+      v_u_sub_u_v_neg l4
+  let add_one_modulus ←
+    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitOrLimbLimb.bitor v_u_sub_u_v_neg
+      result_is_odd
+  let carry1 ←
+    crypto_bigint.limb.Limb.Insts.CoreOpsBitBitAndLimbLimb.bitand l1
+      should_negate
+  let i1 ← crypto_bigint.uint.Uint.LIMBS_1 2#usize
+  let (u1, carry2) ←
+    field.verified.invert.invert.step_loop3 { start := 0#usize, «end» := i1 }
+      u u_sub_v should_negate add_two_modulus add_one_modulus carry1
+  let u2 ←
+    field.verified.invert.invert.step_loop4 { start := i1, «end» := i } u1
+      u_sub_v should_negate add_one_modulus carry2
+  let a4 ← crypto_bigint.uint.Uint.as_limbs u2
+  let i2 ← lift (Std.Usize.wrapping_sub i 1#usize)
+  let l5 ← Array.index_usize a4 i2
+  let i3 ← crypto_bigint.limb.Limb.BITS
+  let i4 ← lift (Std.Usize.wrapping_sub i3 1#usize)
+  let l6 ←
+    crypto_bigint.limb.Limb.Insts.CoreOpsBitShlUsizeLimb.shl add_two_modulus i4
+  let l7 ← crypto_bigint.limb.Limb.Insts.CoreOpsBitBitOrLimbLimb.bitor l5 l6
+  let (a5, as_limbs_mut_back) ← crypto_bigint.uint.Uint.as_limbs_mut u2
+  let i5 ← lift (Std.Usize.wrapping_sub i 1#usize)
+  let a6 ← Array.update a5 i5 l7
+  let v1 ← field.verified.invert.invert.step.select v u both
+  let a7 ← crypto_bigint.uint.shr.Uint.shr_vartime a2 1#usize
+  let u3 := as_limbs_mut_back a6
+  let u4 ← crypto_bigint.uint.shr.Uint.shr_vartime u3 1#usize
+  ok (a7, b1, u4, v1)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert` — loop body (inner step loop)
+    crypto/helioselene/src/field/verified/invert.rs:186-188 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L186-L188
+
+    One iteration of the inner Rust loop "for _ in 0 .. (2 * Limb::BITS)" (invert.rs lines
+    186-188): the loop counter is discarded and the GCD state is simply threaded through one
+    call of `step`. With 64-bit limbs the enclosing loop runs this 128 times per pass of the
+    outer "for _ in 2 ..= U256::LIMBS" loop.
+
+    Loop state (iter, a, b, u, v): the remaining counter range plus the four working values of
+    the binary GCD (a, b: values being reduced toward the gcd; u, v: Bezout accumulators with
+    a ≡ u * value and b ≡ v * value (mod p)). Returns `cont <next-state>` after a `step`, or
+    `done (a, b, u, v)` when the counter is exhausted.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert]: loop body 1
+    Source: 'src/field/verified/invert.rs', lines 187:4-189:5 (patched copy) -/
+@[rust_loop_body]
+def field.verified.invert.invert_loop0_loop0.body
+  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
+  (b : crypto_bigint.uint.Uint 4#usize) (u : crypto_bigint.uint.Uint 4#usize)
+  (v : crypto_bigint.uint.Uint 4#usize) :
+  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
+    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize) ×
+    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize))
+    ((crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize) ×
+    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize)))
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done (a, b, u, v))
+  | some _ =>
+    let (a1, b1, u1, v1) ← field.verified.invert.invert.step a b u v
+    ok (cont (iter1, a1, b1, u1, v1))
+
+/-- **Rust:** `helioselene::field::verified::invert::invert` — loop (inner step loop)
+    crypto/helioselene/src/field/verified/invert.rs:186-188 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L186-L188
+
+    The inner Rust loop "for _ in 0 .. (2 * Limb::BITS)" (invert.rs lines 186-188): applies
+    `step` 2 * 64 = 128 times to the GCD state. Note that despite the Lean name suffix, Aeneas
+    labels this "loop 1" of `invert` (see the metadata below); it is the loop nested inside
+    `invert_loop0` ("loop 0"). Loop state (iter, a, b, u, v); returns the updated (a, b, u, v).
+
+    Called by `invert_loop0.body` once per iteration of the outer "for _ in 2 ..= U256::LIMBS"
+    loop, i.e. three times, contributing 384 of the 510 total `step` iterations.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert]: loop 1
+    Source: 'src/field/verified/invert.rs', lines 187:4-189:5 (patched copy) -/
+@[rust_loop]
+def field.verified.invert.invert_loop0_loop0
+  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
+  (b : crypto_bigint.uint.Uint 4#usize) (u : crypto_bigint.uint.Uint 4#usize)
+  (v : crypto_bigint.uint.Uint 4#usize) :
+  Result ((crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
+    4#usize) × (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
+    4#usize))
+  := do
+  loop
+    (fun (iter1, a1, b1, u1, v1) =>
+      field.verified.invert.invert_loop0_loop0.body iter1 a1 b1 u1 v1)
+    (iter, a, b, u, v)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert` — loop body (outer pass loop)
+    crypto/helioselene/src/field/verified/invert.rs:185-189 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L185-L189
+
+    One iteration of the outer Rust loop "for _ in 2 ..= U256::LIMBS" (invert.rs lines
+    185-189): it recomputes the bound 2 * Limb::BITS = 128 and hands the GCD state to the
+    inner loop `invert_loop0_loop0`, which performs 128 `step` iterations. The inclusive range
+    2 ..= 4 gives three such passes; the pass index itself is never used.
+
+    Loop state (iter, a, b, u, v): a RangeInclusive iterator plus the binary-GCD working
+    values (a, b: values being reduced; u, v: Bezout accumulators). Returns
+    `cont <next-state>` after a full inner pass, or `done (a, b, u, v)` when the range is
+    exhausted.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert]: loop body 0
+    Source: 'src/field/verified/invert.rs', lines 186:2-190:3 (patched copy) -/
+@[rust_loop_body]
+def field.verified.invert.invert_loop0.body
+  (iter : core.ops.range.RangeInclusive Std.Usize)
+  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
+  (u : crypto_bigint.uint.Uint 4#usize) (v : crypto_bigint.uint.Uint 4#usize) :
+  Result (ControlFlow ((core.ops.range.RangeInclusive Std.Usize) ×
+    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize) ×
+    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize))
+    ((crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize) ×
+    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize)))
+  := do
+  let (o, iter1) ←
+    core.ops.range.RangeInclusive.Insts.CoreIterTraitsIteratorIterator.next
+      core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done (a, b, u, v))
+  | some _ =>
+    let i ← crypto_bigint.limb.Limb.BITS
+    let i1 ← lift (Std.Usize.wrapping_mul 2#usize i)
+    let (a1, b1, u1, v1) ←
+      field.verified.invert.invert_loop0_loop0
+        { start := 0#usize, «end» := i1 } a b u v
+    ok (cont (iter1, a1, b1, u1, v1))
+
+/-- **Rust:** `helioselene::field::verified::invert::invert` — loop (outer pass loop)
+    crypto/helioselene/src/field/verified/invert.rs:185-189 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L185-L189
+
+    The outer Rust loop "for _ in 2 ..= U256::LIMBS" (invert.rs lines 185-189) of `invert`:
+    three passes (counter values 2, 3, 4), each running the nested `invert_loop0_loop0` for
+    2 * Limb::BITS = 128 `step` iterations, i.e. 384 iterations in total. Loop state
+    (iter, a, b, u, v); returns the updated (a, b, u, v), which `invert` then feeds to the
+    trailing loop `invert_loop1`.
+
+    Together with `invert_loop1`'s 126 iterations this yields the fixed, input-independent
+    count of 510 = 2 * 255 `step` iterations used for the 255-bit modulus.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert]: loop 0
+    Source: 'src/field/verified/invert.rs', lines 186:2-190:3 (patched copy) -/
+@[rust_loop]
+def field.verified.invert.invert_loop0
+  (iter : core.ops.range.RangeInclusive Std.Usize)
+  (a : crypto_bigint.uint.Uint 4#usize) (b : crypto_bigint.uint.Uint 4#usize)
+  (u : crypto_bigint.uint.Uint 4#usize) (v : crypto_bigint.uint.Uint 4#usize) :
+  Result ((crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
+    4#usize) × (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint
+    4#usize))
+  := do
+  loop
+    (fun (iter1, a1, b1, u1, v1) => field.verified.invert.invert_loop0.body
+      iter1 a1 b1 u1 v1)
+    (iter, a, b, u, v)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert` — loop body (trailing step loop)
+    crypto/helioselene/src/field/verified/invert.rs:190-192 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L190-L192
+
+    One iteration of the trailing Rust loop "for _ in 0 .. ((2 * Limb::BITS) - 2)" (invert.rs
+    lines 190-192): it discards the counter and applies `step` once to the GCD state, exactly
+    like `invert_loop0_loop0.body`. The difference is the exit value: when the counter is
+    exhausted this returns `done v` — only the Bezout accumulator v, which at that point holds
+    a representative of the inverse for nonzero value (for value = 0 the loop returns v = 0
+    and `invert` clears the CtOption validity flag) — rather than the whole state.
+
+    Loop state (iter, a, b, u, v). Returns `cont <next-state>` to continue, or `done v` when
+    the 2 * 64 - 2 = 126 iterations are complete.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert]: loop body 2
+    Source: 'src/field/verified/invert.rs', lines 191:2-193:3 (patched copy) -/
+@[rust_loop_body]
+def field.verified.invert.invert_loop1.body
+  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
+  (b : crypto_bigint.uint.Uint 4#usize) (u : crypto_bigint.uint.Uint 4#usize)
+  (v : crypto_bigint.uint.Uint 4#usize) :
+  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
+    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize) ×
+    (crypto_bigint.uint.Uint 4#usize) × (crypto_bigint.uint.Uint 4#usize))
+    (crypto_bigint.uint.Uint 4#usize))
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done v)
+  | some _ =>
+    let (a1, b1, u1, v1) ← field.verified.invert.invert.step a b u v
+    ok (cont (iter1, a1, b1, u1, v1))
+
+/-- **Rust:** `helioselene::field::verified::invert::invert` — loop (trailing step loop)
+    crypto/helioselene/src/field/verified/invert.rs:190-192 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L190-L192
+
+    The trailing Rust loop "for _ in 0 .. ((2 * Limb::BITS) - 2)" (invert.rs lines 190-192) of
+    `invert`: applies `step` a further 2 * 64 - 2 = 126 times after `invert_loop0`'s 384,
+    reaching the fixed total of 510 = 2 * 255 iterations used for the 255-bit modulus. Loop
+    state (iter, a, b, u, v); unlike the earlier loops it returns only v, the Bezout
+    accumulator that, for nonzero value, then satisfies v ≡ value^-1 (mod p) with v in [0, p];
+    `red1` then canonicalises it into [0, p) (for value = 0 the loop returns v = 0 and
+    `invert` clears the CtOption validity flag).
+
+    Called once by `invert`; its result is passed to `red1` for the final reduction into
+    the range [0, p).
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert]: loop 2
+    Source: 'src/field/verified/invert.rs', lines 191:2-193:3 (patched copy) -/
+@[rust_loop]
+def field.verified.invert.invert_loop1
+  (iter : core.ops.range.Range Std.Usize) (a : crypto_bigint.uint.Uint 4#usize)
+  (b : crypto_bigint.uint.Uint 4#usize) (u : crypto_bigint.uint.Uint 4#usize)
+  (v : crypto_bigint.uint.Uint 4#usize) :
+  Result (crypto_bigint.uint.Uint 4#usize)
+  := do
+  loop
+    (fun (iter1, a1, b1, u1, v1) => field.verified.invert.invert_loop1.body
+      iter1 a1 b1 u1 v1)
+    (iter, a, b, u, v)
+
+/-- **Rust:** `helioselene::field::verified::invert::invert` — function
+    crypto/helioselene/src/field/verified/invert.rs:23-195 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/invert.rs#L23-L195
+
+    Constant-time modular inversion over the Helioselene field, whose modulus is
+    p = 2^255 - 0x8cab7e2e6960ce8067af49720ee20ad, implementing Algorithm 1 of "Optimized
+    Binary GCD for Modular Inversion" (https://eprint.iacr.org/2020/972). It initialises
+    a = value, b = p, u = 1, v = 0 — maintaining the invariants a ≡ u * value and
+    b ≡ v * value (mod p) — and runs the branch-free `step` a fixed 510 = 2 * 255 times
+    (384 via `invert_loop0`, then 126 via `invert_loop1`), after which (for nonzero value)
+    a = 0 and b = gcd(value, p) = 1, so v represents value^-1. Since the iterations keep v
+    only in the range [0, p], `red1` performs one final conditional subtraction of p.
+
+    The result is wrapped as CtOption::new(HelioseleneField(red1(v)), !value.is_zero()): the
+    validity flag is cleared for the non-invertible input 0. In Rust this function backs
+    `<HelioseleneField as ff::Field>::invert` (src/field/mod.rs lines 212-214); in this
+    translation `field.HelioseleneField` is definitionally `Uint 4`, so `value` feeds the
+    limb-level loops directly.
+
+    Aeneas metadata:
+    [helioselene::field::verified::invert::invert]:
+    Source: 'src/field/verified/invert.rs', lines 24:0-196:1 (patched copy) -/
+def field.verified.invert.invert
+  (value : field.HelioseleneField) :
+  Result (subtle.CtOption field.HelioseleneField)
+  := do
+  let b ← field.MODULUS
+  let u ← crypto_bigint.uint.Uint.ONE 4#usize
+  let v ← crypto_bigint.uint.Uint.ZERO 4#usize
+  let i ← crypto_bigint.uint.Uint.LIMBS_1 4#usize
+  let iter ← core.ops.range.RangeInclusive.new 2#usize i
+  let (a, b1, u1, v1) ← field.verified.invert.invert_loop0 iter value b u v
+  let i1 ← crypto_bigint.limb.Limb.BITS
+  let i2 ← lift (Std.Usize.wrapping_mul 2#usize i1)
+  let i3 ← lift (Std.Usize.wrapping_sub i2 2#usize)
+  let v2 ←
+    field.verified.invert.invert_loop1 { start := 0#usize, «end» := i3 } a b1
+      u1 v1
+  let u2 ← field.verified.red1 v2
+  let c ← field.HelioseleneField.Insts.FfField.is_zero value
+  let c1 ← subtle.Choice.Insts.CoreOpsBitNotChoice.not c
+  subtle.CtOption.new u2 c1
+
+/-- [helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::invert]:
+    Source: 'src/field/mod.rs', lines 212:2-214:3
+    Visibility: public -/
+def field.HelioseleneField.Insts.FfField.invert
+  (self : field.HelioseleneField) :
+  Result (subtle.CtOption field.HelioseleneField)
+  := do
+  field.verified.invert.invert self
+
+/-- [helioselene::field::verified::sqrt::MODULUS_PLUS_ONE_DIV_FOUR]
+    Source: 'src/field/verified/sqrt.rs', lines 4:0-6:3 -/
+@[global_simps, irreducible]
+def field.verified.sqrt.MODULUS_PLUS_ONE_DIV_FOUR
+  : Result field.HelioseleneField := do
+  let u ←
+    crypto_bigint.uint.encoding.Uint.from_be_hex 4#usize (toStr
+      "1ffffffffffffffffffffffffffffffffdcd5207465a7cc5fe6142da37c477d5")
+  ok u
 
 /-- **Rust:** `helioselene::field::verified::is_odd` — function
     crypto/helioselene/src/field/verified/mod.rs:132-135 in this repository:
@@ -2764,6 +3221,295 @@ def field.verified.is_odd
   let i ← lift (l &&& 1#u64)
   let i1 ← lift (UScalar.cast .U8 i)
   subtle.Choice.Insts.CoreConvertFromU8.from i1
+
+/-- [helioselene::field::{impl ff::PrimeField<[u8; 32usize]> for helioselene::field::HelioseleneField}::is_odd]:
+    Source: 'src/field/mod.rs', lines 255:2-257:3
+    Visibility: public -/
+def field.HelioseleneField.Insts.FfPrimeFieldArrayU832.is_odd
+  (self : field.HelioseleneField) : Result subtle.Choice := do
+  field.verified.is_odd self
+
+/-- [helioselene::field::verified::sqrt::sqrt]: loop body 0:
+    Source: 'src/field/verified/sqrt.rs', lines 36:2-38:3 -/
+@[rust_loop_body]
+def field.verified.sqrt.sqrt_loop0.body
+  (iter : core.ops.range.Range Std.I32) (res : field.HelioseleneField) :
+  Result (ControlFlow ((core.ops.range.Range Std.I32) ×
+    field.HelioseleneField) field.HelioseleneField)
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepI32 iter
+  match o with
+  | none => ok (done res)
+  | some _ =>
+    let res1 ← field.HelioseleneField.Insts.FfField.square res
+    ok (cont (iter1, res1))
+
+/-- [helioselene::field::verified::sqrt::sqrt]: loop 0:
+    Source: 'src/field/verified/sqrt.rs', lines 36:2-38:3 -/
+@[rust_loop]
+def field.verified.sqrt.sqrt_loop0
+  (iter : core.ops.range.Range Std.I32) (res : field.HelioseleneField) :
+  Result field.HelioseleneField
+  := do
+  loop
+    (fun (iter1, res1) => field.verified.sqrt.sqrt_loop0.body iter1 res1)
+    (iter, res)
+
+/-- [helioselene::field::verified::sqrt::sqrt]: loop body 1:
+    Source: 'src/field/verified/sqrt.rs', lines 42:2-44:3 -/
+@[rust_loop_body]
+def field.verified.sqrt.sqrt_loop1.body
+  (iter : core.ops.range.Range Std.I32) (res : field.HelioseleneField) :
+  Result (ControlFlow ((core.ops.range.Range Std.I32) ×
+    field.HelioseleneField) field.HelioseleneField)
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepI32 iter
+  match o with
+  | none => ok (done res)
+  | some _ =>
+    let res1 ← field.HelioseleneField.Insts.FfField.square res
+    ok (cont (iter1, res1))
+
+/-- [helioselene::field::verified::sqrt::sqrt]: loop 1:
+    Source: 'src/field/verified/sqrt.rs', lines 42:2-44:3 -/
+@[rust_loop]
+def field.verified.sqrt.sqrt_loop1
+  (iter : core.ops.range.Range Std.I32) (res : field.HelioseleneField) :
+  Result field.HelioseleneField
+  := do
+  loop
+    (fun (iter1, res1) => field.verified.sqrt.sqrt_loop1.body iter1 res1)
+    (iter, res)
+
+/-- [helioselene::field::verified::sqrt::sqrt]: loop body 2:
+    Source: 'src/field/verified/sqrt.rs', lines 48:2-50:3 -/
+@[rust_loop_body]
+def field.verified.sqrt.sqrt_loop2.body
+  (iter : core.ops.range.Range Std.I32) (res : field.HelioseleneField) :
+  Result (ControlFlow ((core.ops.range.Range Std.I32) ×
+    field.HelioseleneField) field.HelioseleneField)
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepI32 iter
+  match o with
+  | none => ok (done res)
+  | some _ =>
+    let res1 ← field.HelioseleneField.Insts.FfField.square res
+    ok (cont (iter1, res1))
+
+/-- [helioselene::field::verified::sqrt::sqrt]: loop 2:
+    Source: 'src/field/verified/sqrt.rs', lines 48:2-50:3 -/
+@[rust_loop]
+def field.verified.sqrt.sqrt_loop2
+  (iter : core.ops.range.Range Std.I32) (res : field.HelioseleneField) :
+  Result field.HelioseleneField
+  := do
+  loop
+    (fun (iter1, res1) => field.verified.sqrt.sqrt_loop2.body iter1 res1)
+    (iter, res)
+
+/-- [helioselene::field::verified::sqrt::sqrt]: loop body 3:
+    Source: 'src/field/verified/sqrt.rs', lines 54:2-56:3 -/
+@[rust_loop_body]
+def field.verified.sqrt.sqrt_loop3.body
+  (iter : core.ops.range.Range Std.I32) (res : field.HelioseleneField) :
+  Result (ControlFlow ((core.ops.range.Range Std.I32) ×
+    field.HelioseleneField) field.HelioseleneField)
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepI32 iter
+  match o with
+  | none => ok (done res)
+  | some _ =>
+    let res1 ← field.HelioseleneField.Insts.FfField.square res
+    ok (cont (iter1, res1))
+
+/-- [helioselene::field::verified::sqrt::sqrt]: loop 3:
+    Source: 'src/field/verified/sqrt.rs', lines 54:2-56:3 -/
+@[rust_loop]
+def field.verified.sqrt.sqrt_loop3
+  (iter : core.ops.range.Range Std.I32) (res : field.HelioseleneField) :
+  Result field.HelioseleneField
+  := do
+  loop
+    (fun (iter1, res1) => field.verified.sqrt.sqrt_loop3.body iter1 res1)
+    (iter, res)
+
+/-- [helioselene::field::verified::sqrt::sqrt]: loop body 4:
+    Source: 'src/field/verified/sqrt.rs', lines 72:2-85:3 -/
+@[rust_loop_body]
+def field.verified.sqrt.sqrt_loop4.body
+  (table : Array field.HelioseleneField 16#usize)
+  (modulus_plus_one_div_four_limbs : Array crypto_bigint.limb.Limb 4#usize)
+  (iter : core.ops.range.Range Std.Usize) (res : field.HelioseleneField)
+  (bits : Std.U8) :
+  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
+    field.HelioseleneField × Std.U8) (field.HelioseleneField × Std.U8))
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done (res, bits))
+  | some k =>
+    let i ← lift (Std.Usize.wrapping_sub 124#usize k)
+    let bits1 ← lift (Std.U8.wrapping_shl bits 1#u32)
+    let i1 ← i / 64#usize
+    let l ← Array.index_usize modulus_plus_one_div_four_limbs i1
+    let i2 ← i % 64#usize
+    let i3 ← lift (UScalar.cast .U32 i2)
+    let i4 ← lift (Std.U64.wrapping_shr l i3)
+    let i5 ← lift (i4 &&& 1#u64)
+    let bit ← lift (UScalar.cast .U8 i5)
+    let bits2 ← lift (bits1 ||| bit)
+    let res1 ← field.HelioseleneField.Insts.FfField.square res
+    let i6 ← lift (Std.U8.wrapping_shl 1#u8 3#u32)
+    let i7 ← lift (bits2 &&& i6)
+    if i7 != 0#u8
+    then
+      let i8 ← lift (core.convert.num.FromUsizeU8.from bits2)
+      let hf ← Array.index_usize table i8
+      let res2 ←
+        field.HelioseleneField.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign
+          res1 hf
+      ok (cont (iter1, res2, 0#u8))
+    else ok (cont (iter1, res1, bits2))
+
+/-- [helioselene::field::verified::sqrt::sqrt]: loop 4:
+    Source: 'src/field/verified/sqrt.rs', lines 72:2-85:3 -/
+@[rust_loop]
+def field.verified.sqrt.sqrt_loop4
+  (iter : core.ops.range.Range Std.Usize)
+  (table : Array field.HelioseleneField 16#usize)
+  (res : field.HelioseleneField) (bits : Std.U8)
+  (modulus_plus_one_div_four_limbs : Array crypto_bigint.limb.Limb 4#usize) :
+  Result (field.HelioseleneField × Std.U8)
+  := do
+  loop
+    (fun (iter1, res1, bits1) => field.verified.sqrt.sqrt_loop4.body table
+      modulus_plus_one_div_four_limbs iter1 res1 bits1)
+    (iter, res, bits)
+
+/-- [helioselene::field::verified::sqrt::sqrt]:
+    Source: 'src/field/verified/sqrt.rs', lines 9:0-95:1 -/
+def field.verified.sqrt.sqrt
+  (value : field.HelioseleneField) :
+  Result (subtle.CtOption field.HelioseleneField)
+  := do
+  let hf ← field.HelioseleneField.Insts.FfField.ONE
+  let table := Array.repeat 16#usize hf
+  let table1 ← Array.update table 1#usize value
+  let hf1 ← field.HelioseleneField.Insts.FfField.square value
+  let table2 ← Array.update table1 2#usize hf1
+  let hf2 ← Array.index_usize table2 2#usize
+  let hf3 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+      hf2 value
+  let table3 ← Array.update table2 3#usize hf3
+  let hf4 ← Array.index_usize table3 2#usize
+  let hf5 ← field.HelioseleneField.Insts.FfField.square hf4
+  let table4 ← Array.update table3 4#usize hf5
+  let hf6 ← Array.index_usize table4 4#usize
+  let hf7 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+      hf6 value
+  let table5 ← Array.update table4 5#usize hf7
+  let hf8 ← Array.index_usize table5 3#usize
+  let hf9 ← field.HelioseleneField.Insts.FfField.square hf8
+  let table6 ← Array.update table5 6#usize hf9
+  let hf10 ← Array.index_usize table6 6#usize
+  let hf11 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+      hf10 value
+  let table7 ← Array.update table6 7#usize hf11
+  let hf12 ← Array.index_usize table7 4#usize
+  let hf13 ← field.HelioseleneField.Insts.FfField.square hf12
+  let table8 ← Array.update table7 8#usize hf13
+  let hf14 ← Array.index_usize table8 8#usize
+  let hf15 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+      hf14 value
+  let table9 ← Array.update table8 9#usize hf15
+  let hf16 ← Array.index_usize table9 5#usize
+  let hf17 ← field.HelioseleneField.Insts.FfField.square hf16
+  let table10 ← Array.update table9 10#usize hf17
+  let hf18 ← Array.index_usize table10 10#usize
+  let hf19 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+      hf18 value
+  let table11 ← Array.update table10 11#usize hf19
+  let hf20 ← Array.index_usize table11 6#usize
+  let hf21 ← field.HelioseleneField.Insts.FfField.square hf20
+  let table12 ← Array.update table11 12#usize hf21
+  let hf22 ← Array.index_usize table12 12#usize
+  let hf23 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+      hf22 value
+  let table13 ← Array.update table12 13#usize hf23
+  let hf24 ← Array.index_usize table13 7#usize
+  let hf25 ← field.HelioseleneField.Insts.FfField.square hf24
+  let table14 ← Array.update table13 14#usize hf25
+  let hf26 ← Array.index_usize table14 14#usize
+  let hf27 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+      hf26 value
+  let table15 ← Array.update table14 15#usize hf27
+  let res ← Array.index_usize table15 15#usize
+  let four_zero ← field.HelioseleneField.Insts.FfField.square res
+  let four_zero_zero ← field.HelioseleneField.Insts.FfField.square four_zero
+  let res1 ← field.HelioseleneField.Insts.FfField.square four_zero_zero
+  let res2 ← field.HelioseleneField.Insts.FfField.square res1
+  let res3 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulAssignShared0HelioseleneField.mul_assign
+      res2 res
+  let res4 ←
+    field.verified.sqrt.sqrt_loop0 { start := 0#i32, «end» := 8#i32 } res3
+  let res5 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulAssignShared0HelioseleneField.mul_assign
+      res4 res3
+  let res6 ←
+    field.verified.sqrt.sqrt_loop1 { start := 0#i32, «end» := 16#i32 } res5
+  let res7 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign
+      res6 res5
+  let res8 ←
+    field.verified.sqrt.sqrt_loop2 { start := 0#i32, «end» := 32#i32 } res7
+  let res9 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign
+      res8 res7
+  let res10 ←
+    field.verified.sqrt.sqrt_loop3 { start := 0#i32, «end» := 64#i32 } res9
+  let res11 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign
+      res10 res9
+  let hf28 ← field.verified.sqrt.MODULUS_PLUS_ONE_DIV_FOUR
+  let modulus_plus_one_div_four_limbs ← crypto_bigint.uint.Uint.as_limbs hf28
+  let (res12, bits) ←
+    field.verified.sqrt.sqrt_loop4 { start := 0#usize, «end» := 125#usize }
+      table15 res11 0#u8 modulus_plus_one_div_four_limbs
+  let i ← lift (core.convert.num.FromUsizeU8.from bits)
+  let hf29 ← Array.index_usize table15 i
+  let res13 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign
+      res12 hf29
+  let c ← field.HelioseleneField.Insts.FfPrimeFieldArrayU832.is_odd res13
+  let res14 ←
+    subtle.ConditionallyNegatable.Blanket.conditional_negate
+      field.HelioseleneField.Insts.SubtleConditionallySelectable
+      Shared0HelioseleneField.Insts.CoreOpsArithNegHelioseleneField res13 c
+  let hf30 ← field.HelioseleneField.Insts.FfField.square res14
+  let c1 ← field.HelioseleneField.Insts.SubtleConstantTimeEq.ct_eq hf30 value
+  subtle.CtOption.new res14 c1
+
+/-- [helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::sqrt]:
+    Source: 'src/field/mod.rs', lines 216:2-218:3
+    Visibility: public -/
+def field.HelioseleneField.Insts.FfField.sqrt
+  (self : field.HelioseleneField) :
+  Result (subtle.CtOption field.HelioseleneField)
+  := do
+  field.verified.sqrt.sqrt self
 
 /-- **Rust:** `helioselene::field::verified::from_repr::reduced` — loop body (one iteration)
     crypto/helioselene/src/field/verified/mod.rs:147-150 in this repository:
@@ -2923,6 +3669,15 @@ def field.verified.from_repr
   let reduced ← field.verified.from_repr.reduced res
   subtle.CtOption.new res reduced
 
+/-- [helioselene::field::{impl ff::PrimeField<[u8; 32usize]> for helioselene::field::HelioseleneField}::from_repr]:
+    Source: 'src/field/mod.rs', lines 247:2-249:3
+    Visibility: public -/
+def field.HelioseleneField.Insts.FfPrimeFieldArrayU832.from_repr
+  (bytes : Array Std.U8 32#usize) :
+  Result (subtle.CtOption field.HelioseleneField)
+  := do
+  field.verified.from_repr bytes
+
 /-- **Rust:** `helioselene::field::verified::to_repr` — function
     crypto/helioselene/src/field/verified/mod.rs:159-161 in this repository:
     https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L159-L161
@@ -2942,5 +3697,1161 @@ def field.verified.to_repr
   (value : field.HelioseleneField) : Result (Array Std.U8 32#usize) := do
   crypto_bigint.uint.Uint4.Insts.Crypto_bigintTraitsEncodingArrayU832.to_le_bytes
     value
+
+/-- [helioselene::field::{impl ff::PrimeField<[u8; 32usize]> for helioselene::field::HelioseleneField}::to_repr]:
+    Source: 'src/field/mod.rs', lines 251:2-253:3
+    Visibility: public -/
+def field.HelioseleneField.Insts.FfPrimeFieldArrayU832.to_repr
+  (self : field.HelioseleneField) : Result (Array Std.U8 32#usize) := do
+  field.verified.to_repr self
+
+/-- **Rust:** `<HelioseleneField as Add>::add` — function (trait method behind the `+` operator)
+    crypto/helioselene/src/field/verified/mod.rs:71-73 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L71-L73
+
+    Field addition modulo p = 2^255 - 0x8cab7e2e6960ce8067af49720ee20ad. The two reduced operands
+    (each < p < 2^255) are summed with a plain 256-bit wrapping add, which cannot actually wrap
+    since the sum is < 2p < 2^256. The sum is then passed to `red1`, which performs at most one
+    reduction step: it subtracts p and constant-time-selects, limb by limb via the borrow-derived
+    all-zeros/all-ones mask, between the difference and the unsubtracted sum.
+
+    Rust's `+` operator on `HelioseleneField` dispatches to this method; it is bundled into the
+    trait-instance record
+    `field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField`.
+
+    Aeneas metadata:
+    [helioselene::field::verified::{impl core::ops::arith::Add<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::add]:
+    Source: 'src/field/verified/mod.rs', lines 72:2-74:3 (patched copy) -/
+def
+  field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+  (self : field.HelioseleneField) (b : field.HelioseleneField) :
+  Result field.HelioseleneField
+  := do
+  let u ← crypto_bigint.uint.add.Uint.wrapping_add self b
+  let u1 ← field.verified.red1 u
+  ok u1
+
+/-- **Rust:** `impl Add<HelioseleneField> for HelioseleneField` — trait-instance record
+    crypto/helioselene/src/field/verified/mod.rs:68-74 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L68-L74
+
+    Trait-instance record for `impl Add for HelioseleneField`: it bundles the impl's single
+    method, `add` (modular addition: wrapping 256-bit add followed by one conditional subtraction
+    of the modulus via `red1`). Whenever Rust code writes `a + b` on field elements, the call
+    resolves through this instance to
+    `field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add`.
+
+    Aeneas metadata:
+    Trait implementation: [helioselene::field::verified::{impl core::ops::arith::Add<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}]
+    Source: 'src/field/verified/mod.rs', lines 69:0-75:1 (patched copy) -/
+@[reducible]
+def
+  field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField
+  : core.ops.arith.Add field.HelioseleneField field.HelioseleneField
+  field.HelioseleneField := {
+  add :=
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+}
+
+/-- **Rust:** `<HelioseleneField as Sub>::sub` — loop body (one iteration of the select loop)
+    crypto/helioselene/src/field/verified/mod.rs:83-86 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L83-L86
+
+    One iteration of the limb-selection loop of field subtraction, `for j in 0 .. U256::LIMBS`
+    (mod.rs lines 83-86). For limb index j it selects between `candidate[j]` (the raw borrow-chain
+    difference self - b) and `plus_modulus[j]` (that difference plus p) using the mask
+    `underflowed` — Limb::ZERO when the subtraction did not borrow, Limb::MAX when it did — via
+    the constant-time select `select_word(a, b, m) = a ^ ((a ^ b) & m)`, writing the chosen limb
+    into `out[j]`.
+
+    Loop state is `(iter, out)`: the remaining `0 .. 4` limb range and the output word array
+    filled in so far. This `.body` def performs ONE iteration, returning `cont (iter', out')` to
+    continue or `done out` once the range is exhausted. `candidate`, `underflowed` and
+    `plus_modulus` are loop-invariant values computed by `sub` before the loop.
+
+    Aeneas metadata:
+    [helioselene::field::verified::{impl core::ops::arith::Sub<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sub]: loop body 0:
+    Source: 'src/field/verified/mod.rs', lines 84:4-87:5 (patched copy) -/
+@[rust_loop_body]
+def
+  field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub_loop.body
+  (candidate : crypto_bigint.uint.Uint 4#usize)
+  (underflowed : crypto_bigint.limb.Limb)
+  (plus_modulus : crypto_bigint.uint.Uint 4#usize)
+  (iter : core.ops.range.Range Std.Usize)
+  (out : crypto_bigint.uint.Uint 4#usize) :
+  Result (ControlFlow ((core.ops.range.Range Std.Usize) ×
+    (crypto_bigint.uint.Uint 4#usize)) (crypto_bigint.uint.Uint 4#usize))
+  := do
+  let (o, iter1) ←
+    core.iter.range.IteratorRange.next core.iter.range.StepUsize iter
+  match o with
+  | none => ok (done out)
+  | some j =>
+    let a ← crypto_bigint.uint.Uint.as_limbs candidate
+    let l ← Array.index_usize a j
+    let a1 ← crypto_bigint.uint.Uint.as_limbs plus_modulus
+    let l1 ← Array.index_usize a1 j
+    let l2 ← field.verified.select_word l l1 underflowed
+    let (a2, as_limbs_mut_back) ← crypto_bigint.uint.Uint.as_limbs_mut out
+    let a3 ← Array.update a2 j l2
+    let u := as_limbs_mut_back a3
+    ok (cont (iter1, u))
+
+/-- **Rust:** `<HelioseleneField as Sub>::sub` — loop of function
+    crypto/helioselene/src/field/verified/mod.rs:83-86 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L83-L86
+
+    Encodes the whole `for j in 0 .. U256::LIMBS` loop of field subtraction (mod.rs lines 83-86):
+    for every limb it constant-time-selects, under the borrow mask `underflowed`, between the raw
+    difference `candidate` and `plus_modulus = candidate + p`, assembling the properly reduced
+    result. It repeatedly applies `sub_loop.body` to the state `(iter, out)` — remaining limb
+    range and partially filled output — until the range is exhausted, and returns the final
+    256-bit `out`, which `sub` returns as the field element.
+
+    Only used by
+    `field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub`;
+    `candidate`, `underflowed` and `plus_modulus` are fixed (loop-invariant) arguments.
+
+    Aeneas metadata:
+    [helioselene::field::verified::{impl core::ops::arith::Sub<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sub]: loop 0:
+    Source: 'src/field/verified/mod.rs', lines 84:4-87:5 (patched copy) -/
+@[rust_loop]
+def
+  field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub_loop
+  (iter : core.ops.range.Range Std.Usize)
+  (candidate : crypto_bigint.uint.Uint 4#usize)
+  (underflowed : crypto_bigint.limb.Limb)
+  (plus_modulus : crypto_bigint.uint.Uint 4#usize)
+  (out : crypto_bigint.uint.Uint 4#usize) :
+  Result (crypto_bigint.uint.Uint 4#usize)
+  := do
+  loop
+    (fun (iter1, out1) =>
+      field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub_loop.body
+      candidate underflowed plus_modulus iter1 out1)
+    (iter, out)
+
+/-- **Rust:** `<HelioseleneField as Sub>::sub` — function (trait method behind the `-` operator)
+    crypto/helioselene/src/field/verified/mod.rs:79-88 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L79-L88
+
+    Field subtraction modulo p. First computes `(candidate, underflowed) = self - b` with a
+    borrow (sbb) chain (`sub_value`); `underflowed` is Limb::ZERO on success or Limb::MAX if the
+    difference went negative. It also computes `plus_modulus = candidate + p` (wrapping), then
+    runs `sub_loop`, which per limb constant-time-selects `candidate` when no borrow occurred and
+    `plus_modulus` — the correct add-back of the modulus — when it did. This is the standard
+    constant-time modular subtraction: no branch or memory access depends on the secret borrow.
+
+    Rust's `-` operator on `HelioseleneField` dispatches to this method; it is bundled into the
+    trait-instance record
+    `field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField`.
+
+    Aeneas metadata:
+    [helioselene::field::verified::{impl core::ops::arith::Sub<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sub]:
+    Source: 'src/field/verified/mod.rs', lines 80:2-89:3 (patched copy) -/
+def
+  field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+  (self : field.HelioseleneField) (b : field.HelioseleneField) :
+  Result field.HelioseleneField
+  := do
+  let p ← field.verified.sub_value self b
+  let u ← field.MODULUS
+  let (candidate, underflowed) := p
+  let plus_modulus ← crypto_bigint.uint.add.Uint.wrapping_add candidate u
+  let out ← crypto_bigint.uint.Uint.ZERO 4#usize
+  let i ← crypto_bigint.uint.Uint.LIMBS_1 4#usize
+  let out1 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub_loop
+      { start := 0#usize, «end» := i } candidate underflowed plus_modulus out
+  ok out1
+
+/-- **Rust:** `impl Sub<HelioseleneField> for HelioseleneField` — trait-instance record
+    crypto/helioselene/src/field/verified/mod.rs:76-89 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L76-L89
+
+    Trait-instance record for `impl Sub for HelioseleneField`: it bundles the impl's single
+    method, `sub` (modular subtraction: borrow-chain difference with a constant-time, masked
+    add-back of p on underflow). Whenever Rust code writes `a - b` on field elements, the call
+    resolves through this instance to
+    `field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub`.
+
+    Aeneas metadata:
+    Trait implementation: [helioselene::field::verified::{impl core::ops::arith::Sub<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}]
+    Source: 'src/field/verified/mod.rs', lines 77:0-90:1 (patched copy) -/
+@[reducible]
+def
+  field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField
+  : core.ops.arith.Sub field.HelioseleneField field.HelioseleneField
+  field.HelioseleneField := {
+  sub :=
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+}
+
+/-- **Rust:** `impl Neg for HelioseleneField` — trait-instance record
+    crypto/helioselene/src/field/verified/mod.rs:91-101 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L91-L101
+
+    Trait-instance record for `impl Neg for HelioseleneField`: it bundles the impl's single
+    method, `neg` (modular negation p - x with a constant-time select of zero for x == 0).
+    Whenever Rust code writes unary `-a` on a field element, the call resolves through this
+    instance to `field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg`.
+
+    Aeneas metadata:
+    Trait implementation: [helioselene::field::verified::{impl core::ops::arith::Neg<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}]
+    Source: 'src/field/verified/mod.rs', lines 92:0-102:1 (patched copy) -/
+@[reducible]
+def field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField :
+  core.ops.arith.Neg field.HelioseleneField field.HelioseleneField := {
+  neg := field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg
+}
+
+/-- **Rust:** `impl Mul<HelioseleneField> for HelioseleneField` — trait-instance record
+    crypto/helioselene/src/field/verified/mod.rs:109-115 in this repository:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/verified/mod.rs#L109-L115
+
+    Trait-instance record for `impl Mul for HelioseleneField`: it bundles the impl's single
+    method, `mul` (512-bit wide multiplication followed by Crandall reduction via `red512`).
+    Whenever Rust code writes `a * b` on field elements, the call resolves through this instance
+    to `field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul`.
+
+    Aeneas metadata:
+    Trait implementation: [helioselene::field::verified::{impl core::ops::arith::Mul<helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}]
+    Source: 'src/field/verified/mod.rs', lines 110:0-116:1 (patched copy) -/
+@[reducible]
+def
+  field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField
+  : core.ops.arith.Mul field.HelioseleneField field.HelioseleneField
+  field.HelioseleneField := {
+  mul :=
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+}
+
+/-- [helioselene::point::selene::G_X]
+    Source: 'src/point.rs', lines 29:4-29:61 -/
+@[global_simps, irreducible]
+def point.selene.G_X : Result field.HelioseleneField := do
+  let u ← crypto_bigint.uint.from.Uint.from_u8 4#usize 1#u8
+  field.HelioseleneField.from_u256 u
+
+/-- [helioselene::point::selene::G_Y]
+    Source: 'src/point.rs', lines 30:4-30:29 -/
+@[global_simps, irreducible]
+def point.selene.G_Y : Result field.HelioseleneField := do
+  let u ←
+    crypto_bigint.uint.encoding.Uint.from_be_hex 4#usize (toStr
+      "39098c0a54bd9d2781c7d734720d5ca639ee79deeefcd74517fced93ad6635c0")
+  ok u
+
+/-- [helioselene::point::selene::B]
+    Source: 'src/point.rs', lines 32:4-32:25 -/
+@[global_simps, irreducible]
+def point.selene.B : Result field.HelioseleneField := do
+  let u ←
+    crypto_bigint.uint.encoding.Uint.from_be_hex 4#usize (toStr
+      "38c40d10c226ef3bc597c2e1e25bc748e3401c3d031d14ca2265f309ba81efe4")
+  ok u
+
+/-- [helioselene::point::selene::curve_equation]:
+    Source: 'src/point.rs', lines 36:4-38:5 -/
+def point.selene.curve_equation
+  (x : field.HelioseleneField) : Result field.HelioseleneField := do
+  let hf ← field.HelioseleneField.Insts.FfField.square x
+  let hf1 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      hf x
+  let hf2 ← field.HelioseleneField.Insts.FfField.double x
+  let hf3 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      hf1 hf2
+  let hf4 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      hf3 x
+  let hf5 ← point.selene.B
+  field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+    hf4 hf5
+
+/-- [helioselene::point::selene::recover_y]:
+    Source: 'src/point.rs', lines 40:4-43:5 -/
+def point.selene.recover_y
+  (x : field.HelioseleneField) :
+  Result (subtle.CtOption field.HelioseleneField)
+  := do
+  let hf ← point.selene.curve_equation x
+  field.HelioseleneField.Insts.FfField.sqrt hf
+
+/-- [helioselene::point::selene::{impl core::clone::Clone for helioselene::point::selene::SelenePoint}::clone]:
+    Source: 'src/point.rs', lines 46:13-46:18
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.CoreCloneClone.clone
+  (self : point.selene.SelenePoint) : Result point.selene.SelenePoint := do
+  ok self
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::clone::Clone for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 46:13-46:18 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreCloneClone : core.clone.Clone
+  point.selene.SelenePoint := {
+  clone := point.selene.SelenePoint.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::marker::Copy for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 46:20-46:24 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreMarkerCopy : core.marker.Copy
+  point.selene.SelenePoint := {
+  cloneInst := point.selene.SelenePoint.Insts.CoreCloneClone
+}
+
+/-- [helioselene::point::selene::{impl core::fmt::Debug for helioselene::point::selene::SelenePoint}::fmt]:
+    Source: 'src/point.rs', lines 46:26-46:31
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.CoreFmtDebug.fmt
+  (self : point.selene.SelenePoint) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ field.HelioseleneField.Insts.CoreFmtDebug self.x
+  let dyn1 := Dyn.mk _ field.HelioseleneField.Insts.CoreFmtDebug self.y
+  let dyn2 :=
+    Dyn.mk _ (core.fmt.DebugShared field.HelioseleneField.Insts.CoreFmtDebug)
+      self.z
+  core.fmt.Formatter.debug_struct_field3_finish f (toStr "SelenePoint") (toStr
+    "x") dyn (toStr "y") dyn1 (toStr "z") dyn2
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::fmt::Debug for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 46:26-46:31 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreFmtDebug : core.fmt.Debug
+  point.selene.SelenePoint := {
+  fmt := point.selene.SelenePoint.Insts.CoreFmtDebug.fmt
+}
+
+/-- Trait implementation: [helioselene::point::selene::{impl zeroize::Zeroize for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 54:4-64:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.ZeroizeZeroize : zeroize.Zeroize
+  point.selene.SelenePoint := {
+  zeroize := point.selene.SelenePoint.Insts.ZeroizeZeroize.zeroize
+}
+
+/-- [helioselene::point::selene::G]
+    Source: 'src/point.rs', lines 66:4-66:64 -/
+@[global_simps, irreducible]
+def point.selene.G : Result point.selene.SelenePoint := do
+  let hf ← point.selene.G_X
+  let hf1 ← point.selene.G_Y
+  let hf2 ← field.HelioseleneField.Insts.FfField.ONE
+  ok { x := hf, y := hf1, z := hf2 }
+
+/-- [helioselene::point::selene::{impl subtle::ConstantTimeEq for helioselene::point::selene::SelenePoint}::ct_eq]:
+    Source: 'src/point.rs', lines 69:6-77:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.SubtleConstantTimeEq.ct_eq
+  (self : point.selene.SelenePoint) (other : point.selene.SelenePoint) :
+  Result subtle.Choice
+  := do
+  let x1 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      self.x other.z
+  let x2 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      other.x self.z
+  let y1 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      self.y other.z
+  let y2 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      other.y self.z
+  let c ← field.HelioseleneField.Insts.FfField.is_zero self.x
+  let c1 ← field.HelioseleneField.Insts.FfField.is_zero other.x
+  let c2 ← subtle.Choice.Insts.CoreOpsBitBitAndChoiceChoice.bitand c c1
+  let c3 ← field.HelioseleneField.Insts.SubtleConstantTimeEq.ct_eq x1 x2
+  let c4 ← field.HelioseleneField.Insts.SubtleConstantTimeEq.ct_eq y1 y2
+  let c5 ← subtle.Choice.Insts.CoreOpsBitBitAndChoiceChoice.bitand c3 c4
+  subtle.Choice.Insts.CoreOpsBitBitOrChoiceChoice.bitor c2 c5
+
+/-- Trait implementation: [helioselene::point::selene::{impl subtle::ConstantTimeEq for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 68:4-78:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.SubtleConstantTimeEq : subtle.ConstantTimeEq
+  point.selene.SelenePoint := {
+  ct_eq := point.selene.SelenePoint.Insts.SubtleConstantTimeEq.ct_eq
+}
+
+/-- [helioselene::point::selene::{impl core::cmp::PartialEq<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::eq]:
+    Source: 'src/point.rs', lines 81:6-83:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.CoreCmpPartialEqSelenePoint.eq
+  (self : point.selene.SelenePoint) (other : point.selene.SelenePoint) :
+  Result Bool
+  := do
+  let c ←
+    point.selene.SelenePoint.Insts.SubtleConstantTimeEq.ct_eq self other
+  core.convert.IntoFrom.into Bool.Insts.CoreConvertFromChoice c
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::cmp::PartialEq<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 80:4-84:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreCmpPartialEqSelenePoint :
+  core.cmp.PartialEq point.selene.SelenePoint point.selene.SelenePoint := {
+  eq := point.selene.SelenePoint.Insts.CoreCmpPartialEqSelenePoint.eq
+}
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::cmp::Eq for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 86:4-86:25 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreCmpEq : core.cmp.Eq
+  point.selene.SelenePoint := {
+  partialEqInst := point.selene.SelenePoint.Insts.CoreCmpPartialEqSelenePoint
+  assert_fields_are_eq :=
+    point.selene.SelenePoint.Insts.CoreCmpEq.assert_fields_are_eq
+}
+
+/-- [helioselene::point::selene::{impl subtle::ConditionallySelectable for helioselene::point::selene::SelenePoint}::conditional_select]:
+    Source: 'src/point.rs', lines 89:6-95:7
+    Visibility: public -/
+def
+  point.selene.SelenePoint.Insts.SubtleConditionallySelectable.conditional_select
+  (a : point.selene.SelenePoint) (b : point.selene.SelenePoint)
+  (choice : subtle.Choice) :
+  Result point.selene.SelenePoint
+  := do
+  let hf ←
+    field.HelioseleneField.Insts.SubtleConditionallySelectable.conditional_select
+      a.x b.x choice
+  let hf1 ←
+    field.HelioseleneField.Insts.SubtleConditionallySelectable.conditional_select
+      a.y b.y choice
+  let hf2 ←
+    field.HelioseleneField.Insts.SubtleConditionallySelectable.conditional_select
+      a.z b.z choice
+  ok { x := hf, y := hf1, z := hf2 }
+
+/-- Trait implementation: [helioselene::point::selene::{impl subtle::ConditionallySelectable for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 88:4-96:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.SubtleConditionallySelectable :
+  subtle.ConditionallySelectable point.selene.SelenePoint := {
+  coremarkerCopyInst := point.selene.SelenePoint.Insts.CoreMarkerCopy
+  conditional_select :=
+    point.selene.SelenePoint.Insts.SubtleConditionallySelectable.conditional_select
+}
+
+/-- [helioselene::point::selene::{impl core::ops::arith::Add<helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::add]:
+    Source: 'src/point.rs', lines 101:6-155:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.CoreOpsArithAddSelenePointSelenePoint.add
+  (self : point.selene.SelenePoint) (other : point.selene.SelenePoint) :
+  Result point.selene.SelenePoint
+  := do
+  let t0 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      self.x other.x
+  let t1 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      self.y other.y
+  let t2 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      self.z other.z
+  let t3 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      self.x self.y
+  let t4 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      other.x other.y
+  let t31 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      t3 t4
+  let t41 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      t0 t1
+  let t32 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      t31 t41
+  let t42 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      self.y self.z
+  let X3 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      other.y other.z
+  let t43 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      t42 X3
+  let X31 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      t1 t2
+  let t44 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      t43 X31
+  let X32 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      self.x self.z
+  let Y3 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      other.x other.z
+  let X33 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      X32 Y3
+  let Y31 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      t0 t2
+  let Y32 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      X33 Y31
+  let hf ← point.selene.B
+  let Z3 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      hf t2
+  let X34 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      Y32 Z3
+  let Z31 ← field.HelioseleneField.Insts.FfField.double X34
+  let X35 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      X34 Z31
+  let Z32 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      t1 X35
+  let X36 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      t1 X35
+  let Y33 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      hf Y32
+  let t11 ← field.HelioseleneField.Insts.FfField.double t2
+  let t21 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      t11 t2
+  let Y34 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      Y33 t21
+  let Y35 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      Y34 t0
+  let t12 ← field.HelioseleneField.Insts.FfField.double Y35
+  let Y36 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      t12 Y35
+  let t13 ← field.HelioseleneField.Insts.FfField.double t0
+  let t01 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      t13 t0
+  let t02 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      t01 t21
+  let t14 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      t44 Y36
+  let t22 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      t02 Y36
+  let Y37 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      X36 Z32
+  let Y38 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      Y37 t22
+  let X37 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      t32 X36
+  let X38 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      X37 t14
+  let Z33 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      t44 Z32
+  let t15 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      t32 t02
+  let Z34 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      Z33 t15
+  ok { x := X38, y := Y38, z := Z34 }
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::Add<helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 98:4-156:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithAddSelenePointSelenePoint :
+  core.ops.arith.Add point.selene.SelenePoint point.selene.SelenePoint
+  point.selene.SelenePoint := {
+  add :=
+    point.selene.SelenePoint.Insts.CoreOpsArithAddSelenePointSelenePoint.add
+}
+
+/-- [helioselene::point::selene::{impl core::ops::arith::AddAssign<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::add_assign]:
+    Source: 'src/point.rs', lines 159:6-161:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.CoreOpsArithAddAssignSelenePoint.add_assign
+  (self : point.selene.SelenePoint) (other : point.selene.SelenePoint) :
+  Result point.selene.SelenePoint
+  := do
+  point.selene.SelenePoint.Insts.CoreOpsArithAddSelenePointSelenePoint.add self
+    other
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::AddAssign<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 158:4-162:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithAddAssignSelenePoint :
+  core.ops.arith.AddAssign point.selene.SelenePoint point.selene.SelenePoint
+  := {
+  add_assign :=
+    point.selene.SelenePoint.Insts.CoreOpsArithAddAssignSelenePoint.add_assign
+}
+
+/-- [helioselene::point::selene::{impl core::ops::arith::Add<&'_0 helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::add]:
+    Source: 'src/point.rs', lines 166:6-168:7
+    Visibility: public -/
+def
+  point.selene.SelenePoint.Insts.CoreOpsArithAddShared0SelenePointSelenePoint.add
+  (self : point.selene.SelenePoint) (other : point.selene.SelenePoint) :
+  Result point.selene.SelenePoint
+  := do
+  point.selene.SelenePoint.Insts.CoreOpsArithAddSelenePointSelenePoint.add self
+    other
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::Add<&'_0 helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 164:4-169:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithAddShared0SelenePointSelenePoint
+  : core.ops.arith.Add point.selene.SelenePoint point.selene.SelenePoint
+  point.selene.SelenePoint := {
+  add :=
+    point.selene.SelenePoint.Insts.CoreOpsArithAddShared0SelenePointSelenePoint.add
+}
+
+/-- [helioselene::point::selene::{impl core::ops::arith::AddAssign<&'_0 helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::add_assign]:
+    Source: 'src/point.rs', lines 172:6-174:7
+    Visibility: public -/
+def
+  point.selene.SelenePoint.Insts.CoreOpsArithAddAssignShared0SelenePoint.add_assign
+  (self : point.selene.SelenePoint) (other : point.selene.SelenePoint) :
+  Result point.selene.SelenePoint
+  := do
+  point.selene.SelenePoint.Insts.CoreOpsArithAddAssignSelenePoint.add_assign
+    self other
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::AddAssign<&'_0 helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 171:4-175:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithAddAssignShared0SelenePoint :
+  core.ops.arith.AddAssign point.selene.SelenePoint point.selene.SelenePoint
+  := {
+  add_assign :=
+    point.selene.SelenePoint.Insts.CoreOpsArithAddAssignShared0SelenePoint.add_assign
+}
+
+/-- [helioselene::point::selene::{impl core::ops::arith::Neg<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::neg]:
+    Source: 'src/point.rs', lines 179:6-181:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.CoreOpsArithNegSelenePoint.neg
+  (self : point.selene.SelenePoint) : Result point.selene.SelenePoint := do
+  let hf ←
+    field.HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg self.y
+  ok { self with y := hf }
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::Neg<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 177:4-182:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithNegSelenePoint :
+  core.ops.arith.Neg point.selene.SelenePoint point.selene.SelenePoint := {
+  neg := point.selene.SelenePoint.Insts.CoreOpsArithNegSelenePoint.neg
+}
+
+/-- [helioselene::point::selene::{impl core::ops::arith::Sub<helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sub]:
+    Source: 'src/point.rs', lines 187:6-189:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.CoreOpsArithSubSelenePointSelenePoint.sub
+  (self : point.selene.SelenePoint) (other : point.selene.SelenePoint) :
+  Result point.selene.SelenePoint
+  := do
+  let sp ←
+    point.selene.SelenePoint.Insts.CoreOpsArithNegSelenePoint.neg other
+  point.selene.SelenePoint.Insts.CoreOpsArithAddSelenePointSelenePoint.add self
+    sp
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::Sub<helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 184:4-190:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithSubSelenePointSelenePoint :
+  core.ops.arith.Sub point.selene.SelenePoint point.selene.SelenePoint
+  point.selene.SelenePoint := {
+  sub :=
+    point.selene.SelenePoint.Insts.CoreOpsArithSubSelenePointSelenePoint.sub
+}
+
+/-- [helioselene::point::selene::{impl core::ops::arith::SubAssign<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sub_assign]:
+    Source: 'src/point.rs', lines 193:6-195:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.CoreOpsArithSubAssignSelenePoint.sub_assign
+  (self : point.selene.SelenePoint) (other : point.selene.SelenePoint) :
+  Result point.selene.SelenePoint
+  := do
+  point.selene.SelenePoint.Insts.CoreOpsArithSubSelenePointSelenePoint.sub self
+    other
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::SubAssign<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 192:4-196:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithSubAssignSelenePoint :
+  core.ops.arith.SubAssign point.selene.SelenePoint point.selene.SelenePoint
+  := {
+  sub_assign :=
+    point.selene.SelenePoint.Insts.CoreOpsArithSubAssignSelenePoint.sub_assign
+}
+
+/-- [helioselene::point::selene::{impl core::ops::arith::Sub<&'_0 helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sub]:
+    Source: 'src/point.rs', lines 200:6-202:7
+    Visibility: public -/
+def
+  point.selene.SelenePoint.Insts.CoreOpsArithSubShared0SelenePointSelenePoint.sub
+  (self : point.selene.SelenePoint) (other : point.selene.SelenePoint) :
+  Result point.selene.SelenePoint
+  := do
+  point.selene.SelenePoint.Insts.CoreOpsArithSubSelenePointSelenePoint.sub self
+    other
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::Sub<&'_0 helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 198:4-203:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithSubShared0SelenePointSelenePoint
+  : core.ops.arith.Sub point.selene.SelenePoint point.selene.SelenePoint
+  point.selene.SelenePoint := {
+  sub :=
+    point.selene.SelenePoint.Insts.CoreOpsArithSubShared0SelenePointSelenePoint.sub
+}
+
+/-- [helioselene::point::selene::{impl core::ops::arith::SubAssign<&'_0 helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sub_assign]:
+    Source: 'src/point.rs', lines 206:6-208:7
+    Visibility: public -/
+def
+  point.selene.SelenePoint.Insts.CoreOpsArithSubAssignShared0SelenePoint.sub_assign
+  (self : point.selene.SelenePoint) (other : point.selene.SelenePoint) :
+  Result point.selene.SelenePoint
+  := do
+  point.selene.SelenePoint.Insts.CoreOpsArithSubAssignSelenePoint.sub_assign
+    self other
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::SubAssign<&'_0 helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 205:4-209:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithSubAssignShared0SelenePoint :
+  core.ops.arith.SubAssign point.selene.SelenePoint point.selene.SelenePoint
+  := {
+  sub_assign :=
+    point.selene.SelenePoint.Insts.CoreOpsArithSubAssignShared0SelenePoint.sub_assign
+}
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::MulAssign<&'_0 dalek_ff_group::field::FieldElement> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 340:4-344:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithMulAssignShared0FieldElement :
+  core.ops.arith.MulAssign point.selene.SelenePoint
+  dalek_ff_group.field.FieldElement := {
+  mul_assign :=
+    point.selene.SelenePoint.Insts.CoreOpsArithMulAssignShared0FieldElement.mul_assign
+}
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::Mul<&'_0 dalek_ff_group::field::FieldElement, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 333:4-338:5 -/
+@[reducible]
+def
+  point.selene.SelenePoint.Insts.CoreOpsArithMulShared0FieldElementSelenePoint
+  : core.ops.arith.Mul point.selene.SelenePoint
+  dalek_ff_group.field.FieldElement point.selene.SelenePoint := {
+  mul :=
+    point.selene.SelenePoint.Insts.CoreOpsArithMulShared0FieldElementSelenePoint.mul
+}
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 327:4-331:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithMulAssignFieldElement :
+  core.ops.arith.MulAssign point.selene.SelenePoint
+  dalek_ff_group.field.FieldElement := {
+  mul_assign :=
+    point.selene.SelenePoint.Insts.CoreOpsArithMulAssignFieldElement.mul_assign
+}
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::ops::arith::Mul<dalek_ff_group::field::FieldElement, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 277:4-325:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreOpsArithMulFieldElementSelenePoint :
+  core.ops.arith.Mul point.selene.SelenePoint dalek_ff_group.field.FieldElement
+  point.selene.SelenePoint := {
+  mul :=
+    point.selene.SelenePoint.Insts.CoreOpsArithMulFieldElementSelenePoint.mul
+}
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::iter::traits::accum::Sum<&'a helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 271:4-275:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSharedASelenePoint :
+  core.iter.traits.accum.Sum point.selene.SelenePoint point.selene.SelenePoint
+  := {
+  sum := fun {I : Type} (coreitertraitsiteratorIteratorPSharedSelenePointInst :
+    core.iter.traits.iterator.Iterator I point.selene.SelenePoint) =>
+    point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSharedASelenePoint.sum
+    coreitertraitsiteratorIteratorPSharedSelenePointInst
+}
+
+/-- Trait implementation: [helioselene::point::selene::{impl core::iter::traits::accum::Sum<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 261:4-269:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSelenePoint :
+  core.iter.traits.accum.Sum point.selene.SelenePoint point.selene.SelenePoint
+  := {
+  sum := fun {I : Type} (coreitertraitsiteratorIteratorPSelenePointInst :
+    core.iter.traits.iterator.Iterator I point.selene.SelenePoint) =>
+    point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSelenePoint.sum
+    coreitertraitsiteratorIteratorPSelenePointInst
+}
+
+/-- [helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize]> for helioselene::point::selene::SelenePoint}::is_identity]:
+    Source: 'src/point.rs', lines 230:6-232:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.is_identity
+  (self : point.selene.SelenePoint) : Result subtle.Choice := do
+  let hf ← field.HelioseleneField.Insts.FfField.ZERO
+  field.HelioseleneField.Insts.SubtleConstantTimeEq.ct_eq self.x hf
+
+/-- [helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize]> for helioselene::point::selene::SelenePoint}::identity]:
+    Source: 'src/point.rs', lines 224:6-226:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.identity
+  : Result point.selene.SelenePoint := do
+  let hf ← field.HelioseleneField.Insts.FfField.ZERO
+  let hf1 ← field.HelioseleneField.Insts.FfField.ONE
+  ok { x := hf, y := hf1, z := hf }
+
+/-- [helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize]> for helioselene::point::selene::SelenePoint}::double]:
+    Source: 'src/point.rs', lines 234:6-258:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.double
+  (self : point.selene.SelenePoint) : Result point.selene.SelenePoint := do
+  let hf ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      self.x self.z
+  let hf1 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      self.x self.z
+  let w ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      hf hf1
+  let hf2 ← field.HelioseleneField.Insts.FfField.double w
+  let w1 ←
+    field.HelioseleneField.Insts.CoreOpsArithAddHelioseleneFieldHelioseleneField.add
+      hf2 w
+  let hf3 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      self.y self.z
+  let s ← field.HelioseleneField.Insts.FfField.double hf3
+  let ss ← field.HelioseleneField.Insts.FfField.square s
+  let sss ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      s ss
+  let R ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      self.y s
+  let RR ← field.HelioseleneField.Insts.FfField.square R
+  let hf4 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      self.x R
+  let B_ ← field.HelioseleneField.Insts.FfField.double hf4
+  let hf5 ← field.HelioseleneField.Insts.FfField.square w1
+  let hf6 ← field.HelioseleneField.Insts.FfField.double B_
+  let h ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      hf5 hf6
+  let X3 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      h s
+  let hf7 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      B_ h
+  let hf8 ←
+    field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+      w1 hf7
+  let hf9 ← field.HelioseleneField.Insts.FfField.double RR
+  let Y3 ←
+    field.HelioseleneField.Insts.CoreOpsArithSubHelioseleneFieldHelioseleneField.sub
+      hf8 hf9
+  let sp ←
+    point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.identity
+  let c ←
+    point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.is_identity
+      self
+  point.selene.SelenePoint.Insts.SubtleConditionallySelectable.conditional_select
+    { x := X3, y := Y3, z := sss } sp c
+
+/-- [helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize]> for helioselene::point::selene::SelenePoint}::generator]:
+    Source: 'src/point.rs', lines 227:6-229:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.generator
+  : Result point.selene.SelenePoint := do
+  point.selene.G
+
+/-- Trait implementation: [helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize]> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 211:4-259:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832 :
+  group.Group point.selene.SelenePoint dalek_ff_group.field.FieldElement (Array
+  Std.U8 32#usize) := {
+  corecloneCloneInst := point.selene.SelenePoint.Insts.CoreCloneClone
+  coremarkerCopyInst := point.selene.SelenePoint.Insts.CoreMarkerCopy
+  corefmtDebugInst := point.selene.SelenePoint.Insts.CoreFmtDebug
+  corecmpEqInst := point.selene.SelenePoint.Insts.CoreCmpEq
+  coreitertraitsaccumSumInst :=
+    point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSelenePoint
+  coreitertraitsaccumSumSelfSharedSelfInst :=
+    point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSharedASelenePoint
+  coreopsarithNegInst :=
+    point.selene.SelenePoint.Insts.CoreOpsArithNegSelenePoint
+  GroupOpsInst := group.GroupOps.Blanket
+    point.selene.SelenePoint.Insts.CoreOpsArithAddSelenePointSelenePoint
+    point.selene.SelenePoint.Insts.CoreOpsArithSubSelenePointSelenePoint
+    point.selene.SelenePoint.Insts.CoreOpsArithAddAssignSelenePoint
+    point.selene.SelenePoint.Insts.CoreOpsArithSubAssignSelenePoint
+  GroupOpsOwnedInst := group.GroupOpsOwned.Blanket (group.GroupOps.Blanket
+    point.selene.SelenePoint.Insts.CoreOpsArithAddShared0SelenePointSelenePoint
+    point.selene.SelenePoint.Insts.CoreOpsArithSubShared0SelenePointSelenePoint
+    point.selene.SelenePoint.Insts.CoreOpsArithAddAssignShared0SelenePoint
+    point.selene.SelenePoint.Insts.CoreOpsArithSubAssignShared0SelenePoint)
+  ScalarMulInst := group.ScalarMul.Blanket
+    point.selene.SelenePoint.Insts.CoreOpsArithMulFieldElementSelenePoint
+    point.selene.SelenePoint.Insts.CoreOpsArithMulAssignFieldElement
+  ScalarMulOwnedInst := group.ScalarMulOwned.Blanket (group.ScalarMul.Blanket
+    point.selene.SelenePoint.Insts.CoreOpsArithMulShared0FieldElementSelenePoint
+    point.selene.SelenePoint.Insts.CoreOpsArithMulAssignShared0FieldElement)
+  ffPrimeFieldInst :=
+    dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832
+  random := fun {T0 : Type} (rand_coreRngCoreInst : rand_core.RngCore T0) =>
+    point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.random
+    rand_coreRngCoreInst
+  identity :=
+    point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.identity
+  generator :=
+    point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.generator
+  is_identity :=
+    point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.is_identity
+  double :=
+    point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.double
+}
+
+/-- [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::to_bytes]:
+    Source: 'src/point.rs', lines 388:6-400:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832.to_bytes
+  (self : point.selene.SelenePoint) : Result (Array Std.U8 32#usize) := do
+  let co ← field.HelioseleneField.Insts.FfField.invert self.z
+  let o ← core.option.Option.Insts.CoreConvertFromCtOption.from co
+  match o with
+  | none => ok (Array.repeat 32#usize 0#u8)
+  | some z =>
+    let x ←
+      field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+        self.x z
+    let y ←
+      field.HelioseleneField.Insts.CoreOpsArithMulHelioseleneFieldHelioseleneField.mul
+        self.y z
+    let bytes ← field.HelioseleneField.Insts.FfPrimeFieldArrayU832.to_repr x
+    let (mut_ref, as_mut_back) ←
+      Array.Insts.CoreConvertAsMutSlice.as_mut bytes
+    let c ← field.HelioseleneField.Insts.FfPrimeFieldArrayU832.is_odd y
+    let i ← subtle.Choice.unwrap_u8 c
+    let hf ← field.HelioseleneField.Insts.FfField.ZERO
+    let c1 ← field.HelioseleneField.Insts.SubtleConstantTimeEq.ct_eq x hf
+    let y_sign ←
+      U8.Insts.SubtleConditionallySelectable.conditional_select i 0#u8 c1
+    let i1 ← lift (Std.U8.wrapping_shl y_sign 7#u32)
+    let i2 ← Slice.index_usize mut_ref 31#usize
+    let i3 ← lift (i2 ||| i1)
+    let mut_ref1 ← Slice.update mut_ref 31#usize i3
+    ok (as_mut_back mut_ref1)
+
+/-- [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::{impl core::ops::function::FnOnce<(helioselene::field::HelioseleneField,), helioselene::point::selene::SelenePoint> for helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::closure#1<'_0>}::call_once]:
+    Source: 'src/point.rs', lines 372:38-372:73 -/
+def
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure_1.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldSelenePoint.call_once
+  (c :
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure_1)
+  (tupled_args : field.HelioseleneField) :
+  Result point.selene.SelenePoint
+  := do
+  let hf ← field.HelioseleneField.Insts.FfField.ONE
+  ok { x := c, y := tupled_args, z := hf }
+
+/-- Trait implementation: [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::{impl core::ops::function::FnOnce<(helioselene::field::HelioseleneField,), helioselene::point::selene::SelenePoint> for helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::closure#1<'_0>}]
+    Source: 'src/point.rs', lines 372:38-372:73 -/
+@[reducible]
+def
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure_1.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldSelenePoint
+  : core.ops.function.FnOnce
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure_1
+  field.HelioseleneField point.selene.SelenePoint := {
+  call_once :=
+    point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure_1.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldSelenePoint.call_once
+}
+
+/-- [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::{impl core::ops::function::FnOnce<(helioselene::field::HelioseleneField,), helioselene::field::HelioseleneField> for helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::closure<'_0>}::call_once]:
+    Source: 'src/point.rs', lines 361:35-364:11 -/
+def
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldHelioseleneField.call_once
+  (c :
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure)
+  (tupled_args : field.HelioseleneField) :
+  Result field.HelioseleneField
+  := do
+  let c1 ←
+    field.HelioseleneField.Insts.FfPrimeFieldArrayU832.is_odd tupled_args
+  let c2 ← subtle.Choice.Insts.CoreOpsBitNotChoice.not c
+  let c3 ← subtle.Choice.Insts.SubtleConstantTimeEq.ct_eq c1 c2
+  subtle.ConditionallyNegatable.Blanket.conditional_negate
+    field.HelioseleneField.Insts.SubtleConditionallySelectable
+    Shared0HelioseleneField.Insts.CoreOpsArithNegHelioseleneField tupled_args
+    c3
+
+/-- Trait implementation: [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::{impl core::ops::function::FnOnce<(helioselene::field::HelioseleneField,), helioselene::field::HelioseleneField> for helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::closure<'_0>}]
+    Source: 'src/point.rs', lines 361:35-364:11 -/
+@[reducible]
+def
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldHelioseleneField
+  : core.ops.function.FnOnce
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure
+  field.HelioseleneField field.HelioseleneField := {
+  call_once :=
+    point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldHelioseleneField.call_once
+}
+
+/-- [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::{impl core::ops::function::FnOnce<(helioselene::field::HelioseleneField,), subtle::CtOption<helioselene::point::selene::SelenePoint>> for helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure<'_0>}::call_once]:
+    Source: 'src/point.rs', lines 358:42-381:9 -/
+def
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldCtOptionSelenePoint.call_once
+  (c : point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure)
+  (tupled_args : field.HelioseleneField) :
+  Result (subtle.CtOption point.selene.SelenePoint)
+  := do
+  let is_identity ← field.HelioseleneField.Insts.FfField.is_zero tupled_args
+  let co ← point.selene.recover_y tupled_args
+  let y ←
+    subtle.CtOption.map field.HelioseleneField.Insts.CoreDefaultDefault
+      field.HelioseleneField.Insts.SubtleConditionallySelectable
+      point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldHelioseleneField
+      co c
+  let c1 ←
+    core.convert.IntoFrom.into subtle.Choice.Insts.CoreConvertFromU8 1#u8
+  let hf ← field.HelioseleneField.Insts.FfField.ONE
+  let co1 ← subtle.CtOption.new hf c1
+  let y1 ←
+    subtle.CtOption.Insts.SubtleConditionallySelectable.conditional_select
+      field.HelioseleneField.Insts.SubtleConditionallySelectable y co1
+      is_identity
+  let candidate_point ←
+    subtle.CtOption.map field.HelioseleneField.Insts.CoreDefaultDefault
+      field.HelioseleneField.Insts.SubtleConditionallySelectable
+      point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure_1.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldSelenePoint
+      y1 tupled_args
+  let c2 ←
+    subtle.Choice.Insts.CoreOpsBitBitAndChoiceChoice.bitand is_identity c
+  let not_negative_zero ← subtle.Choice.Insts.CoreOpsBitNotChoice.not c2
+  let sp ←
+    point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.identity
+  let c3 ←
+    core.convert.IntoFrom.into subtle.Choice.Insts.CoreConvertFromU8 0#u8
+  let co2 ← subtle.CtOption.new sp c3
+  subtle.CtOption.Insts.SubtleConditionallySelectable.conditional_select
+    point.selene.SelenePoint.Insts.SubtleConditionallySelectable co2
+    candidate_point not_negative_zero
+
+/-- Trait implementation: [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::{impl core::ops::function::FnOnce<(helioselene::field::HelioseleneField,), subtle::CtOption<helioselene::point::selene::SelenePoint>> for helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure<'_0>}]
+    Source: 'src/point.rs', lines 358:42-381:9 -/
+@[reducible]
+def
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldCtOptionSelenePoint
+  : core.ops.function.FnOnce
+  point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure
+  field.HelioseleneField (subtle.CtOption point.selene.SelenePoint) := {
+  call_once :=
+    point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldCtOptionSelenePoint.call_once
+}
+
+/-- [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes]:
+    Source: 'src/point.rs', lines 349:6-382:7
+    Visibility: public -/
+def point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832.from_bytes
+  (bytes : Array Std.U8 32#usize) :
+  Result (subtle.CtOption point.selene.SelenePoint)
+  := do
+  let i ← Array.index_usize bytes 31#usize
+  let i1 ← lift (Std.U8.wrapping_shr i 7#u32)
+  let sign ← subtle.Choice.Insts.CoreConvertFromU8.from i1
+  let (mut_ref, as_mut_back) ← Array.Insts.CoreConvertAsMutSlice.as_mut bytes
+  let i2 ← lift (Std.U8.wrapping_shl 1#u8 7#u32)
+  let i3 ← lift (~~~ i2)
+  let i4 ← Slice.index_usize mut_ref 31#usize
+  let i5 ← lift (i4 &&& i3)
+  let mut_ref1 ← Slice.update mut_ref 31#usize i5
+  let bytes1 := as_mut_back mut_ref1
+  let co ←
+    field.HelioseleneField.Insts.FfPrimeFieldArrayU832.from_repr bytes1
+  subtle.CtOption.and_then field.HelioseleneField.Insts.CoreDefaultDefault
+    field.HelioseleneField.Insts.SubtleConditionallySelectable
+    point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldCtOptionSelenePoint
+    co sign
+
+/-- [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes_unchecked]:
+    Source: 'src/point.rs', lines 384:6-386:7
+    Visibility: public -/
+def
+  point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832.from_bytes_unchecked
+  (bytes : Array Std.U8 32#usize) :
+  Result (subtle.CtOption point.selene.SelenePoint)
+  := do
+  point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832.from_bytes bytes
+
+/-- Trait implementation: [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 346:4-401:5 -/
+@[reducible]
+def point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832 :
+  group.GroupEncoding point.selene.SelenePoint (Array Std.U8 32#usize) := {
+  coremarkerCopyInst := Array.Insts.CoreMarkerCopy 32#usize core.marker.CopyU8
+  coredefaultDefaultInst := core.default.DefaultArray 32#usize
+    core.default.DefaultU8
+  coreconvertAsRefSelf_ReprSliceU8Inst := Array.Insts.CoreConvertAsRefSlice
+    Std.U8 32#usize
+  coreconvertAsMutSelf_ReprSliceU8Inst := Array.Insts.CoreConvertAsMutSlice
+    Std.U8 32#usize
+  from_bytes :=
+    point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832.from_bytes
+  from_bytes_unchecked :=
+    point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832.from_bytes_unchecked
+  to_bytes :=
+    point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832.to_bytes
+}
+
+/-- Trait implementation: [helioselene::point::selene::{impl group::prime::PrimeGroup<dalek_ff_group::field::FieldElement, [u8; 32usize], [u8; 32usize]> for helioselene::point::selene::SelenePoint}]
+    Source: 'src/point.rs', lines 403:4-403:33 -/
+@[reducible]
+def
+  point.selene.SelenePoint.Insts.GroupPrimePrimeGroupFieldElementArrayU832ArrayU832
+  : group.prime.PrimeGroup point.selene.SelenePoint
+  dalek_ff_group.field.FieldElement (Array Std.U8 32#usize) (Array Std.U8
+  32#usize) := {
+  GroupInst := point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832
+  GroupEncodingInst :=
+    point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832
+}
+
+/-- [helioselene::point::selene::{helioselene::point::selene::SelenePoint}::from_xy]:
+    Source: 'src/point.rs', lines 411:6-413:7
+    Visibility: public -/
+def point.selene.SelenePoint.from_xy
+  (x : field.HelioseleneField) (y : field.HelioseleneField) :
+  Result (subtle.CtOption point.selene.SelenePoint)
+  := do
+  let hf ← field.HelioseleneField.Insts.FfField.ONE
+  let hf1 ← field.HelioseleneField.Insts.FfField.square y
+  let hf2 ← point.selene.curve_equation x
+  let c ← field.HelioseleneField.Insts.SubtleConstantTimeEq.ct_eq hf1 hf2
+  subtle.CtOption.new ({ x, y, z := hf } : point.selene.SelenePoint) c
 
 end helioselene

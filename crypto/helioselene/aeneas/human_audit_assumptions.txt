@@ -10,6 +10,10 @@ The Lean development proves:
   * phiRing : HField ≃+* ZMod p  (ring isomorphism)  (sorry-free)
   * p_prime : Nat.Prime p                            (kernel-only Pratt certificate)
   * instFieldHField : Field HField                   (modulo assumption I.1)
+  * ThetaAddEquiv : SClass ≃+ W.toAffine.Point       (sorry-free; the Selene group
+    law — see VIII.6)
+  * sqrt_ok (square-root soundness contract)         (sorry-free; completeness
+    half sqrt_complete open — see I.2)
 
 This file lists EVERY assumption that remains between those theorems and the
 statement "the Rust field implementation in crypto/helioselene/src/field is a
@@ -18,11 +22,12 @@ still be broken in the Rust code if the assumption is false, and where a human
 should look. Items are ordered by how much a targeted human review buys.
 
 --------------------------------------------------------------------------------
-I. OPEN PROOF OBLIGATION (the single `sorry`)
+I. OPEN PROOF OBLIGATIONS (the two `sorry`s in the tree)
 --------------------------------------------------------------------------------
 
 I.1  HelioseleneSpec.Invert.step_congruence
-     (HelioseleneCore/Spec/Invert.lean, the only `sorry` in the tree)
+     (HelioseleneCore/Spec/Invert.lean; one of exactly two `sorry`s in the
+     tree, the other being I.2)
 
   ASSUMED: one iteration of the branch-free binary-GCD `step` preserves the
   Algorithm-1 invariant (b odd; u,v <= p; a = u*y and b = v*y mod p;
@@ -47,6 +52,37 @@ I.1  HelioseleneSpec.Invert.step_congruence
   helioselene/field/Base.dfy); eprint 2020/972 Algorithm 1 is the reference.
   Mitigating evidence: 15 end-to-end invert test vectors (random + edge cases)
   pass against independent ground truth, exercising all 510 iterations.
+
+I.2  HelioseleneSpec.Selene.sqrt_complete
+     (HelioseleneCore/Spec/Selene/Ops.lean; the second of the two `sorry`s)
+
+  ASSUMED: completeness of the 125-iteration 4-bit-window exponentiation ladder
+  in verified::sqrt — statement: for reduced a, if sqrt(a) returns (r, flag)
+  and psi(a) is a square in ZMod p, then flag = true. (Functional correctness
+  of the ladder: table[i] = value^i, the window loop computes
+  value^((p+1)/4); since p = 3 mod 4, squaring that yields the input back on
+  square inputs, so the final res^2 ct_eq value self-check succeeds.)
+
+  NOT ASSUMED (proved, sorry-free, as sqrt_ok): the returned r is reduced and
+  even, and flag = true <-> psi(r)^2 = psi(a) — the flag's SOUNDNESS comes from
+  the generated code's final ct_eq self-check, independent of the ladder.
+
+  TAINT CONE: a LEAF — nothing in the tree depends on sqrt_complete (verified
+  by grep + #print axioms: only its own declaration carries sorryAx). The
+  Selene group law (VIII.6) is unaffected; it never consumes sqrt. What is
+  affected is DECOMPRESSION COMPLETENESS ONLY: without I.2, `flag = false`
+  does not yet imply "non-square", so e.g. "from_bytes/recover_y rejects a
+  well-formed compressed point only if x^3-3x+B is a non-residue" is not yet a
+  theorem; accepted points are still correct (soundness is proved).
+
+  IF FALSE (i.e. if the Rust ladder were wrong): sqrt could return flag=false
+  on some square inputs — decompression would spuriously reject valid points
+  (availability, not soundness). Mitigating evidence: 25 sqrt vectors
+  (squares + non-squares, random + edge cases; ValidationSelene.lean) pass,
+  and the Veridise Dafny scope covers sqrt (treat the Dafny proofs as the
+  ladder's current story).
+  HUMAN FOCUS: src/field/verified/sqrt.rs windowed loop + final window
+  handling (same item as IV.1, which remains the reference for pow).
 
 --------------------------------------------------------------------------------
 II. FIDELITY OF THE 37 EXTERNAL MODELS (crypto-bigint 0.5.5 / subtle 2.6.1)
@@ -151,18 +187,25 @@ IV. WHAT WAS NEVER TRANSLATED — THE FIELD THEOREM SAYS NOTHING ABOUT IT
 --------------------------------------------------------------------------------
 
 IV.1  pow (src/field/verified/pow.rs) and sqrt (src/field/verified/sqrt.rs).
-      Excluded from translation (Aeneas cannot express the bitvec iterator
-      adapters). The Lean Field instance's `^` is ZMod-transported, NOT the
-      Rust pow — a Lean theorem about x ^ n covers no Rust code. Both are in
-      the Veridise Dafny scope; treat the Dafny proofs (not this artifact)
-      as their verification story, and note both consume the III.2 constants
-      and u8_from_bool (black_box) machinery.
+      [UPDATE 2026-07-07: sqrt IS now translated and specified — soundness
+      proved (sqrt_ok), completeness open as I.2; see VIII. The rest of this
+      item still applies verbatim to pow.]
+      pow remains excluded from translation (u8_from_bool/black_box, bitvec
+      iterator adapters). The Lean Field instance's `^` is ZMod-transported,
+      NOT the Rust pow — a Lean theorem about x ^ n covers no Rust code. pow
+      is in the Veridise Dafny scope; treat the Dafny proofs (not this
+      artifact) as its verification story, and note it consumes the III.2
+      constants and u8_from_bool (black_box) machinery.
       HUMAN FOCUS: windowed-exponentiation table indexing in pow.rs
-      (bits -> table[usize::from(bits)]) and sqrt.rs's final window handling.
+      (bits -> table[usize::from(bits)]); for the sqrt ladder see I.2.
 
-IV.2  point.rs and ciphersuite.rs entirely (group law, decompression,
-      hash-to-point): out of scope; "the field is correct" does not imply
-      "the curves are correct".
+IV.2  point.rs and ciphersuite.rs (group law, decompression, hash-to-point).
+      [UPDATE 2026-07-07: the Selene group-law core of point.rs IS now
+      translated and its group law proved — see VIII/VIII.6. Still out of
+      scope: the Helios instantiation of the curve! macro, scalar
+      multiplication, and ciphersuite.rs/hash-to-point.] "The field is
+      correct" still does not imply "the curves are correct" beyond what
+      VIII.6 states for Selene.
 
 IV.3  Field::random (rejection-free wide reduction of RNG output),
       Field::sqrt_ratio (generic ff helper), PrimeFieldBits decompositions,
@@ -191,22 +234,34 @@ V.2  The translation snapshot: rustc nightly-2026-06-01 MIR, --release,
      Also: debug_assert! blocks (e.g. invert.rs bit-length checks) are not
      in the model.
 
-V.3  The three semantics-preserving source patches (helioselene-aeneas.patch):
-     the translation input is the PATCHED copy, not the shipped code.
-     Equivalence arguments are in README section 4 and the patched copy
-     passes the crate's full test suite, but the equivalence itself is a
-     human argument, not machine-checked.
-     HUMAN FOCUS: the three hunks are ~10 lines total; verify once.
+V.3  The semantics-preserving source patches (helioselene-aeneas.patch): the
+     translation input is the PATCHED copy, not the shipped code. The patch
+     now touches FIVE files — Cargo.toml (build-only) plus six source
+     rewrites: invert.rs and mod.rs (bool|bool lift, x2), mod.rs (from_repr
+     limb-index loop), sqrt.rs (bit-index loop + limb-array local copy +
+     u32-typed shift amounts), point.rs (u32-typed shift amounts,
+     from_bytes local rename point -> candidate_point).
+     Equivalence arguments are in README section 4 (hunks 1-7) and inline in
+     the patch comments, and the patched copy passes the crate's full 11-test
+     suite, but the equivalence itself is a human argument, not
+     machine-checked.
+     HUMAN FOCUS: ~40 changed source lines across 5 files; verify once
+     (README section 4 walks each hunk; VIII.5 summarizes the new ones).
 
 V.4  Lean 4 kernel (v4.30.0-rc2) + mathlib pin + the three standard axioms
      (propext, Classical.choice, Quot.sound). Standard trust.
 
-V.5  Four `<const>._native.decide.ax_1` axioms attached to the generated
+V.5  Seven `<const>._native.decide.ax_1` axioms attached to the generated
      hex-string constants in Funs.lean (Aeneas toStr autoParam
-     `by decide +native`): compiler-level (not kernel) trust for four
-     string-length side conditions. The parsed VALUES are independently
-     re-proved kernel-only in Spec/Externals.lean, so exposure is minimal;
-     removable by regenerating Funs.lean.
+     `by decide +native`): compiler-level (not kernel) trust for
+     string-length side conditions. Four are the original field-layer ones
+     (MODULUS, MODULUS_255_DISTANCE, TWO_MODULUS_255_DISTANCE,
+     MODULUS_XOR_TWO_MODULUS); three entered with the widened Selene scope
+     (point.selene.B, point.selene.G_Y,
+     field.verified.sqrt.MODULUS_PLUS_ONE_DIV_FOUR — see VIII.3). The parsed
+     VALUES are independently re-proved kernel-only (Spec/Externals.lean for
+     the field layer; Spec/Selene/Curve.lean B_ok/G_Y_ok for the Selene
+     constants), so exposure is minimal; removable by regenerating Funs.lean.
 
 V.6  The 964-vector validation layer itself rests on native_decide
      (= Lean compiler trust) and on the ground-truth vectors having been
@@ -261,3 +316,107 @@ Suggested review order for maximal risk reduction per hour:
   -> II.1-II.3 (model conventions vs crate sources) -> V.3 (patch hunks)
   -> IV.1 (pow/sqrt, with Dafny) -> VI.1 (constant-time, separate tooling).
 ================================================================================
+
+--------------------------------------------------------------------------------
+VIII. WIDENED SCOPE (2026-07-07): verified::sqrt + the Selene group-law core
+--------------------------------------------------------------------------------
+
+The translation was regenerated with two additional roots: `verified::sqrt`
+(now transparent; its bitvec iterator chain was replaced by an index loop in
+the translation patch) and `helioselene::point::selene` (the Selene group-law
+core). Sections I-V above still apply verbatim; the following is NEW trusted
+surface.
+
+VIII.1  19 additional concrete external models (FunsExternal.lean, appended
+      section), same fidelity status as section II. Notables:
+      - subtle 2.6.1 CtOption::map / and_then / conditional_select and
+        ConditionallyNegatable::conditional_negate: the "closure always
+        called on select(default, value, flag)" semantics is transcribed
+        literally (including effect order); review against
+        subtle-2.6.1/src/lib.rs:613-827.
+      - crypto-bigint Uint::const_rem: modeled as
+        (ofNat (a % b), flag := b != 0); relies on Lean's n % 0 = n
+        coinciding with the crate's rhs = 0 behaviour (remainder = self).
+      - Uint ct_eq / Default::default / from_u8, Choice bitand/bitor/ct_eq/
+        unwrap_u8, From<Choice> for bool, u8/CtOption conditional_select,
+        From<CtOption> for Option: one-liners, each documented in place.
+      - ff 0.13.1 Field::is_zero / Field::sqrt trait DEFAULTS (referenced by
+        no translated code; modeled for completeness).
+      - The two derived-Eq `assert_fields_are_eq` markers: modeled `ok ()`
+        (their Rust bodies are empty).
+
+VIII.2  54 NEW AXIOMS (FunsExternal.lean, appended section) — existence-only
+      postulates for externals that appear ONLY as trait-instance evidence
+      (records needed to state `Group`/`PrimeField` bounds). Every axiom's
+      type is inhabited (`fun _ => fail .panic`), so each is a conservative
+      extension; none makes a behavioural claim. VERIFIED (dependency-cone
+      audit + kernel `#print axioms`): no goal-scope function -- the Selene
+      add/neg/sub/double/identity/generator/is_identity/ct_eq/eq/
+      conditional_select/from_bytes/from_bytes_unchecked/to_bytes/from_xy/
+      curve_equation/recover_y/G/G_X/G_Y/B, verified::sqrt, FfField.ONE/sqrt
+      -- depends on ANY of them. They are:
+      - 45 dalek_ff_group::FieldElement items (Selene's scalar type; scalar
+        multiplication itself is out of scope): Clone/PartialEq/Default/
+        Debug/From<u64>/Neg + 12 arith (Add/Sub/Mul x owned/shared x op/
+        assign) + ConditionallySelectable/ConstantTimeEq + 4 Sum/Product +
+        ff::Field {ZERO, ONE, random, is_zero, square, double, invert,
+        sqrt_ratio, sqrt} + ff::PrimeField {MODULUS, NUM_BITS, CAPACITY,
+        TWO_INV, MULTIPLICATIVE_GENERATOR, S, ROOT_OF_UNITY,
+        ROOT_OF_UNITY_INV, DELTA, from_repr, to_repr, is_odd}.
+      - crypto_bigint Uint Debug::fmt (1).
+      - SelenePoint items deliberately kept out of scope (8): the
+        scalar-multiplication ladder (Mul/MulAssign x owned/shared scalar,
+        4 axioms; uses u8_from_bool/black_box), Sum (2; iterator adapters),
+        Group::random (RngCore + retry loop), Zeroize::zeroize.
+
+VIII.3  New members of the benign `_native.decide` string-length axiom class
+      (README section 5c.3): point.selene.B, point.selene.G_Y and
+      field.verified.sqrt.MODULUS_PLUS_ONE_DIV_FOUR (from_be_hex string
+      literals; G_X is built by from_u8 and carries none), plus — reachable
+      from trait-evidence records only — the generated Debug fmt bodies'
+      string literals. Same shape as the original four: each asserts only
+      that a string literal is at most U32.max bytes.
+
+VIII.4  New external TYPE models (TypesExternal.lean, appended section):
+      crypto_bigint CtChoice := Bool; dalek FieldElement := ZMod (2^255-19)
+      (cardinality-faithful; representation NOT modeled; nothing in scope
+      constructs or consumes one); rand_core::Error := nonzero U32 code.
+
+VIII.5  Source rewrites added to helioselene-aeneas.patch for the new scope
+      (each argued semantics-preserving in the patch hunks/comments; the
+      patched copy passes the full 11-test suite):
+      - sqrt.rs: bit-index loop replacing the bitvec iterator adapters;
+        the exponent's limb array copied to a local before the loop
+        (borrowing a const/loop-invariant local inside the loop defeats
+        Aeneas' loop fixed-point join); u32-typed shift amounts.
+      - point.rs (curve! macro, affects Helios identically): u32-typed
+        shift amounts in from_bytes/to_bytes; from_bytes' local `point`
+        renamed `candidate_point` (a local named `point` shadows the
+        generated `point.selene.*` namespace in Lean).
+
+VIII.6  The Selene GROUP LAW IS NOW PROVED (2026-07-07, Spec/Selene/):
+      - ThetaAddEquiv : SClass ≃+ W.toAffine.Point (GroupLaw.lean) — the
+        quotient of on-curve reduced projective representatives by projective
+        equivalence, with 0/+/-(unary)/-(binary) descended from the
+        TRANSLATED identity/add/neg/sub, is isomorphic as an additive group
+        to mathlib's point group of y^2 = x^3 - 3x + B over ZMod p.
+        SORRY-FREE (kernel #print axioms: the three standard axioms plus the
+        V.5/VIII.3 string-length constants — see GroupLaw.lean section 9 for
+        the exact per-theorem sets).
+      - AddCommGroup SClass with the descended Rust operations; SClass_double
+        (the dedicated doubling circuit agrees with + on classes); ct_eq/eq/
+        is_identity proved to DECIDE class equality/identity.
+      - Kernel-proved number theory feeding completeness of the RCB formulas:
+        B is a quadratic non-residue (no affine x = 0 point), the curve has
+        no 2-torsion (cubic_no_root), and the discriminant is nonzero
+        (Curve.lean).
+      - Coordinate contracts for every translated Selene operation
+        (Ops.lean), incl. sqrt_ok/recover_y_ok soundness; the only open
+        obligation on this scope is sqrt_complete (I.2) — a leaf that taints
+        NOTHING (decompression completeness only).
+      - Validation: 100 independent Selene vectors (sqrt 25, add 35,
+        double 15, neg 5, ct_eq 12, from_xy 8) pass through the translated
+        code via native_decide, plus per-class corrupted-vector negative
+        controls (ValidationSelene.lean, imported by nothing).
+      Scalar multiplication, Sum, random, zeroize and hash-to-curve remain
+      unmodeled (their absence is recorded by the axioms of VIII.2).

@@ -979,3 +979,955 @@ open crypto_bigint.uint.Uint HelioseleneModel
 #guard subtle.Choice.Insts.CoreConvertFromU8.from 1#u8 == ok true
 
 end SanityChecks
+
+/-! ## Additions for the widened translation scope (2026-07-07): `verified::sqrt` +
+    the Selene group-law core (`point::selene`).
+
+    Two kinds of entries follow, in template order:
+
+    * **Concrete models** (`def`) for every external the goal scope actually calls
+      (the `subtle` `Choice`/`CtOption` combinators, four `crypto-bigint` `Uint`
+      items, and the trivially-empty derived-`Eq` helpers), each documented against
+      the crate sources exactly like the models above.
+    * **Axioms** for externals that are referenced only as trait-instance evidence
+      (the opaque `dalek_ff_group::FieldElement` methods/constants, `Debug::fmt`,
+      the deliberately-untranslated `SelenePoint` scalar-mul ladder, `Sum`,
+      `Zeroize` and `Group::random`). These postulate only the *existence* of a
+      function of the given type (all such types are inhabited, e.g. by
+      `fun _ => fail .panic`, so each axiom is a conservative extension); they make
+      no behavioural claim. No goal-scope function depends on any of them — see the
+      dependency-cone audit in the README. They are listed on the human-assumptions
+      list for the widened scope. -/
+
+/-- **Rust:** `<crypto_bigint::Uint<LIMBS> as subtle::ConstantTimeEq>::ct_eq` — trait-impl
+    method (foreign: crypto-bigint 0.5.5)
+    crypto-bigint 0.5.5, src/uint/cmp.rs:123-128 (method at line 125):
+    https://docs.rs/crypto-bigint/0.5.5/src/crypto_bigint/uint/cmp.rs.html#123-128
+
+    Constant-time equality of two `Uint`s: the crate XOR-accumulates all limb pairs and
+    tests the accumulator for zero, so the result is `Choice(1)` iff every limb is equal,
+    i.e. iff the two values are equal.
+
+    Used by `HelioseleneField`'s `ConstantTimeEq` impl (src/field/mod.rs), which the Selene
+    group law calls from `SelenePoint::ct_eq` (projective cross-multiplied coordinate
+    comparison), `Group::is_identity` (`x.ct_eq(&ZERO)`), `GroupEncoding::to_bytes` (sign
+    normalisation for x = 0), `from_xy` (curve-equation check) and `verified::sqrt` (the
+    `res² = value` validity flag).
+
+    Model: value equality of the limb vectors; `ok (a.toNat == b.toNat)` (equal-length
+    little-endian limb vectors are equal iff their values are). -/
+@[rust_fun
+  "crypto_bigint::uint::cmp::{subtle::ConstantTimeEq<crypto_bigint::uint::Uint<@LIMBS>>}::ct_eq"]
+def crypto_bigint.uint.Uint.Insts.SubtleConstantTimeEq.ct_eq
+  {LIMBS : Std.Usize} :
+  crypto_bigint.uint.Uint LIMBS → crypto_bigint.uint.Uint LIMBS → Result
+    subtle.Choice :=
+  fun a b => ok (a.toNat == b.toNat)
+
+/-- **Rust:** `crypto_bigint::Uint::<LIMBS>::const_rem` — function (foreign: crypto-bigint
+    0.5.5)
+    crypto-bigint 0.5.5, src/uint/div.rs:80-105 (method at line 87):
+    https://docs.rs/crypto-bigint/0.5.5/src/crypto_bigint/uint/div.rs.html#80-105
+
+    Computes `self % rhs` by binary long division (shift-and-subtract over `Self::BITS`
+    steps), returning the remainder together with a `CtChoice` that is truthy iff
+    `rhs ≠ 0` (`is_some`). For `rhs = 0` the subtract never fires and the "remainder"
+    returned is `self` itself, with a falsy flag.
+
+    Used (with the nonzero constant `MODULUS`) by `HelioseleneField::from_u256`
+    (src/field/mod.rs:167-170), which the Selene group law evaluates to build the
+    generator x-coordinate `G_X = from_u256(&U256::from_u8(1))`; the flag is dropped at
+    that call site.
+
+    Model: `ok (ofNat LIMBS (a.toNat % b.toNat), b.toNat != 0)`. Lean's `Nat` convention
+    `n % 0 = n` coincides with the crate's `rhs = 0` behaviour, so no case split is
+    needed; for `b ≠ 0` the remainder is `< b ≤ 2^(64·LIMBS)` and `ofNat` does not wrap. -/
+@[rust_fun
+  "crypto_bigint::uint::div::{crypto_bigint::uint::Uint<@LIMBS>}::const_rem"]
+def crypto_bigint.uint.div.Uint.const_rem
+  {LIMBS : Std.Usize} :
+  crypto_bigint.uint.Uint LIMBS → crypto_bigint.uint.Uint LIMBS → Result
+    ((crypto_bigint.uint.Uint LIMBS) × crypto_bigint.ct_choice.CtChoice) :=
+  fun a b =>
+    ok (crypto_bigint.uint.Uint.ofNat LIMBS (a.toNat % b.toNat), b.toNat != 0)
+
+/-- **Rust:** `crypto_bigint::Uint::<LIMBS>::from_u8` — function (foreign: crypto-bigint
+    0.5.5)
+    crypto-bigint 0.5.5, src/uint/from.rs:8-14 (crate source):
+    https://docs.rs/crypto-bigint/0.5.5/src/crypto_bigint/uint/from.rs.html#8-14
+
+    Widens a `u8` into a `Uint`: limb 0 carries the byte, all higher limbs are zero. The
+    crate `assert!`s `LIMBS >= 1` (a const-evaluation failure for the empty instantiation).
+
+    Used by the Selene group law to build the generator x-coordinate:
+    `G_X = HelioseleneField::from_u256(&U256::from_u8(1))` (src/point.rs:29, instantiated
+    at LIMBS = 4).
+
+    Model: `ok (ofNat LIMBS n.val)` for `LIMBS ≥ 1`, `fail panic` for `LIMBS = 0`
+    (mirroring the assertion; unreachable at the call site). -/
+@[rust_fun
+  "crypto_bigint::uint::from::{crypto_bigint::uint::Uint<@LIMBS>}::from_u8"]
+def crypto_bigint.uint.from.Uint.from_u8
+  (LIMBS : Std.Usize) : Std.U8 → Result (crypto_bigint.uint.Uint LIMBS) :=
+  fun n =>
+    if LIMBS.val = 0 then fail Error.panic
+    else ok (crypto_bigint.uint.Uint.ofNat LIMBS n.val)
+
+/-- **Rust:** `<crypto_bigint::Uint<LIMBS> as core::default::Default>::default` —
+    trait-impl method (foreign: crypto-bigint 0.5.5)
+    crypto-bigint 0.5.5, src/uint.rs:208-212 (method at line 209):
+    https://docs.rs/crypto-bigint/0.5.5/src/crypto_bigint/uint.rs.html#208-212
+
+    `Self::ZERO` — the all-zero limb vector.
+
+    Used by `HelioseleneField`'s derived `Default` (src/field/mod.rs:22), which the Selene
+    `GroupEncoding::from_bytes` path passes to the `CtOption::map`/`and_then` combinators
+    as the dummy-value supplier for their constant-time `None` branch.
+
+    Model: `ok (ofNat LIMBS 0)`. -/
+@[rust_fun
+  "crypto_bigint::uint::{core::default::Default<crypto_bigint::uint::Uint<@LIMBS>>}::default"]
+def crypto_bigint.uint.Uint.Insts.CoreDefaultDefault.default
+  (LIMBS : Std.Usize) : Result (crypto_bigint.uint.Uint LIMBS) :=
+  ok (crypto_bigint.uint.Uint.ofNat LIMBS 0)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [crypto_bigint::uint::{impl core::fmt::Debug for crypto_bigint::uint::Uint<LIMBS>}::fmt]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/uint.rs', lines 239:4-239:60
+    Name pattern: [crypto_bigint::uint::{core::fmt::Debug<crypto_bigint::uint::Uint<@LIMBS>>}::fmt]
+    Visibility: public -/
+@[rust_fun
+  "crypto_bigint::uint::{core::fmt::Debug<crypto_bigint::uint::Uint<@LIMBS>>}::fmt"]
+axiom crypto_bigint.uint.Uint.Insts.CoreFmtDebug.fmt
+  {LIMBS : Std.Usize} :
+  crypto_bigint.uint.Uint LIMBS → core.fmt.Formatter → Result
+    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::clone::Clone for dalek_ff_group::field::FieldElement}::clone]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:9-38:14
+    Name pattern: [dalek_ff_group::field::{core::clone::Clone<dalek_ff_group::field::FieldElement>}::clone]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::clone::Clone<dalek_ff_group::field::FieldElement>}::clone"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreCloneClone.clone
+  :
+  dalek_ff_group.field.FieldElement → Result
+    dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::cmp::PartialEq<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::eq]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:22-38:31
+    Name pattern: [dalek_ff_group::field::{core::cmp::PartialEq<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::eq]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::cmp::PartialEq<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::eq"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreCmpPartialEqFieldElement.eq
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result Bool
+
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::cmp::Eq>::
+    assert_fields_are_eq` — derived-`Eq` marker method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/field.rs:38 (`#[derive(…, Eq, …)]`):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#38
+
+    rustc's `Eq` marker helper (`assert_receiver_is_total_eq`) — a compile-time
+    obligation with an empty runtime body; it computes nothing and cannot panic.
+
+    Referenced only by the `core.cmp.Eq` instance record for `FieldElement` (evidence for
+    the `ff::Field` supertrait bounds of Selene's scalar type); never called by the
+    translated group law.
+
+    Model: `ok ()` (the empty body). -/
+@[rust_fun
+  "dalek_ff_group::field::{core::cmp::Eq<dalek_ff_group::field::FieldElement>}::assert_fields_are_eq"]
+def dalek_ff_group.field.FieldElement.Insts.CoreCmpEq.assert_fields_are_eq
+  : dalek_ff_group.field.FieldElement → Result Unit :=
+  fun _ => ok ()
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::default::Default for dalek_ff_group::field::FieldElement}::default]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:37-38:44
+    Name pattern: [dalek_ff_group::field::{core::default::Default<dalek_ff_group::field::FieldElement>}::default]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::default::Default<dalek_ff_group::field::FieldElement>}::default"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreDefaultDefault.default
+  : Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::fmt::Debug for dalek_ff_group::field::FieldElement}::fmt]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:46-38:51
+    Name pattern: [dalek_ff_group::field::{core::fmt::Debug<dalek_ff_group::field::FieldElement>}::fmt]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::fmt::Debug<dalek_ff_group::field::FieldElement>}::fmt"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreFmtDebug.fmt
+  :
+  dalek_ff_group.field.FieldElement → core.fmt.Formatter → Result
+    ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::convert::From<u64> for dalek_ff_group::field::FieldElement}::from]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 76:6-76:39
+    Name pattern: [dalek_ff_group::field::{core::convert::From<dalek_ff_group::field::FieldElement, u64>}::from]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::convert::From<dalek_ff_group::field::FieldElement, u64>}::from"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreConvertFromU64.from
+  : Std.U64 → Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Neg<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::neg]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 91:2-91:30
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::Neg<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::neg]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::Neg<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::neg"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithNegFieldElement.neg
+  :
+  dalek_ff_group.field.FieldElement → Result
+    dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::MulAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul_assign]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 159:6-159:49
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::mul_assign]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::mul_assign"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignSharedAFieldElement.mul_assign
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::SubAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub_assign]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 159:6-159:49
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::sub_assign]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::sub_assign"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignSharedAFieldElement.sub_assign
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::AddAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add_assign]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 159:6-159:49
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::add_assign]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::add_assign"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignSharedAFieldElement.add_assign
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Mul<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 154:6-154:56
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::Mul<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::Mul<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulSharedAFieldElementFieldElement.mul
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Sub<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 154:6-154:56
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::Sub<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::Sub<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubSharedAFieldElementFieldElement.sub
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Add<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 154:6-154:56
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::Add<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::Add<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddSharedAFieldElementFieldElement.add
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul_assign]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 148:6-148:45
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul_assign]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul_assign"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignFieldElement.mul_assign
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub_assign]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 148:6-148:45
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub_assign]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub_assign"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignFieldElement.sub_assign
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add_assign]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 148:6-148:45
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add_assign]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add_assign"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignFieldElement.add_assign
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 143:6-143:52
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulFieldElementFieldElement.mul
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 143:6-143:52
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubFieldElementFieldElement.sub
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 143:6-143:52
+    Name pattern: [dalek_ff_group::field::{core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddFieldElementFieldElement.add
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl subtle::ConditionallySelectable for dalek_ff_group::field::FieldElement}::conditional_select]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 88:6-88:71
+    Name pattern: [dalek_ff_group::field::{subtle::ConditionallySelectable<dalek_ff_group::field::FieldElement>}::conditional_select]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{subtle::ConditionallySelectable<dalek_ff_group::field::FieldElement>}::conditional_select"]
+axiom dalek_ff_group.field.FieldElement.Insts.SubtleConditionallySelectable.conditional_select
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    subtle.Choice → Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl subtle::ConstantTimeEq for dalek_ff_group::field::FieldElement}::ct_eq]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 82:6-82:45
+    Name pattern: [dalek_ff_group::field::{subtle::ConstantTimeEq<dalek_ff_group::field::FieldElement>}::ct_eq]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{subtle::ConstantTimeEq<dalek_ff_group::field::FieldElement>}::ct_eq"]
+axiom dalek_ff_group.field.FieldElement.Insts.SubtleConstantTimeEq.ct_eq
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result subtle.Choice
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::iter::traits::accum::Product<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::product]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 342:2-342:75
+    Name pattern: [dalek_ff_group::field::{core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::product]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::product"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductSharedAFieldElement.product
+  {I : Type} (coreitertraitsiteratorIteratorISharedAFieldElementInst :
+  core.iter.traits.iterator.Iterator I dalek_ff_group.field.FieldElement) :
+  I → Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::product]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 332:2-332:71
+    Name pattern: [dalek_ff_group::field::{core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::product]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::product"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductFieldElement.product
+  {I : Type} (coreitertraitsiteratorIteratorIFieldElementInst :
+  core.iter.traits.iterator.Iterator I dalek_ff_group.field.FieldElement) :
+  I → Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::iter::traits::accum::Sum<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sum]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 326:2-326:71
+    Name pattern: [dalek_ff_group::field::{core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::sum]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::sum"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumSharedAFieldElement.sum
+  {I : Type} (coreitertraitsiteratorIteratorISharedAFieldElementInst :
+  core.iter.traits.iterator.Iterator I dalek_ff_group.field.FieldElement) :
+  I → Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sum]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 316:2-316:67
+    Name pattern: [dalek_ff_group::field::{core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sum]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sum"]
+axiom dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumFieldElement.sum
+  {I : Type} (coreitertraitsiteratorIteratorIFieldElementInst :
+  core.iter.traits.iterator.Iterator I dalek_ff_group.field.FieldElement) :
+  I → Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::sqrt_ratio]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 134:2-134:77
+    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::sqrt_ratio]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::sqrt_ratio"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfField.sqrt_ratio
+  :
+  dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
+    Result (subtle.Choice × dalek_ff_group.field.FieldElement)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::sqrt]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 127:2-127:34
+    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::sqrt]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::sqrt"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfField.sqrt
+  :
+  dalek_ff_group.field.FieldElement → Result (subtle.CtOption
+    dalek_ff_group.field.FieldElement)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::invert]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 120:2-120:36
+    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::invert]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::invert"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfField.invert
+  :
+  dalek_ff_group.field.FieldElement → Result (subtle.CtOption
+    dalek_ff_group.field.FieldElement)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::double]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 116:2-116:26
+    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::double]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::double"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfField.double
+  :
+  dalek_ff_group.field.FieldElement → Result
+    dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::square]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 113:2-113:26
+    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::square]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::square"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfField.square
+  :
+  dalek_ff_group.field.FieldElement → Result
+    dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::random]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 107:2-107:42
+    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::random]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::random"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfField.random
+  {T0 : Type} (rand_coreRngCoreInst : rand_core.RngCore T0) :
+  T0 → Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::ONE]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 105:2-105:17
+    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::ONE]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::ONE"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfField.ONE
+  : Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::ZERO]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 104:2-104:18
+    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::ZERO]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::ZERO"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfField.ZERO
+  : Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::is_zero]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 103:0-103:27
+    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::is_zero]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::is_zero"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfField.is_zero
+  : dalek_ff_group.field.FieldElement → Result subtle.Choice
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::is_odd]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 198:2-198:28
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::is_odd]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::is_odd"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.is_odd
+  : dalek_ff_group.field.FieldElement → Result subtle.Choice
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::to_repr]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 194:2-194:31
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::to_repr]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::to_repr"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.to_repr
+  : dalek_ff_group.field.FieldElement → Result (Array Std.U8 32#usize)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::from_repr]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 190:2-190:49
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::from_repr]
+    Visibility: public -/
+@[rust_fun
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::from_repr"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.from_repr
+  :
+  Array Std.U8 32#usize → Result (subtle.CtOption
+    dalek_ff_group.field.FieldElement)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::DELTA]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 186:2-186:19
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::DELTA]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::DELTA"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.DELTA
+  : Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::ROOT_OF_UNITY_INV]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 182:2-182:31
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::ROOT_OF_UNITY_INV]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::ROOT_OF_UNITY_INV"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.ROOT_OF_UNITY_INV
+  : Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::ROOT_OF_UNITY]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 178:2-178:27
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::ROOT_OF_UNITY]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::ROOT_OF_UNITY"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.ROOT_OF_UNITY
+  : Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::S]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 174:2-174:14
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::S]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::S"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.S
+  : Result Std.U32
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::MULTIPLICATIVE_GENERATOR]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 171:2-171:38
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::MULTIPLICATIVE_GENERATOR]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::MULTIPLICATIVE_GENERATOR"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.MULTIPLICATIVE_GENERATOR
+  : Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::TWO_INV]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 167:2-167:21
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::TWO_INV]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::TWO_INV"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.TWO_INV
+  : Result dalek_ff_group.field.FieldElement
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::CAPACITY]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 165:2-165:21
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::CAPACITY]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::CAPACITY"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.CAPACITY
+  : Result Std.U32
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::NUM_BITS]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 164:2-164:21
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::NUM_BITS]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::NUM_BITS"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.NUM_BITS
+  : Result Std.U32
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::MODULUS]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 162:2-162:29
+    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::MODULUS]
+    Visibility: public -/
+@[rust_const
+  "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::MODULUS"]
+axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.MODULUS
+  : Result Str
+
+/-- **Rust:** `ff::Field::is_zero` — provided (default) trait method (foreign: ff 0.13.1)
+    ff 0.13.1, src/lib.rs:80-83 (method at line 81):
+    https://docs.rs/ff/0.13.1/src/ff/lib.rs.html#80-83
+
+    Trait-default body: `self.ct_eq(&Self::ZERO)`.
+
+    Emitted for the `ff::Field` trait declaration; not referenced by any translated
+    function in this scope (`HelioseleneField` overrides `is_zero`, and
+    `dalek_ff_group::FieldElement`'s instance record binds dalek's own override).
+
+    Model: literal transcription through the `Field` instance record's `ZERO` constant
+    and `ConstantTimeEq` super-instance. -/
+@[rust_fun "ff::Field::is_zero"]
+def ff.Field.is_zero.default
+  {Self : Type} (FieldInst : ff.Field Self) : Self → Result subtle.Choice :=
+  fun self => do
+    let z ← FieldInst.ZERO
+    FieldInst.subtleConstantTimeEqInst.ct_eq self z
+
+/-- **Rust:** `ff::Field::sqrt` — provided (default) trait method (foreign: ff 0.13.1)
+    ff 0.13.1, src/lib.rs:141-149 (method at line 144):
+    https://docs.rs/ff/0.13.1/src/ff/lib.rs.html#141-149
+
+    Trait-default body: `let (is_square, res) = Self::sqrt_ratio(self, &Self::ONE);
+    CtOption::new(res, is_square)`.
+
+    Emitted for the `ff::Field` trait declaration; not referenced by any translated
+    function in this scope (`HelioseleneField` overrides `sqrt` with `verified::sqrt`,
+    and `dalek_ff_group::FieldElement`'s instance record binds dalek's own override).
+
+    Model: literal transcription through the `Field` instance record's `ONE` constant and
+    `sqrt_ratio` method. -/
+@[rust_fun "ff::Field::sqrt"]
+def ff.Field.sqrt.default
+  {Self : Type} (FieldInst : ff.Field Self) :
+  Self → Result (subtle.CtOption Self) :=
+  fun self => do
+    let one ← FieldInst.ONE
+    let (is_square, res) ← FieldInst.sqrt_ratio self one
+    ok (res, is_square)
+
+/-- **Rust:** `subtle::Choice::unwrap_u8` — method (foreign: subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:122-136 (method at line 133):
+    https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#122-136
+
+    Unwraps the `Choice` to its underlying `u8` (0 or 1 under the crate's invariant).
+
+    Used by `SelenePoint`'s `GroupEncoding::to_bytes`: `y.is_odd().unwrap_u8()` produces
+    the sign byte that (after `u8::conditional_select` against `x = 0`) is packed into
+    bit 7 of the last encoding byte (src/point.rs:394).
+
+    Model: `ok (if c then 1 else 0)` (Choice = Bool). -/
+@[rust_fun "subtle::{subtle::Choice}::unwrap_u8"]
+def subtle.Choice.unwrap_u8 : subtle.Choice → Result Std.U8 :=
+  fun c => ok (if c then 1#u8 else 0#u8)
+
+/-- **Rust:** `<bool as core::convert::From<subtle::Choice>>::from` — trait-impl method
+    (foreign: subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:138-157 (method at line 153):
+    https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#138-157
+
+    Converts a `Choice` into a plain `bool` (`source.0 != 0`, debug-asserted to be 0 or 1)
+    — subtle's sanctioned exit point from the constant-time world.
+
+    Used by `SelenePoint`'s `PartialEq::eq` (`self.ct_eq(other).into()`,
+    src/point.rs:80-84) and by the (opaque) `Group::random` retry loop.
+
+    Model: the identity on `Bool` (Choice = Bool); `ok c`. -/
+@[rust_fun "subtle::{core::convert::From<bool, subtle::Choice>}::from"]
+def Bool.Insts.CoreConvertFromChoice.from : subtle.Choice → Result Bool :=
+  fun c => ok c
+
+/-- **Rust:** `<subtle::Choice as core::ops::BitAnd>::bitand` — trait-impl method
+    (foreign: subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:159-166 (method at line 162):
+    https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#159-166
+
+    Non-short-circuiting AND of two constant-time booleans: `(self.0 & rhs.0).into()`.
+    On the crate's {0,1} byte invariant, bitwise AND is logical conjunction.
+
+    Used by `SelenePoint::ct_eq` (`(x zero) & (other x zero)`, `x-eq & y-eq`;
+    src/point.rs:76) and by `GroupEncoding::from_bytes` (`is_identity & sign` for the
+    minus-zero rejection, src/point.rs:371).
+
+    Model: boolean conjunction; `ok (a && b)` (Choice = Bool). -/
+@[rust_fun
+  "subtle::{core::ops::bit::BitAnd<subtle::Choice, subtle::Choice, subtle::Choice>}::bitand"]
+def subtle.Choice.Insts.CoreOpsBitBitAndChoiceChoice.bitand
+  : subtle.Choice → subtle.Choice → Result subtle.Choice :=
+  fun a b => ok (a && b)
+
+/-- **Rust:** `<subtle::Choice as core::ops::BitOr>::bitor` — trait-impl method (foreign:
+    subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:174-181 (method at line 177):
+    https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#174-181
+
+    Non-short-circuiting OR of two constant-time booleans: `(self.0 | rhs.0).into()`.
+    On the crate's {0,1} byte invariant, bitwise OR is logical disjunction.
+
+    Used by `SelenePoint::ct_eq`: `(both x-coordinates zero) | (cross-multiplied x and y
+    equal)` (src/point.rs:76).
+
+    Model: boolean disjunction; `ok (a || b)` (Choice = Bool). -/
+@[rust_fun
+  "subtle::{core::ops::bit::BitOr<subtle::Choice, subtle::Choice, subtle::Choice>}::bitor"]
+def subtle.Choice.Insts.CoreOpsBitBitOrChoiceChoice.bitor
+  : subtle.Choice → subtle.Choice → Result subtle.Choice :=
+  fun a b => ok (a || b)
+
+/-- **Rust:** `<subtle::Choice as subtle::ConstantTimeEq>::ct_eq` — trait-impl method
+    (foreign: subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:334-340 (method at line 336):
+    https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#334-340
+
+    Equality of two constant-time booleans: `!(*self ^ *rhs)` — XOR is 0 iff the wrapped
+    bytes agree, and `Not` flips it into the equality flag.
+
+    Used by `SelenePoint`'s `GroupEncoding::from_bytes`: the recovered `y` is negated iff
+    `y.is_odd().ct_eq(&!sign)` demands the other root (src/point.rs:361).
+
+    Model: boolean equality; `ok (a == b)` (Choice = Bool). -/
+@[rust_fun "subtle::{subtle::ConstantTimeEq<subtle::Choice>}::ct_eq"]
+def subtle.Choice.Insts.SubtleConstantTimeEq.ct_eq
+  : subtle.Choice → subtle.Choice → Result subtle.Choice :=
+  fun a b => ok (a == b)
+
+/-- **Rust:** `<u8 as subtle::ConditionallySelectable>::conditional_select` — trait-impl
+    method (foreign: subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:505-520 (macro-generated impl for `u8`; `generate_integer_
+    conditional_select!`): https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#505-520
+
+    Branch-free byte select `a ^ (mask & (a ^ b))` with `mask = -(choice as i8) as u8`:
+    returns `b` if `choice = 1`, `a` if `choice = 0`.
+
+    Used by `SelenePoint`'s `GroupEncoding::to_bytes` to zero the sign byte exactly when
+    `x = 0` (`u8::conditional_select(&y.is_odd().unwrap_u8(), &0, x.ct_eq(&ZERO))`,
+    src/point.rs:394).
+
+    Model: `ok (if c then b else a)` (Choice = Bool). -/
+@[rust_fun "subtle::{subtle::ConditionallySelectable<u8>}::conditional_select"]
+def U8.Insts.SubtleConditionallySelectable.conditional_select
+  : Std.U8 → Std.U8 → subtle.Choice → Result Std.U8 :=
+  fun a b c => ok (if c then b else a)
+
+/-- **Rust:** `<T as subtle::ConditionallyNegatable>::conditional_negate` (blanket impl for
+    `T: ConditionallySelectable` with `&T: Neg`) — trait-impl method (foreign: subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:613-626 (method at line 620):
+    https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#613-626
+
+    `let self_neg = -(self as &T); self.conditional_assign(&self_neg, choice)` — i.e.
+    replace the value by its negation exactly when `choice = 1`, via one unconditional
+    negation plus a constant-time select.
+
+    Used (at `T = HelioseleneField`, with the `Neg for &HelioseleneField` instance) by
+    `verified::sqrt` to normalise the returned root to the even choice
+    (src/field/verified/sqrt.rs:83) and by `SelenePoint`'s `from_bytes` to pick the root
+    matching the encoded sign bit (src/point.rs:361).
+
+    Model: `select t (-t) choice` through the supplied instance records — the negation is
+    always computed (and its `Result` effects always taken), matching the Rust. -/
+@[rust_fun "subtle::{subtle::ConditionallyNegatable<@T>}::conditional_negate"]
+def subtle.ConditionallyNegatable.Blanket.conditional_negate
+  {T : Type} (ConditionallySelectableInst : subtle.ConditionallySelectable T)
+  (coreopsarithNegShared0TTInst : core.ops.arith.Neg T T) :
+  T → subtle.Choice → Result T :=
+  fun t choice => do
+    let neg ← coreopsarithNegShared0TTInst.neg t
+    ConditionallySelectableInst.conditional_select t neg choice
+
+/-- **Rust:** `<core::option::Option<T> as core::convert::From<subtle::CtOption<T>>>::from`
+    — trait-impl method (foreign: subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:648-670 (method at line 662):
+    https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#648-670
+
+    Decodes a `CtOption` into a plain `Option` at the end of a constant-time computation:
+    `Some(value)` iff `is_some.unwrap_u8() == 1`, else `None` (explicitly NOT constant
+    time, per the crate docs).
+
+    Used by `SelenePoint`'s `GroupEncoding::to_bytes`: `Option::<F>::from(self.z.invert())`
+    branches to the all-zero encoding when `z` has no inverse, i.e. for the identity
+    (src/point.rs:386).
+
+    Model: `ok (if flag then some v else none)` (CtOption T = T × Bool). -/
+@[rust_fun
+  "subtle::{core::convert::From<core::option::Option<@T>, subtle::CtOption<@T>>}::from"]
+def core.option.Option.Insts.CoreConvertFromCtOption.from
+  {T : Type} : subtle.CtOption T → Result (Option T) :=
+  fun co => ok (if co.2 then some co.1 else none)
+
+/-- **Rust:** `subtle::CtOption::<T>::map` — method (foreign: subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:742-764 (method at line 751):
+    https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#742-764
+
+    Constant-time functorial map: the closure is ALWAYS called — on the enclosed value if
+    `is_some = 1`, on the dummy `T::default()` otherwise (selected branch-free) — and the
+    result keeps the original `is_some` flag:
+    `CtOption::new(f(T::conditional_select(&T::default(), &self.value, self.is_some)),
+    self.is_some)`.
+
+    Used by `SelenePoint`'s `from_bytes`: once to conditionally-negate the recovered `y`
+    and once to assemble the point `{x, y, z: ONE}` from the y-solution
+    (src/point.rs:360-369).
+
+    Model: literal transcription over CtOption T = T × Bool, calling the closure through
+    its `FnOnce` instance record (so its `Result` effects are always taken). -/
+@[rust_fun "subtle::{subtle::CtOption<@T>}::map"]
+def subtle.CtOption.map
+  {T : Type} {U : Type} {F : Type} (coredefaultDefaultInst :
+  core.default.Default T) (ConditionallySelectableInst :
+  subtle.ConditionallySelectable T) (coreopsfunctionFnOnceFTupleTUInst :
+  core.ops.function.FnOnce F T U) :
+  subtle.CtOption T → F → Result (subtle.CtOption U) :=
+  fun co f => do
+    let d ← coredefaultDefaultInst.default
+    let t ← ConditionallySelectableInst.conditional_select d co.1 co.2
+    let u ← coreopsfunctionFnOnceFTupleTUInst.call_once f t
+    ok (u, co.2)
+
+/-- **Rust:** `subtle::CtOption::<T>::and_then` — method (foreign: subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:766-787 (method at line 774):
+    https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#766-787
+
+    Constant-time monadic bind: the closure is ALWAYS called — on the enclosed value if
+    `is_some = 1`, on the dummy `T::default()` otherwise (selected branch-free) — and the
+    resulting option's flag is ANDed with the original:
+    `let mut u = f(select(default, value, is_some)); u.is_some &= self.is_some; u`.
+
+    Used by `SelenePoint`'s `from_bytes` as the outer combinator: parse `x` via
+    `HelioseleneField::from_repr(bytes).and_then(|x| …recover y, build the point…)`
+    (src/point.rs:357).
+
+    Model: literal transcription over CtOption T = T × Bool, calling the closure through
+    its `FnOnce` instance record; result flag `uf && co.2`. -/
+@[rust_fun "subtle::{subtle::CtOption<@T>}::and_then"]
+def subtle.CtOption.and_then
+  {T : Type} {U : Type} {F : Type} (coredefaultDefaultInst :
+  core.default.Default T) (ConditionallySelectableInst :
+  subtle.ConditionallySelectable T) (coreopsfunctionFnOnceFTupleTCtOptionInst :
+  core.ops.function.FnOnce F T (subtle.CtOption U)) :
+  subtle.CtOption T → F → Result (subtle.CtOption U) :=
+  fun co f => do
+    let d ← coredefaultDefaultInst.default
+    let t ← ConditionallySelectableInst.conditional_select d co.1 co.2
+    let u ← coreopsfunctionFnOnceFTupleTCtOptionInst.call_once f t
+    ok (u.1, u.2 && co.2)
+
+/-- **Rust:** `<subtle::CtOption<T> as subtle::ConditionallySelectable>::conditional_select`
+    — trait-impl method (foreign: subtle 2.6.1)
+    subtle 2.6.1, src/lib.rs:820-827 (method at line 821):
+    https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#820-827
+
+    Component-wise constant-time select on `CtOption`: value and `is_some` flag are each
+    selected independently (`T::conditional_select` on the values,
+    `Choice::conditional_select` on the flags).
+
+    Used twice by `SelenePoint`'s `from_bytes`: to force `y = ONE` for the identity
+    encoding, and to return the flagged-`None` identity instead of "-0"
+    (src/point.rs:366-377).
+
+    Model: `((if c then b.value else a.value), (if c then b.flag else a.flag))` — with the
+    value select routed through the supplied `T` instance record, matching the Rust. -/
+@[rust_fun
+  "subtle::{subtle::ConditionallySelectable<subtle::CtOption<@T>>}::conditional_select"]
+def subtle.CtOption.Insts.SubtleConditionallySelectable.conditional_select
+  {T : Type} (ConditionallySelectableInst : subtle.ConditionallySelectable T) :
+  subtle.CtOption T → subtle.CtOption T → subtle.Choice → Result
+    (subtle.CtOption T) :=
+  fun a b c => do
+    let v ← ConditionallySelectableInst.conditional_select a.1 b.1 c
+    ok (v, if c then b.2 else a.2)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl zeroize::Zeroize for helioselene::point::selene::SelenePoint}::zeroize]:
+    Source: 'src/point.rs', lines 55:6-63:7
+    Visibility: public -/
+axiom point.selene.SelenePoint.Insts.ZeroizeZeroize.zeroize
+  : point.selene.SelenePoint → Result point.selene.SelenePoint
+
+/-- **Rust:** `<helioselene::point::selene::SelenePoint as core::cmp::Eq>::
+    assert_fields_are_eq` — derived-`Eq` marker method (this repository)
+    src/point.rs:86 (`impl Eq for SelenePoint {}`), commit
+    6313959f906fe754909754ac642134237dae42a9:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/point.rs#L86
+
+    rustc's `Eq` marker helper (`assert_receiver_is_total_eq`) — a compile-time
+    obligation with an empty runtime body; it computes nothing and cannot panic.
+
+    Referenced only by the `core.cmp.Eq` instance record for `SelenePoint` (evidence for
+    `Group`'s `Eq` supertrait bound); never called by the translated group law.
+
+    Model: `ok ()` (the empty body). -/
+def point.selene.SelenePoint.Insts.CoreCmpEq.assert_fields_are_eq
+  : point.selene.SelenePoint → Result Unit :=
+  fun _ => ok ()
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::ops::arith::MulAssign<&'_0 dalek_ff_group::field::FieldElement> for helioselene::point::selene::SelenePoint}::mul_assign]:
+    Source: 'src/point.rs', lines 341:6-343:7
+    Visibility: public -/
+axiom point.selene.SelenePoint.Insts.CoreOpsArithMulAssignShared0FieldElement.mul_assign
+  :
+  point.selene.SelenePoint → dalek_ff_group.field.FieldElement → Result
+    point.selene.SelenePoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::ops::arith::Mul<&'_0 dalek_ff_group::field::FieldElement, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::mul]:
+    Source: 'src/point.rs', lines 335:6-337:7
+    Visibility: public -/
+axiom point.selene.SelenePoint.Insts.CoreOpsArithMulShared0FieldElementSelenePoint.mul
+  :
+  point.selene.SelenePoint → dalek_ff_group.field.FieldElement → Result
+    point.selene.SelenePoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement> for helioselene::point::selene::SelenePoint}::mul_assign]:
+    Source: 'src/point.rs', lines 328:6-330:7
+    Visibility: public -/
+axiom point.selene.SelenePoint.Insts.CoreOpsArithMulAssignFieldElement.mul_assign
+  :
+  point.selene.SelenePoint → dalek_ff_group.field.FieldElement → Result
+    point.selene.SelenePoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::ops::arith::Mul<dalek_ff_group::field::FieldElement, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::mul]:
+    Source: 'src/point.rs', lines 279:6-324:7
+    Visibility: public -/
+axiom point.selene.SelenePoint.Insts.CoreOpsArithMulFieldElementSelenePoint.mul
+  :
+  point.selene.SelenePoint → dalek_ff_group.field.FieldElement → Result
+    point.selene.SelenePoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::iter::traits::accum::Sum<&'a helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sum]:
+    Source: 'src/point.rs', lines 272:6-274:7
+    Visibility: public -/
+axiom point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSharedASelenePoint.sum
+  {I : Type} (coreitertraitsiteratorIteratorISharedASelenePointInst :
+  core.iter.traits.iterator.Iterator I point.selene.SelenePoint) :
+  I → Result point.selene.SelenePoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::iter::traits::accum::Sum<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sum]:
+    Source: 'src/point.rs', lines 262:6-268:7
+    Visibility: public -/
+axiom point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSelenePoint.sum
+  {I : Type} (coreitertraitsiteratorIteratorISelenePointInst :
+  core.iter.traits.iterator.Iterator I point.selene.SelenePoint) :
+  I → Result point.selene.SelenePoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize]> for helioselene::point::selene::SelenePoint}::random]:
+    Source: 'src/point.rs', lines 213:6-223:7
+    Visibility: public -/
+axiom point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.random
+  {T0 : Type} (rand_coreRngCoreInst : rand_core.RngCore T0) :
+  T0 → Result point.selene.SelenePoint

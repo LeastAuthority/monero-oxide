@@ -148,3 +148,262 @@ Machine-generated index of every declaration in the generated Lean files, the Ru
 | `subtle.Choice` | axiom-type | [`subtle::Choice`](https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#120) | Constant-time boolean (u8 that is 0 or 1); axiomatized type, model required |
 | `crypto_bigint.uint.Uint` | axiom-type | [`crypto_bigint::Uint`](https://docs.rs/crypto-bigint/0.5.5/src/crypto_bigint/uint.rs.html#73-76) | Big unsigned integer as little-endian array of 64-bit limbs; axiomatized type family |
 | `subtle.CtOption` | axiom-type | [`subtle::CtOption`](https://docs.rs/subtle/2.6.1/src/subtle/lib.rs.html#647-650) | Constant-time Option: value always stored, validity in a Choice; axiomatized type |
+
+
+## Appendix: Selene-scope declarations (added 2026-07-07)
+
+Generated mechanically from the Aeneas metadata of the widened translation (`point::selene` group-law core + `verified::sqrt` + new externals). Audited per-declaration review comments for these are pending (README §7, remaining work).
+
+### `HelioseleneCore/Funs.lean` (130 new)
+
+| Lean declaration | Rust item (Aeneas metadata) | Source span |
+|---|---|---|
+| `crypto_bigint.uint.Uint.Insts.CoreFmtDebug` | `crypto_bigint::uint::{impl core::fmt::Debug for crypto_bigint::uint::Uint<LIMBS>}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/uint.rs:238:0 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreCloneClone` | `dalek_ff_group::field::{impl core::clone::Clone for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:38:9 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreMarkerCopy` | `dalek_ff_group::field::{impl core::marker::Copy for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:38:16 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreCmpPartialEqFieldElement` | `dalek_ff_group::field::{impl core::cmp::PartialEq<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:38:22 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreCmpEq` | `dalek_ff_group::field::{impl core::cmp::Eq for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:38:33 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreDefaultDefault` | `dalek_ff_group::field::{impl core::default::Default for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:38:37 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreFmtDebug` | `dalek_ff_group::field::{impl core::fmt::Debug for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:38:46 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreConvertFromU64` | `dalek_ff_group::field::{impl core::convert::From<u64> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:75:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithNegFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::Neg<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:89:0 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignSharedAFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::MulAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:158:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignSharedAFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::SubAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:158:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignSharedAFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::AddAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:158:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulSharedAFieldElementFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::Mul<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:152:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubSharedAFieldElementFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::Sub<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:152:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddSharedAFieldElementFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::Add<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:152:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:147:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:147:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:147:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulFieldElementFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:141:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubFieldElementFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:141:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddFieldElementFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:141:4 |
+| `dalek_ff_group.field.FieldElement.Insts.SubtleConditionallySelectable` | `dalek_ff_group::field::{impl subtle::ConditionallySelectable for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:87:4 |
+| `dalek_ff_group.field.FieldElement.Insts.SubtleConstantTimeEq` | `dalek_ff_group::field::{impl subtle::ConstantTimeEq for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:81:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductSharedAFieldElement` | `dalek_ff_group::field::{impl core::iter::traits::accum::Product<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:341:0 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductFieldElement` | `dalek_ff_group::field::{impl core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:331:0 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumSharedAFieldElement` | `dalek_ff_group::field::{impl core::iter::traits::accum::Sum<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:325:0 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumFieldElement` | `dalek_ff_group::field::{impl core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:315:0 |
+| `dalek_ff_group.field.FieldElement.Insts.FfField` | `dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:103:0 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:158:0 |
+| `group.GroupOps.Blanket` | `group::{impl group::GroupOps<Rhs, Output> for T}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs:35:0 |
+| `group.GroupOpsOwned.Blanket` | `group::{impl group::GroupOpsOwned<Rhs, Output> for T}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs:42:0 |
+| `group.ScalarMul.Blanket` | `group::{impl group::ScalarMul<Rhs, Output> for T}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs:47:0 |
+| `group.ScalarMulOwned.Blanket` | `group::{impl group::ScalarMulOwned<Rhs, Output> for T}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs:52:0 |
+| `Bool.Insts.CoreConvertFromChoice` | `subtle::{impl core::convert::From<subtle::Choice> for bool}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subtle-2.6.1/src/lib.rs:138:0 |
+| `subtle.Choice.Insts.CoreConvertFromU8` | `subtle::{impl core::convert::From<u8> for subtle::Choice}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subtle-2.6.1/src/lib.rs:236:0 |
+| `field.HelioseleneField.Insts.CoreCloneClone.clone` | `helioselene::field::{impl core::clone::Clone for helioselene::field::HelioseleneField}::clone` | src/field/mod.rs:20:9 |
+| `field.HelioseleneField.Insts.CoreCloneClone` | `helioselene::field::{impl core::clone::Clone for helioselene::field::HelioseleneField}` | src/field/mod.rs:20:9 |
+| `field.HelioseleneField.Insts.CoreMarkerCopy` | `helioselene::field::{impl core::marker::Copy for helioselene::field::HelioseleneField}` | src/field/mod.rs:20:16 |
+| `field.HelioseleneField.Insts.CoreDefaultDefault.default` | `helioselene::field::{impl core::default::Default for helioselene::field::HelioseleneField}::default` | src/field/mod.rs:20:37 |
+| `field.HelioseleneField.Insts.CoreDefaultDefault` | `helioselene::field::{impl core::default::Default for helioselene::field::HelioseleneField}` | src/field/mod.rs:20:37 |
+| `field.HelioseleneField.Insts.CoreFmtDebug.fmt` | `helioselene::field::{impl core::fmt::Debug for helioselene::field::HelioseleneField}::fmt` | src/field/mod.rs:20:46 |
+| `field.HelioseleneField.Insts.CoreFmtDebug` | `helioselene::field::{impl core::fmt::Debug for helioselene::field::HelioseleneField}` | src/field/mod.rs:20:46 |
+| `field.HelioseleneField.Insts.SubtleConstantTimeEq.ct_eq` | `helioselene::field::{impl subtle::ConstantTimeEq for helioselene::field::HelioseleneField}::ct_eq` | src/field/mod.rs:53:2 |
+| `field.HelioseleneField.Insts.SubtleConditionallySelectable` | `helioselene::field::{impl subtle::ConditionallySelectable for helioselene::field::HelioseleneField}` | src/field/mod.rs:58:0 |
+| `Shared0HelioseleneField.Insts.CoreOpsArithNegHelioseleneField.neg` | `helioselene::field::{impl core::ops::arith::Neg<helioselene::field::HelioseleneField> for &'_0 helioselene::field::HelioseleneField}::neg` | src/field/mod.rs:102:2 |
+| `Shared0HelioseleneField.Insts.CoreOpsArithNegHelioseleneField` | `helioselene::field::{impl core::ops::arith::Neg<helioselene::field::HelioseleneField> for &'_0 helioselene::field::HelioseleneField}` | src/field/mod.rs:99:0 |
+| `field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul` | `helioselene::field::{impl core::ops::arith::Mul<&'_0 helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::mul` | src/field/mod.rs:130:2 |
+| `field.HelioseleneField.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign` | `helioselene::field::{impl core::ops::arith::MulAssign<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::mul_assign` | src/field/mod.rs:136:2 |
+| `field.HelioseleneField.Insts.CoreOpsArithMulAssignShared0HelioseleneField.mul_assign` | `helioselene::field::{impl core::ops::arith::MulAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::mul_assign` | src/field/mod.rs:142:2 |
+| `field.HelioseleneField.from_u256` | `helioselene::field::{helioselene::field::HelioseleneField}::from_u256` | src/field/mod.rs:166:2 |
+| `field.HelioseleneField.Insts.FfField.ONE` | `helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::ONE` | src/field/mod.rs:185:2 |
+| `field.HelioseleneField.Insts.FfField.double` | `helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::double` | src/field/mod.rs:201:2 |
+| `field.HelioseleneField.Insts.FfField.square` | `helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::square` | src/field/mod.rs:206:2 |
+| `field.HelioseleneField.Insts.FfField.invert` | `helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::invert` | src/field/mod.rs:212:2 |
+| `field.verified.sqrt.MODULUS_PLUS_ONE_DIV_FOUR` | `helioselene::field::verified::sqrt::MODULUS_PLUS_ONE_DIV_FOUR` | src/field/verified/sqrt.rs:4:0 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.is_odd` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:255:2 |
+| `field.verified.sqrt.sqrt_loop0.body` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:36:2 |
+| `field.verified.sqrt.sqrt_loop0` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:36:2 |
+| `field.verified.sqrt.sqrt_loop1.body` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:42:2 |
+| `field.verified.sqrt.sqrt_loop1` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:42:2 |
+| `field.verified.sqrt.sqrt_loop2.body` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:48:2 |
+| `field.verified.sqrt.sqrt_loop2` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:48:2 |
+| `field.verified.sqrt.sqrt_loop3.body` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:54:2 |
+| `field.verified.sqrt.sqrt_loop3` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:54:2 |
+| `field.verified.sqrt.sqrt_loop4.body` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:72:2 |
+| `field.verified.sqrt.sqrt_loop4` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:72:2 |
+| `field.verified.sqrt.sqrt` | `helioselene::field::verified::sqrt::sqrt` | src/field/verified/sqrt.rs:9:0 |
+| `field.HelioseleneField.Insts.FfField.sqrt` | `helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::sqrt` | src/field/mod.rs:216:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.from_repr` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:247:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.to_repr` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:251:2 |
+| `point.selene.G_X` | `helioselene::point::selene::G_X` | src/point.rs:29:4 |
+| `point.selene.G_Y` | `helioselene::point::selene::G_Y` | src/point.rs:30:4 |
+| `point.selene.B` | `helioselene::point::selene::B` | src/point.rs:32:4 |
+| `point.selene.curve_equation` | `helioselene::point::selene::curve_equation` | src/point.rs:36:4 |
+| `point.selene.recover_y` | `helioselene::point::selene::recover_y` | src/point.rs:40:4 |
+| `point.selene.SelenePoint.Insts.CoreCloneClone.clone` | `helioselene::point::selene::{impl core::clone::Clone for helioselene::point::selene::SelenePoint}::clone` | src/point.rs:46:13 |
+| `point.selene.SelenePoint.Insts.CoreCloneClone` | `helioselene::point::selene::{impl core::clone::Clone for helioselene::point::selene::SelenePoint}` | src/point.rs:46:13 |
+| `point.selene.SelenePoint.Insts.CoreMarkerCopy` | `helioselene::point::selene::{impl core::marker::Copy for helioselene::point::selene::SelenePoint}` | src/point.rs:46:20 |
+| `point.selene.SelenePoint.Insts.CoreFmtDebug.fmt` | `helioselene::point::selene::{impl core::fmt::Debug for helioselene::point::selene::SelenePoint}::fmt` | src/point.rs:46:26 |
+| `point.selene.SelenePoint.Insts.CoreFmtDebug` | `helioselene::point::selene::{impl core::fmt::Debug for helioselene::point::selene::SelenePoint}` | src/point.rs:46:26 |
+| `point.selene.SelenePoint.Insts.ZeroizeZeroize` | `helioselene::point::selene::{impl zeroize::Zeroize for helioselene::point::selene::SelenePoint}` | src/point.rs:54:4 |
+| `point.selene.G` | `helioselene::point::selene::G` | src/point.rs:66:4 |
+| `point.selene.SelenePoint.Insts.SubtleConstantTimeEq.ct_eq` | `helioselene::point::selene::{impl subtle::ConstantTimeEq for helioselene::point::selene::SelenePoint}::ct_eq` | src/point.rs:69:6 |
+| `point.selene.SelenePoint.Insts.SubtleConstantTimeEq` | `helioselene::point::selene::{impl subtle::ConstantTimeEq for helioselene::point::selene::SelenePoint}` | src/point.rs:68:4 |
+| `point.selene.SelenePoint.Insts.CoreCmpPartialEqSelenePoint.eq` | `helioselene::point::selene::{impl core::cmp::PartialEq<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::eq` | src/point.rs:81:6 |
+| `point.selene.SelenePoint.Insts.CoreCmpPartialEqSelenePoint` | `helioselene::point::selene::{impl core::cmp::PartialEq<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:80:4 |
+| `point.selene.SelenePoint.Insts.CoreCmpEq` | `helioselene::point::selene::{impl core::cmp::Eq for helioselene::point::selene::SelenePoint}` | src/point.rs:86:4 |
+| `point.selene.SelenePoint.Insts.SubtleConditionallySelectable.conditional_select` | `helioselene::point::selene::{impl subtle::ConditionallySelectable for helioselene::point::selene::SelenePoint}::conditional_select` | src/point.rs:89:6 |
+| `point.selene.SelenePoint.Insts.SubtleConditionallySelectable` | `helioselene::point::selene::{impl subtle::ConditionallySelectable for helioselene::point::selene::SelenePoint}` | src/point.rs:88:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithAddSelenePointSelenePoint.add` | `helioselene::point::selene::{impl core::ops::arith::Add<helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::add` | src/point.rs:101:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithAddSelenePointSelenePoint` | `helioselene::point::selene::{impl core::ops::arith::Add<helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:98:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithAddAssignSelenePoint.add_assign` | `helioselene::point::selene::{impl core::ops::arith::AddAssign<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::add_assign` | src/point.rs:159:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithAddAssignSelenePoint` | `helioselene::point::selene::{impl core::ops::arith::AddAssign<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:158:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithAddShared0SelenePointSelenePoint.add` | `helioselene::point::selene::{impl core::ops::arith::Add<&'_0 helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::add` | src/point.rs:166:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithAddShared0SelenePointSelenePoint` | `helioselene::point::selene::{impl core::ops::arith::Add<&'_0 helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:164:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithAddAssignShared0SelenePoint.add_assign` | `helioselene::point::selene::{impl core::ops::arith::AddAssign<&'_0 helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::add_assign` | src/point.rs:172:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithAddAssignShared0SelenePoint` | `helioselene::point::selene::{impl core::ops::arith::AddAssign<&'_0 helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:171:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithNegSelenePoint.neg` | `helioselene::point::selene::{impl core::ops::arith::Neg<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::neg` | src/point.rs:179:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithNegSelenePoint` | `helioselene::point::selene::{impl core::ops::arith::Neg<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:177:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithSubSelenePointSelenePoint.sub` | `helioselene::point::selene::{impl core::ops::arith::Sub<helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sub` | src/point.rs:187:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithSubSelenePointSelenePoint` | `helioselene::point::selene::{impl core::ops::arith::Sub<helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:184:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithSubAssignSelenePoint.sub_assign` | `helioselene::point::selene::{impl core::ops::arith::SubAssign<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sub_assign` | src/point.rs:193:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithSubAssignSelenePoint` | `helioselene::point::selene::{impl core::ops::arith::SubAssign<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:192:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithSubShared0SelenePointSelenePoint.sub` | `helioselene::point::selene::{impl core::ops::arith::Sub<&'_0 helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sub` | src/point.rs:200:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithSubShared0SelenePointSelenePoint` | `helioselene::point::selene::{impl core::ops::arith::Sub<&'_0 helioselene::point::selene::SelenePoint, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:198:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithSubAssignShared0SelenePoint.sub_assign` | `helioselene::point::selene::{impl core::ops::arith::SubAssign<&'_0 helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sub_assign` | src/point.rs:206:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithSubAssignShared0SelenePoint` | `helioselene::point::selene::{impl core::ops::arith::SubAssign<&'_0 helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:205:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulAssignShared0FieldElement` | `helioselene::point::selene::{impl core::ops::arith::MulAssign<&'_0 dalek_ff_group::field::FieldElement> for helioselene::point::selene::SelenePoint}` | src/point.rs:340:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulShared0FieldElementSelenePoint` | `helioselene::point::selene::{impl core::ops::arith::Mul<&'_0 dalek_ff_group::field::FieldElement, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:333:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulAssignFieldElement` | `helioselene::point::selene::{impl core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement> for helioselene::point::selene::SelenePoint}` | src/point.rs:327:4 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulFieldElementSelenePoint` | `helioselene::point::selene::{impl core::ops::arith::Mul<dalek_ff_group::field::FieldElement, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:277:4 |
+| `point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSharedASelenePoint` | `helioselene::point::selene::{impl core::iter::traits::accum::Sum<&'a helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:271:4 |
+| `point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSelenePoint` | `helioselene::point::selene::{impl core::iter::traits::accum::Sum<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}` | src/point.rs:261:4 |
+| `point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.is_identity` | `helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize` | src/point.rs:230:6 |
+| `point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.identity` | `helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize` | src/point.rs:224:6 |
+| `point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.double` | `helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize` | src/point.rs:234:6 |
+| `point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.generator` | `helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize` | src/point.rs:227:6 |
+| `point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832` | `helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize` | src/point.rs:211:4 |
+| `point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832.to_bytes` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:388:6 |
+| `point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure_1.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldSelenePoint.call_once` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:372:38 |
+| `point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure_1.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldSelenePoint` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:372:38 |
+| `point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldHelioseleneField.call_once` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:361:35 |
+| `point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldHelioseleneField` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:361:35 |
+| `point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldCtOptionSelenePoint.call_once` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:358:42 |
+| `point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleHelioseleneFieldCtOptionSelenePoint` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:358:42 |
+| `point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832.from_bytes` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:349:6 |
+| `point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832.from_bytes_unchecked` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:384:6 |
+| `point.selene.SelenePoint.Insts.GroupGroupEncodingArrayU832` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:346:4 |
+| `point.selene.SelenePoint.Insts.GroupPrimePrimeGroupFieldElementArrayU832ArrayU832` | `helioselene::point::selene::{impl group::prime::PrimeGroup<dalek_ff_group::field::FieldElement, [u8; 32usize` | src/point.rs:403:4 |
+| `point.selene.SelenePoint.from_xy` | `helioselene::point::selene::{helioselene::point::selene::SelenePoint}::from_xy` | src/point.rs:411:6 |
+
+### `HelioseleneCore/Types.lean` (20 new)
+
+| Lean declaration | Rust item (Aeneas metadata) | Source span |
+|---|---|---|
+| `core.ops.arith.AddAssign` | `core::ops::arith::AddAssign` | /rustc/library/core/src/ops/arith.rs:768:0 |
+| `core.ops.arith.SubAssign` | `core::ops::arith::SubAssign` | /rustc/library/core/src/ops/arith.rs:839:0 |
+| `core.ops.arith.MulAssign` | `core::ops::arith::MulAssign` | /rustc/library/core/src/ops/arith.rs:901:0 |
+| `subtle.ConditionallySelectable` | `subtle::ConditionallySelectable` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subtle-2.6.1/src/lib.rs:393:0 |
+| `subtle.ConstantTimeEq` | `subtle::ConstantTimeEq` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subtle-2.6.1/src/lib.rs:262:0 |
+| `rand_core.RngCore` | `rand_core::RngCore` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.6.4/src/lib.rs:142:0 |
+| `ff.Field` | `ff::Field` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ff-0.13.1/src/lib.rs:41:0 |
+| `ff.PrimeField` | `ff::PrimeField` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ff-0.13.1/src/lib.rs:195:0 |
+| `group.GroupOps` | `group::GroupOps` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs:30:0 |
+| `group.GroupOpsOwned` | `group::GroupOpsOwned` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs:41:0 |
+| `group.ScalarMul` | `group::ScalarMul` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs:45:0 |
+| `group.ScalarMulOwned` | `group::ScalarMulOwned` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs:51:0 |
+| `group.Group` | `group::Group` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs:55:0 |
+| `group.GroupEncoding` | `group::GroupEncoding` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs:116:0 |
+| `group.prime.PrimeGroup` | `group::prime::PrimeGroup` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/prime.rs:9:0 |
+| `zeroize.Zeroize` | `zeroize::Zeroize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zeroize-1.9.0/src/lib.rs:245:0 |
+| `point.selene.SelenePoint` | `helioselene::point::selene::SelenePoint` | src/point.rs:48:4 |
+| `point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure_1` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:372:38 |
+| `point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:361:35 |
+| `point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure` | `helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:358:42 |
+
+### `HelioseleneCore/FunsExternal.lean` (81 new)
+
+| Lean declaration | Rust item (Aeneas metadata) | Source span |
+|---|---|---|
+| `limbOfNat` | `?` | — |
+| `byteOfNat` | `?` | — |
+| `limbAllOnes` | `?` | — |
+| `hexDigit?` | `?` | — |
+| `parseBeHex?` | `?` | — |
+| `leBytesToNat` | `?` | — |
+| `crypto_bigint.uint.Uint.toNat` | `?` | — |
+| `crypto_bigint.uint.Uint.ofNat` | `?` | — |
+| `crypto_bigint.uint.Uint.Insts.SubtleConstantTimeEq.ct_eq` | `?` | — |
+| `crypto_bigint.uint.div.Uint.const_rem` | `?` | — |
+| `crypto_bigint.uint.from.Uint.from_u8` | `?` | — |
+| `crypto_bigint.uint.Uint.Insts.CoreDefaultDefault.default` | `?` | — |
+| `crypto_bigint.uint.Uint.Insts.CoreFmtDebug.fmt` | `crypto_bigint::uint::{impl core::fmt::Debug for crypto_bigint::uint::Uint<LIMBS>}::fmt` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/uint.rs:239:4 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreCloneClone.clone` | `dalek_ff_group::field::{impl core::clone::Clone for dalek_ff_group::field::FieldElement}::clone` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:38:9 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreCmpPartialEqFieldElement.eq` | `dalek_ff_group::field::{impl core::cmp::PartialEq<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::eq` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:38:22 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreCmpEq.assert_fields_are_eq` | `derive(…, Eq, …)` | — |
+| `dalek_ff_group.field.FieldElement.Insts.CoreDefaultDefault.default` | `dalek_ff_group::field::{impl core::default::Default for dalek_ff_group::field::FieldElement}::default` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:38:37 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreFmtDebug.fmt` | `dalek_ff_group::field::{impl core::fmt::Debug for dalek_ff_group::field::FieldElement}::fmt` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:38:46 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreConvertFromU64.from` | `dalek_ff_group::field::{impl core::convert::From<u64> for dalek_ff_group::field::FieldElement}::from` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:76:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithNegFieldElement.neg` | `dalek_ff_group::field::{impl core::ops::arith::Neg<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::neg` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:91:2 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignSharedAFieldElement.mul_assign` | `dalek_ff_group::field::{impl core::ops::arith::MulAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul_assign` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:159:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignSharedAFieldElement.sub_assign` | `dalek_ff_group::field::{impl core::ops::arith::SubAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub_assign` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:159:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignSharedAFieldElement.add_assign` | `dalek_ff_group::field::{impl core::ops::arith::AddAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add_assign` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:159:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulSharedAFieldElementFieldElement.mul` | `dalek_ff_group::field::{impl core::ops::arith::Mul<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:154:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubSharedAFieldElementFieldElement.sub` | `dalek_ff_group::field::{impl core::ops::arith::Sub<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:154:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddSharedAFieldElementFieldElement.add` | `dalek_ff_group::field::{impl core::ops::arith::Add<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:154:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignFieldElement.mul_assign` | `dalek_ff_group::field::{impl core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul_assign` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:148:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignFieldElement.sub_assign` | `dalek_ff_group::field::{impl core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub_assign` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:148:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignFieldElement.add_assign` | `dalek_ff_group::field::{impl core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add_assign` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:148:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulFieldElementFieldElement.mul` | `dalek_ff_group::field::{impl core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:143:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubFieldElementFieldElement.sub` | `dalek_ff_group::field::{impl core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:143:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddFieldElementFieldElement.add` | `dalek_ff_group::field::{impl core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:143:6 |
+| `dalek_ff_group.field.FieldElement.Insts.SubtleConditionallySelectable.conditional_select` | `dalek_ff_group::field::{impl subtle::ConditionallySelectable for dalek_ff_group::field::FieldElement}::conditional_select` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:88:6 |
+| `dalek_ff_group.field.FieldElement.Insts.SubtleConstantTimeEq.ct_eq` | `dalek_ff_group::field::{impl subtle::ConstantTimeEq for dalek_ff_group::field::FieldElement}::ct_eq` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs:82:6 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductSharedAFieldElement.product` | `dalek_ff_group::field::{impl core::iter::traits::accum::Product<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::product` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:342:2 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumProductFieldElement.product` | `dalek_ff_group::field::{impl core::iter::traits::accum::Product<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::product` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:332:2 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumSharedAFieldElement.sum` | `dalek_ff_group::field::{impl core::iter::traits::accum::Sum<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sum` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:326:2 |
+| `dalek_ff_group.field.FieldElement.Insts.CoreIterTraitsAccumSumFieldElement.sum` | `dalek_ff_group::field::{impl core::iter::traits::accum::Sum<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sum` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:316:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfField.sqrt_ratio` | `dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::sqrt_ratio` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:134:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfField.sqrt` | `dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::sqrt` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:127:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfField.invert` | `dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::invert` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:120:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfField.double` | `dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::double` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:116:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfField.square` | `dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::square` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:113:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfField.random` | `dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::random` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:107:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfField.ONE` | `dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::ONE` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:105:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfField.ZERO` | `dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::ZERO` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:104:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfField.is_zero` | `dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::is_zero` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:103:0 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.is_odd` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:198:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.to_repr` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:194:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.from_repr` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:190:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.DELTA` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:186:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.ROOT_OF_UNITY_INV` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:182:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.ROOT_OF_UNITY` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:178:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.S` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:174:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.MULTIPLICATIVE_GENERATOR` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:171:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.TWO_INV` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:167:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.CAPACITY` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:165:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.NUM_BITS` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:164:2 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.MODULUS` | `dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:162:2 |
+| `ff.Field.is_zero.default` | `?` | — |
+| `ff.Field.sqrt.default` | `?` | — |
+| `subtle.Choice.unwrap_u8` | `?` | — |
+| `Bool.Insts.CoreConvertFromChoice.from` | `?` | — |
+| `subtle.Choice.Insts.CoreOpsBitBitAndChoiceChoice.bitand` | `?` | — |
+| `subtle.Choice.Insts.CoreOpsBitBitOrChoiceChoice.bitor` | `?` | — |
+| `subtle.Choice.Insts.SubtleConstantTimeEq.ct_eq` | `?` | — |
+| `U8.Insts.SubtleConditionallySelectable.conditional_select` | `?` | — |
+| `subtle.ConditionallyNegatable.Blanket.conditional_negate` | `?` | — |
+| `core.option.Option.Insts.CoreConvertFromCtOption.from` | `?` | — |
+| `subtle.CtOption.map` | `?` | — |
+| `subtle.CtOption.and_then` | `?` | — |
+| `subtle.CtOption.Insts.SubtleConditionallySelectable.conditional_select` | `?` | — |
+| `point.selene.SelenePoint.Insts.ZeroizeZeroize.zeroize` | `helioselene::point::selene::{impl zeroize::Zeroize for helioselene::point::selene::SelenePoint}::zeroize` | src/point.rs:55:6 |
+| `point.selene.SelenePoint.Insts.CoreCmpEq.assert_fields_are_eq` | `?` | — |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulAssignShared0FieldElement.mul_assign` | `helioselene::point::selene::{impl core::ops::arith::MulAssign<&'_0 dalek_ff_group::field::FieldElement> for helioselene::point::selene::SelenePoint}::mul_assign` | src/point.rs:341:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulShared0FieldElementSelenePoint.mul` | `helioselene::point::selene::{impl core::ops::arith::Mul<&'_0 dalek_ff_group::field::FieldElement, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::mul` | src/point.rs:335:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulAssignFieldElement.mul_assign` | `helioselene::point::selene::{impl core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement> for helioselene::point::selene::SelenePoint}::mul_assign` | src/point.rs:328:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulFieldElementSelenePoint.mul` | `helioselene::point::selene::{impl core::ops::arith::Mul<dalek_ff_group::field::FieldElement, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::mul` | src/point.rs:279:6 |
+| `point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSharedASelenePoint.sum` | `helioselene::point::selene::{impl core::iter::traits::accum::Sum<&'a helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sum` | src/point.rs:272:6 |
+| `point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSelenePoint.sum` | `helioselene::point::selene::{impl core::iter::traits::accum::Sum<helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sum` | src/point.rs:262:6 |
+| `point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.random` | `helioselene::point::selene::{impl group::Group<dalek_ff_group::field::FieldElement, [u8; 32usize` | src/point.rs:213:6 |
+
+### `HelioseleneCore/TypesExternal.lean` (3 new)
+
+| Lean declaration | Rust item (Aeneas metadata) | Source span |
+|---|---|---|
+| `crypto_bigint.ct_choice.CtChoice` | `?` | — |
+| `dalek_ff_group.field.FieldElement` | `?` | — |
+| `rand_core.error.Error` | `?` | — |

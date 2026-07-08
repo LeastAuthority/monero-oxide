@@ -422,18 +422,27 @@ Notes:
 
 /-! ## Transitively-sorried obligation inventory (whole Spec tree)
 
-Result of `grep -n sorry HelioseleneCore/Spec/*.lean` on this build: the ONE
-remaining `sorry` is
+Result of `grep -rn sorry HelioseleneCore/Spec/` on this build: the TWO
+remaining `sorry`s are
 
   `HelioseleneSpec.Invert.step_congruence`  (Spec/Invert.lean)
      — one branch-free binary-GCD `step` preserves the Algorithm-1 invariant
        `InvA` (congruences `a ≡ ±u·y`, `b ≡ ±v·y (mod p)`, `b` odd, `u,v ≤ p`,
        `gcd` preservation, potential halving `2·a'·b' ≤ a·b`).
+     Downstream taint (all via `invert_ok`): `HField.inv`,
+     `instInvHField`/`instDivHField`, `HField.inv_val_of_zero`,
+     `HField.inv_val_of_ne_zero`, `φ_inv`, `φ_div`, `instFieldHField`.
 
-Everything else in `Spec/{Externals,Phi,Linear,Repr,Reduction,Prime}.lean` and the
-rest of `Spec/Invert.lean` is proved. Downstream taint (all via `invert_ok`):
-`HField.inv`, `instInvHField`/`instDivHField`, `HField.inv_val_of_zero`,
-`HField.inv_val_of_ne_zero`, `φ_inv`, `φ_div`, `instFieldHField`. -/
+  `HelioseleneSpec.Selene.sqrt_complete`  (Spec/Selene/Ops.lean)
+     — completeness of the windowed square-root ladder: on a square input the
+       returned validity flag is true. A LEAF: nothing in the tree depends on
+       it (its taint cone is empty; in particular the Selene group law of
+       `Spec/Selene/GroupLaw.lean` and the proved `sqrt_ok` soundness contract
+       are unaffected — only "flag = false ⇒ non-square" waits on it).
+
+Everything else in `Spec/{Externals,Phi,Linear,Repr,Reduction,Prime}.lean`,
+`Spec/Selene/{Curve,Ops,GroupLaw}.lean` and the rest of `Spec/Invert.lean` is
+proved. -/
 
 end HelioseleneSpec
 

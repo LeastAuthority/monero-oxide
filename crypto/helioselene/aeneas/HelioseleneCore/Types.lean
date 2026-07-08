@@ -101,6 +101,30 @@ structure core.ops.arith.Mul (Self : Type) (Rhs : Type) (Self_Output : Type)
 structure core.ops.arith.Neg (Self : Type) (Self_Output : Type) where
   neg : Self → Result Self_Output
 
+/-- Trait declaration: [core::ops::arith::AddAssign]
+    Source: '/rustc/library/core/src/ops/arith.rs', lines 768:0-768:37
+    Name pattern: [core::ops::arith::AddAssign]
+    Visibility: public -/
+@[rust_trait "core::ops::arith::AddAssign"]
+structure core.ops.arith.AddAssign (Self : Type) (Rhs : Type) where
+  add_assign : Self → Rhs → Result Self
+
+/-- Trait declaration: [core::ops::arith::SubAssign]
+    Source: '/rustc/library/core/src/ops/arith.rs', lines 839:0-839:37
+    Name pattern: [core::ops::arith::SubAssign]
+    Visibility: public -/
+@[rust_trait "core::ops::arith::SubAssign"]
+structure core.ops.arith.SubAssign (Self : Type) (Rhs : Type) where
+  sub_assign : Self → Rhs → Result Self
+
+/-- Trait declaration: [core::ops::arith::MulAssign]
+    Source: '/rustc/library/core/src/ops/arith.rs', lines 901:0-901:37
+    Name pattern: [core::ops::arith::MulAssign]
+    Visibility: public -/
+@[rust_trait "core::ops::arith::MulAssign"]
+structure core.ops.arith.MulAssign (Self : Type) (Rhs : Type) where
+  mul_assign : Self → Rhs → Result Self
+
 /-- **Rust:** `crypto_bigint::Limb` — type (foreign: crypto-bigint 0.5.5, newtype flattened)
     crypto-bigint 0.5.5, src/limb.rs:65 (crate source):
     https://docs.rs/crypto-bigint/0.5.5/src/crypto_bigint/limb.rs.html#65
@@ -119,6 +143,214 @@ structure core.ops.arith.Neg (Self : Type) (Self_Output : Type) where
     Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/limb.rs', lines 65:0-65:15 -/
 @[reducible, rust_type "crypto_bigint::limb::Limb"]
 def crypto_bigint.limb.Limb := Std.U64
+
+/-- Trait declaration: [subtle::ConditionallySelectable]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subtle-2.6.1/src/lib.rs', lines 393:0-393:39
+    Name pattern: [subtle::ConditionallySelectable]
+    Visibility: public -/
+@[rust_trait "subtle::ConditionallySelectable"
+  (parentClauses := ["coremarkerCopyInst"])]
+structure subtle.ConditionallySelectable (Self : Type) where
+  coremarkerCopyInst : core.marker.Copy Self
+  conditional_select : Self → Self → subtle.Choice → Result Self
+
+/-- Trait declaration: [subtle::ConstantTimeEq]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subtle-2.6.1/src/lib.rs', lines 262:0-262:24
+    Name pattern: [subtle::ConstantTimeEq]
+    Visibility: public -/
+@[rust_trait "subtle::ConstantTimeEq"]
+structure subtle.ConstantTimeEq (Self : Type) where
+  ct_eq : Self → Self → Result subtle.Choice
+
+/-- Trait declaration: [rand_core::RngCore]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.6.4/src/lib.rs', lines 142:0-142:17
+    Name pattern: [rand_core::RngCore]
+    Visibility: public -/
+@[rust_trait "rand_core::RngCore"]
+structure rand_core.RngCore (Self : Type) where
+  next_u32 : Self → Result (Std.U32 × Self)
+  next_u64 : Self → Result (Std.U64 × Self)
+  fill_bytes : Self → Slice Std.U8 → Result (Self × (Slice Std.U8))
+  try_fill_bytes : Self → Slice Std.U8 → Result ((core.result.Result Unit
+    rand_core.error.Error) × Self × (Slice Std.U8))
+
+/-- Trait declaration: [ff::Field]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ff-0.13.1/src/lib.rs', lines 41:0-69:33
+    Name pattern: [ff::Field]
+    Visibility: public -/
+@[rust_trait "ff::Field"
+  (parentClauses := ["corecmpEqInst", "coremarkerCopyInst", "corecloneCloneInst", "coredefaultDefaultInst", "corefmtDebugInst", "subtleConditionallySelectableInst", "subtleConstantTimeEqInst", "coreopsarithNegInst", "coreopsarithAddInst", "coreopsarithSubInst", "coreopsarithMulInst", "coreitertraitsaccumSumInst", "coreitertraitsaccumProductInst", "coreopsarithAddSelfSharedSelfSelfInst", "coreopsarithSubSelfSharedSelfSelfInst", "coreopsarithMulSelfSharedSelfSelfInst", "coreitertraitsaccumSumSelfSharedSelfInst", "coreitertraitsaccumProductSelfSharedSelfInst", "coreopsarithAddAssignInst", "coreopsarithSubAssignInst", "coreopsarithMulAssignInst", "coreopsarithAddAssignSelfSharedSelfInst", "coreopsarithSubAssignSelfSharedSelfInst", "coreopsarithMulAssignSelfSharedSelfInst"])
+  (consts := ["ZERO", "ONE"])]
+structure ff.Field (Self : Type) where
+  ZERO : Result Self
+  ONE : Result Self
+  corecmpEqInst : core.cmp.Eq Self
+  coremarkerCopyInst : core.marker.Copy Self
+  corecloneCloneInst : core.clone.Clone Self
+  coredefaultDefaultInst : core.default.Default Self
+  corefmtDebugInst : core.fmt.Debug Self
+  subtleConditionallySelectableInst : subtle.ConditionallySelectable Self
+  subtleConstantTimeEqInst : subtle.ConstantTimeEq Self
+  coreopsarithNegInst : core.ops.arith.Neg Self Self
+  coreopsarithAddInst : core.ops.arith.Add Self Self Self
+  coreopsarithSubInst : core.ops.arith.Sub Self Self Self
+  coreopsarithMulInst : core.ops.arith.Mul Self Self Self
+  coreitertraitsaccumSumInst : core.iter.traits.accum.Sum Self Self
+  coreitertraitsaccumProductInst : core.iter.traits.accum.Product Self Self
+  coreopsarithAddSelfSharedSelfSelfInst : core.ops.arith.Add Self Self Self
+  coreopsarithSubSelfSharedSelfSelfInst : core.ops.arith.Sub Self Self Self
+  coreopsarithMulSelfSharedSelfSelfInst : core.ops.arith.Mul Self Self Self
+  coreitertraitsaccumSumSelfSharedSelfInst : core.iter.traits.accum.Sum Self
+    Self
+  coreitertraitsaccumProductSelfSharedSelfInst : core.iter.traits.accum.Product
+    Self Self
+  coreopsarithAddAssignInst : core.ops.arith.AddAssign Self Self
+  coreopsarithSubAssignInst : core.ops.arith.SubAssign Self Self
+  coreopsarithMulAssignInst : core.ops.arith.MulAssign Self Self
+  coreopsarithAddAssignSelfSharedSelfInst : core.ops.arith.AddAssign Self Self
+  coreopsarithSubAssignSelfSharedSelfInst : core.ops.arith.SubAssign Self Self
+  coreopsarithMulAssignSelfSharedSelfInst : core.ops.arith.MulAssign Self Self
+  random : forall {T1 : Type} (rand_coreRngCoreInst : rand_core.RngCore T1), T1
+    → Result Self
+  is_zero : Self → Result subtle.Choice
+  square : Self → Result Self
+  double : Self → Result Self
+  invert : Self → Result (subtle.CtOption Self)
+  sqrt_ratio : Self → Self → Result (subtle.Choice × Self)
+  sqrt : Self → Result (subtle.CtOption Self)
+
+/-- Trait declaration: [ff::PrimeField]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ff-0.13.1/src/lib.rs', lines 195:0-195:39
+    Name pattern: [ff::PrimeField]
+    Visibility: public -/
+@[rust_trait "ff::PrimeField"
+  (parentClauses := ["FieldInst", "coreconvertFromSelfU64Inst", "coremarkerCopyInst", "coredefaultDefaultInst", "coreconvertAsRefSelf_ReprSliceU8Inst", "coreconvertAsMutSelf_ReprSliceU8Inst"])
+  (consts := ["MODULUS", "NUM_BITS", "CAPACITY", "TWO_INV", "MULTIPLICATIVE_GENERATOR", "S", "ROOT_OF_UNITY", "ROOT_OF_UNITY_INV", "DELTA"])]
+structure ff.PrimeField (Self : Type) (Self_Repr : Type) where
+  MODULUS : Result Str
+  NUM_BITS : Result Std.U32
+  CAPACITY : Result Std.U32
+  TWO_INV : Result Self
+  MULTIPLICATIVE_GENERATOR : Result Self
+  S : Result Std.U32
+  ROOT_OF_UNITY : Result Self
+  ROOT_OF_UNITY_INV : Result Self
+  DELTA : Result Self
+  FieldInst : ff.Field Self
+  coreconvertFromSelfU64Inst : core.convert.From Self Std.U64
+  coremarkerCopyInst : core.marker.Copy Self_Repr
+  coredefaultDefaultInst : core.default.Default Self_Repr
+  coreconvertAsRefSelf_ReprSliceU8Inst : core.convert.AsRef Self_Repr (Slice
+    Std.U8)
+  coreconvertAsMutSelf_ReprSliceU8Inst : core.convert.AsMut Self_Repr (Slice
+    Std.U8)
+  from_repr : Self_Repr → Result (subtle.CtOption Self)
+  to_repr : Self → Result Self_Repr
+  is_odd : Self → Result subtle.Choice
+
+/-- Trait declaration: [group::GroupOps]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs', lines 30:0-31:91
+    Name pattern: [group::GroupOps]
+    Visibility: public -/
+@[rust_trait "group::GroupOps"
+  (parentClauses := ["coreopsarithAddInst", "coreopsarithSubInst", "coreopsarithAddAssignInst", "coreopsarithSubAssignInst"])]
+structure group.GroupOps (Self : Type) (Rhs : Type) (Output : Type) where
+  coreopsarithAddInst : core.ops.arith.Add Self Rhs Output
+  coreopsarithSubInst : core.ops.arith.Sub Self Rhs Output
+  coreopsarithAddAssignInst : core.ops.arith.AddAssign Self Rhs
+  coreopsarithSubAssignInst : core.ops.arith.SubAssign Self Rhs
+
+/-- Trait declaration: [group::GroupOpsOwned]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs', lines 41:0-41:85
+    Name pattern: [group::GroupOpsOwned]
+    Visibility: public -/
+@[rust_trait "group::GroupOpsOwned"
+  (parentClauses := ["GroupOpsSelfSharedRhsOutputInst"])]
+structure group.GroupOpsOwned (Self : Type) (Rhs : Type) (Output : Type) where
+  GroupOpsSelfSharedRhsOutputInst : group.GroupOps Self Rhs Output
+
+/-- Trait declaration: [group::ScalarMul]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs', lines 45:0-45:83
+    Name pattern: [group::ScalarMul]
+    Visibility: public -/
+@[rust_trait "group::ScalarMul"
+  (parentClauses := ["coreopsarithMulInst", "coreopsarithMulAssignInst"])]
+structure group.ScalarMul (Self : Type) (Rhs : Type) (Output : Type) where
+  coreopsarithMulInst : core.ops.arith.Mul Self Rhs Output
+  coreopsarithMulAssignInst : core.ops.arith.MulAssign Self Rhs
+
+/-- Trait declaration: [group::ScalarMulOwned]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs', lines 51:0-51:80
+    Name pattern: [group::ScalarMulOwned]
+    Visibility: public -/
+@[rust_trait "group::ScalarMulOwned"
+  (parentClauses := ["ScalarMulSelfSharedRhsOutputInst"])]
+structure group.ScalarMulOwned (Self : Type) (Rhs : Type) (Output : Type) where
+  ScalarMulSelfSharedRhsOutputInst : group.ScalarMul Self Rhs Output
+
+/-- Trait declaration: [group::Group]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs', lines 55:0-70:45
+    Name pattern: [group::Group]
+    Visibility: public -/
+@[rust_trait "group::Group"
+  (parentClauses := ["corecloneCloneInst", "coremarkerCopyInst", "corefmtDebugInst", "corecmpEqInst", "coreitertraitsaccumSumInst", "coreitertraitsaccumSumSelfSharedSelfInst", "coreopsarithNegInst", "GroupOpsInst", "GroupOpsOwnedInst", "ScalarMulInst", "ScalarMulOwnedInst", "ffPrimeFieldInst"])]
+structure group.Group (Self : Type) (Self_Scalar : Type) (Self_Clause13_Repr :
+  Type) where
+  corecloneCloneInst : core.clone.Clone Self
+  coremarkerCopyInst : core.marker.Copy Self
+  corefmtDebugInst : core.fmt.Debug Self
+  corecmpEqInst : core.cmp.Eq Self
+  coreitertraitsaccumSumInst : core.iter.traits.accum.Sum Self Self
+  coreitertraitsaccumSumSelfSharedSelfInst : core.iter.traits.accum.Sum Self
+    Self
+  coreopsarithNegInst : core.ops.arith.Neg Self Self
+  GroupOpsInst : group.GroupOps Self Self Self
+  GroupOpsOwnedInst : group.GroupOpsOwned Self Self Self
+  ScalarMulInst : group.ScalarMul Self Self_Scalar Self
+  ScalarMulOwnedInst : group.ScalarMulOwned Self Self_Scalar Self
+  ffPrimeFieldInst : ff.PrimeField Self_Scalar Self_Clause13_Repr
+  random : forall {T1 : Type} (rand_coreRngCoreInst : rand_core.RngCore T1), T1
+    → Result Self
+  identity : Result Self
+  generator : Result Self
+  is_identity : Self → Result subtle.Choice
+  double : Self → Result Self
+
+/-- Trait declaration: [group::GroupEncoding]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/lib.rs', lines 116:0-116:30
+    Name pattern: [group::GroupEncoding]
+    Visibility: public -/
+@[rust_trait "group::GroupEncoding"
+  (parentClauses := ["coremarkerCopyInst", "coredefaultDefaultInst", "coreconvertAsRefSelf_ReprSliceU8Inst", "coreconvertAsMutSelf_ReprSliceU8Inst"])]
+structure group.GroupEncoding (Self : Type) (Self_Repr : Type) where
+  coremarkerCopyInst : core.marker.Copy Self_Repr
+  coredefaultDefaultInst : core.default.Default Self_Repr
+  coreconvertAsRefSelf_ReprSliceU8Inst : core.convert.AsRef Self_Repr (Slice
+    Std.U8)
+  coreconvertAsMutSelf_ReprSliceU8Inst : core.convert.AsMut Self_Repr (Slice
+    Std.U8)
+  from_bytes : Self_Repr → Result (subtle.CtOption Self)
+  from_bytes_unchecked : Self_Repr → Result (subtle.CtOption Self)
+  to_bytes : Self → Result Self_Repr
+
+/-- Trait declaration: [group::prime::PrimeGroup]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/group-0.13.0/src/prime.rs', lines 9:0-9:43
+    Name pattern: [group::prime::PrimeGroup]
+    Visibility: public -/
+@[rust_trait "group::prime::PrimeGroup"
+  (parentClauses := ["GroupInst", "GroupEncodingInst"])]
+structure group.prime.PrimeGroup (Self : Type) (Self_Clause0_Scalar : Type)
+  (Self_Clause0_Clause13_Repr : Type) (Self_Clause1_Repr : Type) where
+  GroupInst : group.Group Self Self_Clause0_Scalar Self_Clause0_Clause13_Repr
+  GroupEncodingInst : group.GroupEncoding Self Self_Clause1_Repr
+
+/-- Trait declaration: [zeroize::Zeroize]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zeroize-1.9.0/src/lib.rs', lines 245:0-245:17
+    Name pattern: [zeroize::Zeroize]
+    Visibility: public -/
+@[rust_trait "zeroize::Zeroize"]
+structure zeroize.Zeroize (Self : Type) where
+  zeroize : Self → Result Self
 
 /-- **Rust:** `helioselene::field::HelioseleneField` — type (newtype flattened)
     crypto/helioselene/src/field/mod.rs:22 in this repository:
@@ -141,5 +373,33 @@ def crypto_bigint.limb.Limb := Std.U64
     Source: 'src/field/mod.rs', lines 22:0-22:45 -/
 @[reducible]
 def field.HelioseleneField := crypto_bigint.uint.Uint 4#usize
+
+/-- [helioselene::point::selene::SelenePoint]
+    Source: 'src/point.rs', lines 48:4-52:5
+    Visibility: public -/
+structure point.selene.SelenePoint where
+  x : field.HelioseleneField
+  y : field.HelioseleneField
+  z : field.HelioseleneField
+
+/-- [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::closure#1]
+    Source: 'src/point.rs', lines 372:38-372:73 -/
+@[reducible]
+def point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure_1
+  :=
+  field.HelioseleneField
+
+/-- [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::closure]
+    Source: 'src/point.rs', lines 361:35-364:11 -/
+@[reducible]
+def point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure
+  :=
+  subtle.Choice
+
+/-- [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure]
+    Source: 'src/point.rs', lines 358:42-381:9 -/
+@[reducible]
+def point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure :=
+  subtle.Choice
 
 end helioselene

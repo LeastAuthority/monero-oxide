@@ -72,3 +72,61 @@ def crypto_bigint.uint.Uint (LIMBS : Std.Usize) : Type :=
     Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/subtle-2.6.1/src/lib.rs', lines 647:0-647:22 -/
 @[reducible, rust_type "subtle::CtOption"]
 def subtle.CtOption (T : Type) : Type := T × Bool
+
+/-! ## Additions for the widened translation scope (2026-07-07): `verified::sqrt` +
+    the Selene group-law core (`point::selene`). -/
+
+/-- **Rust:** `crypto_bigint::ct_choice::CtChoice` — type (foreign: crypto-bigint 0.5.5)
+    crypto-bigint 0.5.5, src/ct_choice.rs:9 (crate source):
+    https://docs.rs/crypto-bigint/0.5.5/src/crypto_bigint/ct_choice.rs.html#9
+
+    `pub struct CtChoice(Word)`: crypto-bigint's internal constant-time boolean for
+    `const fn` contexts (predating `const`-capable `subtle::Choice`). The wrapped word is
+    maintained as 0 (falsy) or `Word::MAX` (truthy, the all-ones mask).
+
+    In this scope it appears only as the `is_some` component of `Uint::const_rem`'s return
+    value (reached from `HelioseleneField::from_u256` when the Selene generator's
+    x-coordinate is built), and that component is dropped by the caller.
+
+    Model: `Bool`, with `true` ↔ the all-ones mask and `false` ↔ 0 — the same convention
+    as the `subtle.Choice` model above. -/
+@[reducible, rust_type "crypto_bigint::ct_choice::CtChoice"]
+def crypto_bigint.ct_choice.CtChoice : Type := Bool
+
+/-- **Rust:** `dalek_ff_group::field::FieldElement` — type (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/field.rs:40 (crate source):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#40
+
+    `pub struct FieldElement(U256)`: an element of GF(2^255 - 19), the Ed25519 base field,
+    represented reduced mod `2^255 - 19`. It is `SelenePoint`'s scalar type (Selene's
+    scalar field is the 25519 base field): the `Group` impl for `SelenePoint` binds
+    `type Scalar = dalek_ff_group::FieldElement`, whose `ff::PrimeField` bound pulls this
+    type in as trait-instance evidence.
+
+    The type only appears in the (axiomatised) `dalek_ff_group` method signatures and the
+    trait-instance records built from them, plus the signatures of the deliberately-opaque
+    `SelenePoint` scalar-mul items; no translated function in the goal scope constructs or
+    consumes a value of it (see the dependency-cone audit in the README).
+
+    Model: `ZMod (2 ^ 255 - 19)` — the field of the intended cardinality, giving the
+    axiomatised operations honest, inhabited types. The representation details of the Rust
+    struct (a `U256`, kept reduced) are NOT modeled; nothing in scope depends on them. -/
+@[rust_type "dalek_ff_group::field::FieldElement"]
+def dalek_ff_group.field.FieldElement : Type := ZMod (2 ^ 255 - 19)
+
+/-- **Rust:** `rand_core::error::Error` — type (foreign: rand_core 0.6.4)
+    rand_core 0.6.4, src/error.rs:21-27 (crate source):
+    https://docs.rs/rand_core/0.6.4/src/rand_core/error.rs.html#21-27
+
+    RNG error type; in `no_std` builds (this build configuration) it wraps a
+    `NonZeroU32` error code.
+
+    In this scope it appears only inside the `rand_core::RngCore` trait declaration
+    (`try_fill_bytes`'s error type), which is itself referenced only by the signatures of
+    the opaque `random` methods; nothing constructs, consumes or even mentions a value of
+    this type in any translated body.
+
+    Model: `{ code : Std.U32 // code.val ≠ 0 }` — a nonzero 32-bit code, mirroring the
+    `no_std` representation. -/
+@[rust_type "rand_core::error::Error"]
+def rand_core.error.Error : Type := { code : Std.U32 // code.val ≠ 0 }

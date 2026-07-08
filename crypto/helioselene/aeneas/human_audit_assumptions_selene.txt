@@ -1,0 +1,182 @@
+================================================================================
+HUMAN AUDIT ASSUMPTIONS — Selene group-law formalization (Stage 2)
+================================================================================
+
+Status snapshot: 2026-07-07, monero-oxide commit
+6313959f906fe754909754ac642134237dae42a9, artifact crypto/helioselene/aeneas/,
+files HelioseleneCore/Spec/Selene/{Curve,Ops,GroupLaw}.lean.
+COMPANION FILE: human_audit_assumptions.txt (the field-level ledger). All of
+its sections still apply — Selene points have helioselene field elements as
+coordinates, so every field-level assumption is inherited wholesale. This file
+lists only what the CURVE stage adds, changes, or closes.
+
+The Lean development proves (adversarially audited, 0 high findings):
+  * ThetaAddEquiv : SClass ≃+ W.Point            (sorry-free)
+      where SClass = on-curve projective Selene representatives modulo
+      projective equivalence, with 0 / + / unary - / binary - DEFINITIONALLY
+      the descended, Aeneas-translated Rust identity/add/neg/sub, and
+      W : WeierstrassCurve (ZMod p) is y^2 = x^3 - 3x + B with the exact
+      Rust constants (traced to the hex literals in point.rs).
+  * AddCommGroup SClass                          (sorry-free)
+  * ct_eq_correct / eq_correct / is_identity_correct: the translated
+    constant-time equality tests decide projective-class equality resp.
+    identity-ness, over ALL valid representatives  (sorry-free)
+  * Kernel-only curve facts: B is a quadratic non-residue; the curve has NO
+    2-torsion (cubic X^3-3X+B has no root, via a polynomial Fermat/Bezout
+    certificate); the discriminant is nonzero; the generator (1, G_Y) is an
+    on-curve point of the nonsingular curve.
+
+--------------------------------------------------------------------------------
+I. OPEN PROOF OBLIGATIONS (the two `sorry`s in the whole package)
+--------------------------------------------------------------------------------
+
+I.1  HelioseleneSpec.Invert.step_congruence  (UNCHANGED from the field ledger)
+     Field-inversion GCD step invariant. Taints: HField.inv/Div, Field HField.
+     DOES NOT taint the Selene group law: the group-law chain never inverts
+     (projective formulas are inversion-free); #print axioms on ThetaAddEquiv
+     shows no sorryAx. (Inversion IS used by ValidationSelene's checker and by
+     to_bytes — see II.3.)
+
+I.2  HelioseleneSpec.Selene.sqrt_complete  (NEW)
+     (HelioseleneCore/Spec/Selene/Ops.lean)
+
+  ASSUMED: if the input is a square mod p, the translated sqrt's validity
+  flag is true. The converse — flag true implies the returned value really is
+  the even-normalized square root — IS proved (sqrt_ok), because the Rust code
+  ends with an explicit res^2 == input self-check; soundness needs no ladder
+  analysis. Only the COMPLETENESS direction (the 125-iteration windowed
+  exponentiation ladder actually computes a^((p+1)/4)) is open.
+
+  IF FALSE: sqrt could wrongly REJECT valid square inputs. Consequence:
+  point decompression (from_bytes) could reject valid encodings — a
+  liveness/interoperability bug, not a soundness one (accepting a wrong point
+  is excluded by the proved direction). Group law unaffected.
+
+  HUMAN FOCUS: src/field/verified/sqrt.rs — the addition-chain preamble
+  (first 128 exponent bits) and the 4-bit window loop (trigger `bits & 8`,
+  final window multiply). Covered by: Veridise Dafny proofs (sqrt is a stated
+  verification target), 25 sqrt test vectors incl. rejects, and the ff-group
+  test suite on the patched copy.
+
+--------------------------------------------------------------------------------
+II. WHAT THE GROUP-LAW THEOREM DOES NOT COVER (scope boundaries)
+--------------------------------------------------------------------------------
+
+II.1  Scalar multiplication. The Rust ladder (Mul<Scalar> impl, u8_from_bool/
+      black_box bit handling) is deliberately untranslated (opaque). The
+      `n • x` on SClass is mathlib-transported bookkeeping, NOT Rust code.
+      Verifying the ladder against nsmul is the natural next stage; until
+      then, ANY claim about the Rust `*` operator on points is unverified.
+      HUMAN FOCUS: point.rs Mul impl (windowed ladder, table indexing,
+      the (i+1)%4 window boundary logic).
+
+II.2  The curve ORDER / the cycle property. |Selene(F_p)| = q (the 25519
+      field prime) is NOT proved and is not provable with current mathlib
+      (no Hasse-Weil). It remains an externally computed design fact.
+      Everything proved here is order-agnostic. Note: once scalar-mul is
+      verified, `q . G = O` becomes checkable computationally, which pins
+      the order of <G> (and with Hasse, |E| = q — future mathlib).
+      HUMAN FOCUS: the original curve-search/parameter documentation
+      (tevador/kayabaNerve) for the order computation.
+
+II.3  Encoding round-trips. from_bytes/to_bytes are translated and pass the
+      test vectors, but only partial theorems exist: from_bytes completeness
+      inherits sqrt_complete (I.2); to_bytes correctness (normalizes via the
+      field invert) inherits step_congruence (I.1) if theoremized. No
+      round-trip theorem (from_bytes ∘ to_bytes = id on classes) is proved
+      yet. Encodings feed consensus — worth its own stage later.
+
+II.4  Helios entirely (coordinates in the 25519 field; dalek boundary), plus
+      point::Sum, Group::random, Zeroize, hash-to-curve (ciphersuite.rs).
+
+II.5  Rust `sub` and `PartialEq::eq` have no dedicated test vectors; they are
+      covered by kernel proofs instead (sub = add ∘ neg definitionally in the
+      translation; eq = ct_eq via the proved eq_correct). Noted for
+      completeness; no action needed.
+
+--------------------------------------------------------------------------------
+III. NEW MODEL-FIDELITY ASSUMPTIONS (external models added for Selene)
+--------------------------------------------------------------------------------
+
+19 new concrete models were added to FunsExternal.lean (same trust class as
+the field-level section II of the companion file; validated by the 100 curve
+vectors + spec lemmas):
+
+III.1  subtle CtOption combinators: and_then (flag-AND, closure applied
+       unconditionally), map (value-map, flag kept), conditional_select
+       (componentwise). Used by from_bytes' CtOption plumbing.
+       HUMAN FOCUS: subtle-2.6.1 src/lib.rs CtOption impls — the exact
+       flag/value flow (subtle applies closures to selected defaults to stay
+       constant-time; the model mirrors the RESULTING values).
+III.2  Choice & / | (modeled as Bool and/or), From<CtOption> for Option,
+       u8::conditional_select, ConditionallyNegatable::conditional_negate
+       (blanket impl through Neg + conditional_select).
+III.3  Uint::const_rem — NOW LOAD-BEARING: G_X = from_u256(1) reduces through
+       it. The model is concrete (Nat mod); G_X's value (= 1) is kernel-
+       checked, so exposure is minimal, but const_rem's model fidelity for
+       OTHER inputs matters if from_u256 is theoremized later.
+       HUMAN FOCUS: crypto-bigint-0.5.5 src/uint/div.rs const_rem.
+III.4  54 existence-only axioms (45 dalek_ff_group::FieldElement items, Uint
+       Debug::fmt, 8 out-of-scope SelenePoint items: Mul/MulAssign ladder,
+       Sum, Group::random, Zeroize). These assert only that functions of the
+       given types EXIST (all such types are inhabited, so no consistency
+       risk) and are PROVEN absent from every group-law/field proof cone
+       (kernel #print axioms + dependency-cone analysis). They become real
+       obligations only if a later stage proves things about the trait
+       RECORDS (e.g. Helios).
+
+--------------------------------------------------------------------------------
+IV. NEW TOOL-TRUST ITEMS
+--------------------------------------------------------------------------------
+
+IV.1  Three new source patches (helioselene-aeneas.patch, now 5 files;
+      11/11 Rust tests pass on the patched copy; equivalence arguments in
+      README §4):
+      (a) sqrt.rs: constant-exponent bitvec iterator chain replaced by an
+          index loop over bits 124..0 + a local copy of the exponent's limb
+          array (works around an Aeneas loop-join limitation with borrows of
+          const-materialized temporaries). Same bit sequence, same body.
+      (b) sqrt.rs/point.rs: shift-amount literals retyped to u32 (Aeneas
+          backend emits MIR i32 shift operands against a U32-typed stdlib).
+          Type-level only; identical values.
+      (c) point.rs from_bytes: local `point` renamed `candidate_point`
+          (namespace shadowing in generated Lean). Pure alpha-rename.
+      HUMAN FOCUS: the three hunks (~20 lines total) — verify once.
+IV.2  The widened re-translation itself: all 84+6 previously-audited
+      declarations were verified BYTE-IDENTICAL after regeneration (drift
+      check in the S1 log), so the field-stage audit results carry over.
+IV.3  Three new `_native.decide.ax_1` constants (point.selene.B,
+      point.selene.G_Y, field.verified.sqrt.MODULUS_PLUS_ONE_DIV_FOUR) —
+      same benign string-length class as the field four; the parsed VALUES
+      are independently kernel-checked in Spec/Selene/Curve.lean.
+
+--------------------------------------------------------------------------------
+V. ASSUMPTIONS FROM THE DESIGN THAT ARE NOW *CLOSED* (were risks, now theorems)
+--------------------------------------------------------------------------------
+
+For orientation — do NOT spend review time re-checking these by hand:
+
+V.1  "is_identity checks x = 0" is sound  <-> B is a quadratic non-residue:
+     PROVED kernel-only (B_nonresidue via Euler's criterion + powMod;
+     no_affine_x_zero). A B that were a square would break identity handling;
+     the kernel now guarantees it isn't.
+V.2  RCB completeness (the complete-addition claim of add-2015-rcb-3)
+     requires no 2-torsion: PROVED kernel-only (cubic_no_root via the
+     polynomial Fermat/Bezout certificate; no_two_torsion). The doubling
+     identity fix-up's blind spot (2-torsion inputs) is likewise vacuous.
+V.3  Curve nonsingularity (delta != 0), generator on-curve, generator != O,
+     translated constants = Rust hex literals: all kernel-checked.
+V.4  ct_eq's cross-multiplication equality test is sound on all valid
+     representatives (incl. scaled and z=0 ones): PROVED (ct_eq_correct).
+V.5  The RCB/doubling formula transcriptions in the spec layer were
+     INDEPENDENTLY re-derived from point.rs by the audit (no drift).
+
+--------------------------------------------------------------------------------
+Suggested review order for maximal risk reduction per hour:
+  I.2 (sqrt ladder, with the Dafny proofs) -> III.1/III.3 (CtOption +
+  const_rem models vs crate sources) -> IV.1 (three patch hunks) ->
+  II.1 (the untranslated scalar ladder — biggest UNVERIFIED code surface
+  actually shipping) -> II.2/II.3 (order + encodings: scope decisions for
+  the next stage, not code review).
+Plus everything in human_audit_assumptions.txt (unchanged and inherited).
+================================================================================
