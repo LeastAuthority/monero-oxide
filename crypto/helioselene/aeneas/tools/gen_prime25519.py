@@ -1,0 +1,271 @@
+#!/usr/bin/env python3
+"""Generate HelioseleneCore/Spec/Helios/Prime25519.lean: a kernel-only Lean 4
+(mathlib) proof that the Curve25519 field prime q = 2^255 - 19 is prime, via
+Pratt certificates (`lucas_primality`) with all modular exponentiations
+discharged by kernel reduction of a fuel-based binary-powering function
+`powMod`. Modeled exactly on gen_prime.py / Spec/Prime.lean (the helioselene
+prime); only the certificate data and namespace differ.
+
+Certificate source (verified independently; re-verified here):
+  tools/pratt_25519.json  (next to this script)
+
+Usage: python3 gen_prime25519.py [output.lean]
+"""
+import json
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+JSON_PATH = os.path.join(HERE, "pratt_25519.json")
+OUT_PATH = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
+    HERE, "..", "HelioseleneCore", "Spec", "Helios", "Prime25519.lean")
+
+# The 7 nodes that get a lucas_primality proof; all other prime factors are
+# norm_num leaves (all < 10^9, where mathlib's norm_num Prime extension is fast).
+LUCAS_NODES = {
+    2773320623,
+    72106336199,
+    1919519569386763,
+    31757755568855353,
+    75445702479781427272750846543864801,
+    74058212732561358302231226437062788676166966415465897661863160754340907,
+    57896044618658097711785492504343953926634992332820282019728792003956564819949,
+}
+
+Q = 2 ** 255 - 19
+assert Q in LUCAS_NODES
+
+
+def load_and_verify():
+    with open(JSON_PATH) as f:
+        data = json.load(f)
+    root = int(data["root"])
+    assert root == Q
+    nodes = {}
+    for k, v in data["nodes"].items():
+        n = int(k)
+        w = int(v["witness"])
+        fac = {int(q): int(e) for q, e in v["p_minus_1_factorization"].items()}
+        nodes[n] = (w, fac)
+    # Full independent re-verification of the Pratt tree.
+    for n, (w, fac) in nodes.items():
+        if n == 2:
+            continue
+        prod = 1
+        for q, e in fac.items():
+            prod *= q ** e
+        assert prod == n - 1, f"factorization of {n}-1 wrong"
+        assert pow(w, n - 1, n) == 1, f"witness {w} fails Fermat at {n}"
+        for q in fac:
+            assert pow(w, (n - 1) // q, n) != 1, f"witness {w} not primitive at {n} (q={q})"
+            assert q in nodes or q < 10 ** 9, f"factor {q} of {n}-1 missing from closure"
+    # Every lucas node must be in the closure; every non-lucas factor of a
+    # lucas node must be < 10^9 (norm_num-leaf territory).
+    for n in LUCAS_NODES:
+        assert n in nodes
+        for q in nodes[n][1]:
+            assert q in LUCAS_NODES or q < 10 ** 9, f"factor {q} of {n} is neither leaf nor node"
+    return nodes
+
+
+def fac_expr(fac):
+    """Right-nested product expression `q1 ^ e1 * (q2 ^ e2 * (...))`,
+    factors in ascending order."""
+    parts = []
+    for q in sorted(fac):
+        e = fac[q]
+        parts.append(f"{q} ^ {e}" if e > 1 else f"{q}")
+    expr = parts[-1]
+    for t in reversed(parts[:-1]):
+        expr = f"{t} * ({expr})"
+    return expr
+
+
+def prime_ref(q):
+    """Proof term for `Nat.Prime q` inside a node's divisor case split."""
+    return f"prime_{q}" if q in LUCAS_NODES else "(by norm_num)"
+
+
+def gen_case(node, w, q, e, r, indent):
+    """One terminal case: hypothesis h : q ∣ qi ^ ei, conclude the goal."""
+    pad = " " * indent
+    hterm = "(hq.dvd_of_dvd_pow h)" if e > 1 else "h"
+    return (
+        f"{pad}rw [(Nat.prime_dvd_prime_iff_eq hq {prime_ref(q)}).mp {hterm}]\n"
+        f"{pad}refine zmod_pow_ne_one _ {w} _ {r} hn (by norm_num)\n"
+        f"{pad}  (pow_mod_eq_of_powMod 256 {w} _ _ _\n"
+        f"{pad}    (Nat.lt_of_le_of_lt (Nat.div_le_self _ _) hb) ?_)\n"
+        f"{pad}rfl\n"
+    )
+
+
+def build_cases(n, w, qs, fac, residues):
+    """Nested rcases chain, built recursively."""
+    def rec(i, indent):
+        pad = " " * indent
+        if i == len(qs) - 1:
+            return gen_case(n, w, qs[i], fac[qs[i]], residues[qs[i]], indent)
+        hyp = "hdvd" if i == 0 else "h"
+        s = f"{pad}rcases (Nat.Prime.dvd_mul hq).mp {hyp} with h | h\n"
+        s += f"{pad}· " + gen_case(n, w, qs[i], fac[qs[i]], residues[qs[i]], indent + 2).lstrip()
+        s += f"{pad}· " + rec(i + 1, indent + 2).lstrip()
+        return s
+
+    return rec(0, 4).rstrip("\n")
+
+
+HEADER = f'''/-
+Primality of the Curve25519 field prime
+
+  q = 2^255 - 19
+    = {Q}
+
+proved kernel-only (no `native_decide`, no extra axioms) via Pratt
+certificates: `lucas_primality` at the 7 tree nodes
+
+  q, p236 = 74058212732561358302231226437062788676166966415465897661863160754340907,
+  75445702479781427272750846543864801, 31757755568855353,
+  1919519569386763, 72106336199, 2773320623
+
+with q - 1 = 2^2 * 3 * 65147 * p236, and `norm_num` for every prime factor
+below 10^9. The modular exponentiations are computed by kernel reduction
+(GMP-fast `Nat` arithmetic) of the fuel-based binary-powering function
+`powMod` below.
+
+This file is generated by tools/gen_prime25519.py from the machine-verified
+certificate tools/pratt_25519.json (msieve for the 27-digit cofactor split of
+p35 - 1; see tools/prime25519-certificate.md). Do not edit by hand.
+-/
+import Mathlib
+
+/-! ## Kernel-computable modular exponentiation -/
+
+namespace Helios25519Pratt
+
+set_option maxRecDepth 8192
+
+/-- Binary modular exponentiation, structurally recursive on `fuel` so that
+the kernel can evaluate it by plain recursor reduction with GMP-fast `Nat`
+operations at every step (well-founded recursion would not reduce).
+Computes `a ^ e % n` whenever `e < 2 ^ fuel`. -/
+def powMod : ℕ → ℕ → ℕ → ℕ → ℕ
+  | 0, _, _, n => 1 % n
+  | fuel + 1, a, e, n =>
+    if e % 2 = 0 then
+      if e = 0 then 1 % n else powMod fuel (a * a % n) (e / 2) n
+    else
+      powMod fuel (a * a % n) (e / 2) n * a % n
+
+theorem powMod_eq (fuel : ℕ) :
+    ∀ a e n : ℕ, e < 2 ^ fuel → powMod fuel a e n = a ^ e % n := by
+  induction fuel with
+  | zero =>
+    intro a e n h
+    have he : e = 0 := by simpa using Nat.lt_one_iff.mp (by simpa using h)
+    subst he
+    simp [powMod]
+  | succ fuel ih =>
+    intro a e n h
+    have h2 : e / 2 < 2 ^ fuel := by
+      have hp : 2 ^ (fuel + 1) = 2 ^ fuel * 2 := pow_succ 2 fuel
+      omega
+    rw [powMod]
+    by_cases hp : e % 2 = 0
+    · rw [if_pos hp]
+      by_cases he : e = 0
+      · subst he; simp
+      · rw [if_neg he, ih _ _ _ h2, ← Nat.pow_mod, ← pow_two, ← pow_mul]
+        have hee : 2 * (e / 2) = e := by omega
+        rw [hee]
+    · rw [if_neg hp, ih _ _ _ h2, ← Nat.pow_mod, ← pow_two, ← pow_mul,
+        Nat.mod_mul_mod, ← pow_succ]
+      have hee : 2 * (e / 2) + 1 = e := by omega
+      rw [hee]
+
+theorem pow_mod_eq_of_powMod (fuel a e n r : ℕ) (hb : e < 2 ^ fuel)
+    (h : powMod fuel a e n = r) : a ^ e % n = r :=
+  (powMod_eq fuel a e n hb).symm.trans h
+
+/-! ## Bridging `ℕ` congruences to `ZMod` power equations -/
+
+theorem zmod_pow_eq (n w e r : ℕ) (h : w ^ e % n = r) :
+    (w : ZMod n) ^ e = (r : ZMod n) := by
+  calc (w : ZMod n) ^ e = ((w ^ e : ℕ) : ZMod n) := by rw [Nat.cast_pow]
+    _ = ((w ^ e % n : ℕ) : ZMod n) := (ZMod.natCast_mod _ _).symm
+    _ = (r : ZMod n) := by rw [h]
+
+theorem zmod_pow_eq_one (n w e : ℕ) (h : w ^ e % n = 1) :
+    (w : ZMod n) ^ e = 1 := by
+  simpa using zmod_pow_eq n w e 1 h
+
+theorem zmod_pow_ne_one (n w e r : ℕ) (hn : 1 < n) (hr : r ≠ 1)
+    (h : w ^ e % n = r) : (w : ZMod n) ^ e ≠ 1 := by
+  haveI : NeZero n := ⟨by omega⟩
+  have hrn : r < n := h ▸ Nat.mod_lt _ (by omega)
+  rw [zmod_pow_eq n w e r h]
+  intro hc
+  have hv := congrArg ZMod.val hc
+  rw [ZMod.val_cast_of_lt hrn, ZMod.val_one_eq_one_mod, Nat.mod_eq_of_lt hn] at hv
+  exact hr hv
+
+/-! ## Pratt certificate nodes (bottom-up) -/
+
+'''
+
+FOOTER = f'''
+end Helios25519Pratt
+
+/-- **The Curve25519 field prime is prime.**
+`q = 2^255 - 19`, the base field of Curve25519/Ed25519 and the field the
+Helios/Selene tower cycle sits over. Kernel-only Pratt-certificate proof;
+depends on no axioms beyond `propext`, `Classical.choice`, `Quot.sound`. -/
+theorem q_prime :
+    Nat.Prime
+      {Q} :=
+  Helios25519Pratt.prime_{Q}
+
+instance fact_q_prime :
+    Fact (Nat.Prime
+      {Q}) :=
+  ⟨q_prime⟩
+'''
+
+
+def main():
+    nodes = load_and_verify()
+    chunks = [HEADER]
+    for n in sorted(LUCAS_NODES):
+        w, fac = nodes[n]
+        chunks.append(gen_node_clean(n, w, fac))
+        chunks.append("\n")
+    chunks.append(FOOTER)
+    out_path = os.path.normpath(OUT_PATH)
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, "w") as f:
+        f.write("".join(chunks))
+    print(f"wrote {out_path}")
+
+
+def gen_node_clean(n, w, fac):
+    """Emit one lucas_primality node theorem."""
+    qs = sorted(fac)
+    residues = {q: pow(w, (n - 1) // q, n) for q in qs}
+    for q in qs:
+        assert residues[q] != 1
+    assert pow(w, n - 1, n) == 1
+    out = []
+    out.append(f"theorem prime_{n} : Nat.Prime {n} := by")
+    out.append(f"  have hb : ({n} : ℕ) - 1 < 2 ^ 256 := by norm_num")
+    out.append(f"  have hn : (1 : ℕ) < {n} := by norm_num")
+    out.append(f"  refine lucas_primality _ (({w} : ℕ) : ZMod {n}) ?_ ?_")
+    out.append(f"  · refine zmod_pow_eq_one _ {w} _ (pow_mod_eq_of_powMod 256 {w} _ _ 1 hb ?_)")
+    out.append(f"    rfl")
+    out.append(f"  · intro q hq hdvd")
+    out.append(f"    have hfac : ({n} : ℕ) - 1 = {fac_expr(fac)} := by norm_num")
+    out.append(f"    rw [hfac] at hdvd")
+    out.append(build_cases(n, w, qs, fac, residues))
+    return "\n".join(out) + "\n"
+
+
+if __name__ == "__main__":
+    main()

@@ -5,6 +5,18 @@ HUMAN AUDIT ASSUMPTIONS — helioselene finite-field formalization
 Status snapshot this list belongs to: 2026-07-07, monero-oxide commit
 6313959f906fe754909754ac642134237dae42a9, artifact crypto/helioselene/aeneas/.
 
+[2026-07-09 NOTE — FROZEN AT THE 2026-07-07 SELENE STAGE. The 2026-07-08 third
+charon run (Helios group-law core, point::helios) changed two counts quoted
+below: the `_native.decide` string-length axiom class of V.5 is now NINE (adds
+point.helios.B and point.helios.G_Y), and the FunsExternal.lean existence-only
+axiom inventory of VIII.2 is now 48 (21 dalek items became concrete behavioural
+ZMod models — load-bearing for the HELIOS stage only — and 15 new third-run
+axioms were added). Bracketed updates appear in place at V.5 and VIII.2.
+Everything else in this file is unaffected: the field-layer and Selene proof
+cones did not change. The Helios stage has its own ledger,
+human_audit_assumptions_helios.txt; see also human_audit_assumptions_selene.txt
+II.4/III.4 and README sections 3, 5c and 7.]
+
 The Lean development proves:
   * Fintype HField, Fintype.card HField = p          (no assumptions beyond IV/V)
   * phiRing : HField ≃+* ZMod p  (ring isomorphism)  (sorry-free)
@@ -251,7 +263,11 @@ V.3  The semantics-preserving source patches (helioselene-aeneas.patch): the
 V.4  Lean 4 kernel (v4.30.0-rc2) + mathlib pin + the three standard axioms
      (propext, Classical.choice, Quot.sound). Standard trust.
 
-V.5  Seven `<const>._native.decide.ax_1` axioms attached to the generated
+V.5  [2026-07-08 update: the class is now NINE — the third run added
+     point.helios.B and point.helios.G_Y, whose parsed values are re-proved
+     kernel-only in Spec/Helios/Curve.lean (B_ok/G_Y_ok); same benign
+     string-length shape as the rest.]
+     Seven `<const>._native.decide.ax_1` axioms attached to the generated
      hex-string constants in Funs.lean (Aeneas toStr autoParam
      `by decide +native`): compiler-level (not kernel) trust for
      string-length side conditions. Four are the original field-layer ones
@@ -345,7 +361,20 @@ VIII.1  19 additional concrete external models (FunsExternal.lean, appended
       - The two derived-Eq `assert_fields_are_eq` markers: modeled `ok ()`
         (their Rust bodies are empty).
 
-VIII.2  54 NEW AXIOMS (FunsExternal.lean, appended section) — existence-only
+VIII.2  [2026-07-08 update: this inventory is now stale — FunsExternal.lean
+      holds 48 existence-only axioms: 21 of the 45 dalek items below were
+      converted to concrete BEHAVIOURAL ZMod models for the Helios stage
+      (which computes through them — the "none makes a behavioural claim /
+      no goal-scope function depends on any" statements below remain true
+      only of the REMAINING axioms and of the SELENE/field goal scope), and
+      15 third-run axioms were added (8 HeliosPoint, 4 HelioseleneField
+      Sum/Product, 1 HelioseleneField sqrt_ratio, 2 Uint). Current split:
+      24 dalek + 8 SelenePoint + 8 HeliosPoint + 4 Sum/Product + 1
+      sqrt_ratio + 2 Uint + 1 Uint Debug::fmt = 48, all still outside every
+      headline proof cone (Spec/Helios/GroupLaw.lean section 9). The 26
+      concrete dalek defs are per-item fidelity assumptions in
+      human_audit_assumptions_helios.txt.]
+      54 NEW AXIOMS (FunsExternal.lean, appended section) — existence-only
       postulates for externals that appear ONLY as trait-instance evidence
       (records needed to state `Group`/`PrimeField` bounds). Every axiom's
       type is inhabited (`fun _ => fail .panic`), so each is a conservative

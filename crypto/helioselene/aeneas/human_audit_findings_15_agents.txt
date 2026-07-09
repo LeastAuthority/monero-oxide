@@ -1,0 +1,576 @@
+================================================================================
+15-AGENT HUMAN-AUDIT ASSUMPTION REVIEW -- crypto/helioselene
+================================================================================
+
+Date: 2026-07-08
+Branch: fcmp++
+Coordinator: Codex
+
+Purpose:
+  Audit whether the assumptions/axioms listed in
+  crypto/helioselene/aeneas/human_audit_assumptions.txt are actually satisfied
+  by the Rust implementation, or whether an assumption mismatch could break the
+  Lean proof story or create an exploitable system issue.
+
+Method:
+  Fifteen sequential sub-agents are run. Each agent is given the assumption file,
+  the relevant Rust scope, and the report accumulated by prior agents. New
+  sections are appended in order; prior sections are left intact.
+
+Related pre-existing local audit artifacts (read-only context):
+  - audit_leads.txt
+  - helioselene_audit_findings.txt
+
+Agent scopes:
+  01. Invert step congruence (I.1)
+  02. sqrt completeness and pow/sqrt ladders (I.2, IV.1)
+  03. crypto-bigint subtraction/borrow and multiplication models (II.1-II.2)
+  04. subtle Choice/CtOption/conditional selection models (II.3, VIII.1)
+  05. byte/limb order, shifts, and remaining external models (II.4-II.6)
+  06. raw constants and PrimeField associated constants (III.1-III.2)
+  07. reducedness invariant, raw constructors, const_rem/from_u256 (III.3-III.4, VIII.1)
+  08. field serialization, equality, bits, random, sqrt_ratio, Sum/Product (IV.3)
+  09. Selene/Helios point decoding, identity, recover_y/from_xy (IV.2, VIII.6)
+  10. point group formulas, scalar multiplication, Sum, macro Helios/Selene differences (IV.2, VIII.2)
+  11. ciphersuite/hash-to-point/read_G and protocol-facing reachability (IV.2, VI)
+  12. toolchain snapshot, 64-bit target assumptions, debug/release differences (V.1-V.2)
+  13. Aeneas source patch equivalence and generated mapping assumptions (V.3, VIII.5)
+  14. constant-time, zeroization, compiler/codegen trust boundaries (VI.1-VI.3)
+  15. synthesis: exploitability, duplicate/refute prior findings, residual risks
+
+================================================================================
+FINDINGS LOG
+================================================================================
+
+===== AGENT 01: Invert step congruence (I.1) =====
+SCOPE:
+Audited `crypto/helioselene/src/field/verified/invert.rs`, especially `step`, mask/carry helpers, `MODULUS_XOR_TWO_MODULUS`, final shift/reduction/`CtOption`, and the Lean assumption in `crypto/helioselene/aeneas/HelioseleneCore/Spec/Invert.lean`.
+
+FINDINGS: NONE
+
+EVIDENCE:
+`step` matches the Algorithm-1 shape assumed in Lean: odd/less-than masks at `invert.rs:35-47`, branch-free selects at `invert.rs:52-62` and `:167-168`, conditional `a-b` negation at `:63-78`, masked `u-v` at `:89-99`, sign/parity correction at `:111-136`, fused 0/1/2-modulus addition at `:140-165`, and final exact halving at `:170-172`.
+
+The modulus split is correct: `MODULUS_XOR_TWO_MODULUS` at `invert.rs:127-128` equals `p ^ (2p)`. Low limbs reconstruct `2p`; high limbs differ from `p` only at bit 255, restored by `add_two_modulus << (Limb::BITS - 1)` at `invert.rs:164-165`. This also matches the Veridise Dafny constant/helper model in `Base.dfy` and the Algorithm-1 reference shape in ePrint 2020/972: https://eprint.iacr.org/2020/972.pdf.
+
+Independent read-only Python simulation of the exact limb-level Rust arithmetic checked:
+- 10,000 randomly generated `InvA`-valid states for 64-bit limbs and 10,000 for 32-bit limbs: invariant, parity/evenness, `u,v <= p`, congruences, gcd, and potential decrease all held.
+- Full 510-step traces for 1006 inputs on 64-bit simulation and 206 on 32-bit simulation: zero input ended as payload `0`; nonzero inputs ended with `a=0`, `b=1`, `v*y ≡ 1 mod p`, and `v < p`.
+- Loop count from `invert.rs:185-192` is 384 + 126 = 510 on 64-bit, and also simplifies to 510 on 32-bit.
+
+Final behavior is consistent: `red1` conditionally subtracts `p` at `verified/mod.rs:59-66`; `invert` returns `CtOption::new(HelioseleneField(red1(v)), !value.is_zero())` at `invert.rs:194`; `is_zero` is the limb OR check at `verified/mod.rs:123-129`. `cargo test -p helioselene --lib` passed 11/11 tests.
+
+EXPLOITABILITY / PROOF IMPACT:
+No exploitable mismatch found. Under the assumed/reachable invariant, the branch-free step preserves the congruence and produces the expected inverse. If this assumption were false, `invert` has no self-validation and could return a wrong inverse with flag true, but I found no evidence of such a state.
+
+RECOMMENDATIONS:
+Discharge `step_congruence` in Lean. Add regression/property tests that check per-step invariant preservation on generated valid states, plus static assertions for `MODULUS_XOR_TWO_MODULUS == p ^ (2p)` and the 510 loop count.
+
+RESIDUAL RISK:
+The Lean theorem still depends on the `sorry`; the above is audit/testing evidence, not a proof. Formal coverage remains 64-bit-oriented, though the source-level arithmetic also checked out in 32-bit simulation.
+
+===== AGENT 02: sqrt completeness and pow/sqrt ladders (I.2, IV.1) =====
+SCOPE:
+Audited `crypto/helioselene/src/field/verified/sqrt.rs` and `pow.rs`, with call-site context in `field/mod.rs` and `point.rs`. Reviewed prior Agent 01 report and prior audit artifacts; no duplicate finding.
+
+FINDINGS: NONE
+
+EVIDENCE:
+`MODULUS_PLUS_ONE_DIV_FOUR` at `sqrt.rs:4-6` equals `(p+1)/4`; `p mod 4 = 3` from `field/mod.rs:25-26`. The table in `sqrt.rs:10-25` constructs `value^0..value^15` correctly. The prefix ladder at `sqrt.rs:27-58` computes `value^(2^128-1)`: `15 -> 255 -> 2^16-1 -> 2^32-1 -> 2^64-1 -> 2^128-1`.
+
+The tail loop `sqrt.rs:59-71` processes exponent bits 124 down to 0: `to_le_bits().iter().take(253).rev().skip(128)` is MSB-to-LSB over the 253-bit exponent because `ff::FieldBits` is `BitArray<_, Lsb0>`. A read-only Python reconstruction of the exact prefix/tail/final-window schedule produced exactly `E = (p+1)/4`; all loop table indices stayed in `0..=15`, and the final unflushed window at `sqrt.rs:73-74` is handled correctly.
+
+Even-root normalization is correct: `sqrt.rs:78` negates iff the candidate is odd; `subtle` implements this as constant-time conditional assignment to `-self`, and `HelioseleneField::neg` maps zero to zero at `verified/mod.rs:91-100`. The final gate `sqrt.rs:80` returns `Some` only when `res.square().ct_eq(value)`, so soundness is self-validating even if the ladder were wrong.
+
+For `pow.rs`, the table at `pow.rs:5-20` is again `base^0..base^15`. The 256-bit loop `pow.rs:24-46` consumes bits MSB-to-LSB in 4-bit windows. Skipping the pre-squaring for `i == 3` is correct for the first window; every later window performs `res = res^16 * table[nibble]`. A read-only exponent-schedule simulation matched the input exponent for edge cases and 1000 random 256-bit exponents.
+
+Constant-time indexing is appropriate: `pow.rs:37-42` scans all 16 table entries by `conditional_select`, so the secret `bits` value is not used as an array index. In `sqrt.rs:68,74`, direct indexing is driven only by the public constant exponent, not by secret field data. `u8_from_bool` at `src/lib.rs:11-20` is only used in `pow.rs` for secret exponent bits.
+
+`recover_y` uses `curve_equation(x).sqrt()` at `point.rs:40-42`; `from_bytes` then applies the sign bit to the even root at `point.rs:360-362`. Thus sqrt completeness affects decompression acceptance, while the final self-check prevents accepting an invalid root. `cargo test -p helioselene --lib` and `cargo test -p helioselene --lib --release` both passed 11/11 tests.
+
+EXPLOITABILITY / PROOF IMPACT:
+No mismatch found. For reduced field inputs, `sqrt` computes the required candidate `a^((p+1)/4)`, so every square passes the final check; I.2 appears satisfied. A hypothetical sqrt ladder bug would fail closed on squares or nonsquares because of `res.square()==value`, affecting decompression completeness/availability, not soundness. No secret-dependent table index was found. `pow` satisfies its exponent contract, though it remains outside the Lean proof story.
+
+RECOMMENDATIONS:
+Discharge `sqrt_complete` in Lean using the exponent reconstruction above. Add small regression tests for `MODULUS_PLUS_ONE_DIV_FOUR == (p+1)/4`, sqrt of random squares, nonsquare rejection, even-root normalization, and inherent `HelioseleneField::pow` against a reference square-and-multiply implementation.
+
+RESIDUAL RISK:
+The conclusion relies on the existing reduced-field invariant and external primitive fidelity (`to_le_bits`, `conditional_select`, `ct_eq`). `pow.rs` is still un-translated/formally unproved in this artifact, and current crate tests do not directly target the inherent `HelioseleneField::pow(self, HelioseleneField)` path.
+
+===== AGENT 03: crypto-bigint sbb/mac external fidelity (II.1-II.2) =====
+SCOPE:
+Audited II.1-II.2 only: Lean external models for `crypto-bigint` 0.5.5 `Uint::sbb`, `Limb::mac`, and the related `mul_wide`/`square_wide` product ordering used by helioselene field arithmetic.
+
+FINDINGS: NONE
+
+EVIDENCE:
+Cargo resolves `crypto-bigint` to 0.5.5 at `Cargo.lock:178-181`.
+
+Lean models 64-bit limbs explicitly: `TypesExternal.lean:36-55` models `Uint<LIMBS>` as little-endian `Array U64`; `FunsExternal.lean:28-35` defines `Limb::MAX` as all ones; `FunsExternal.lean:60-70` defines little-endian `toNat/ofNat`.
+
+II.1 `sbb`: Lean models borrow-in as `borrow.val >>> 63` and borrow-out as `0` or all-ones at `FunsExternal.lean:662-696`. This matches the crate: `Limb::sbb` reads `borrow.0 >> (Self::BITS - 1)` and returns `(ret as Word, ret >> Self::BITS)` at `/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/limb/sub.rs:10-16`. On the 64-bit target, `Word = u64`, `WideWord = u128` at `src/limb.rs:48-54`, so an underflow produces high word `u64::MAX`. `Uint::sbb` just chains that limb borrow over little-endian limbs at `src/uint/sub.rs:11-22`.
+
+Helioselene uses that full-mask convention correctly: `sub_value` calls `a.sbb(&b, Limb::ZERO)` at `crypto/helioselene/src/field/verified/mod.rs:53-55`; `red1` selects original vs reduced limbs using the returned borrow mask at `mod.rs:59-65`; field subtraction selects `candidate` vs `candidate + MODULUS` using the same full mask at `mod.rs:76-87`. `invert` mostly uses its own bounded 0/1 helper, explicitly documented as unlike `sbb` at `invert.rs:3-16`; its final `red1(v)` at `invert.rs:194` therefore inherits the verified `sbb` convention but no mismatch was found.
+
+II.2 `mac`: Lean models `mac(a,b,c,carry)` as exact `a + b*c + carry`, returned as low 64 bits and high 64 bits at `FunsExternal.lean:229-256`. This matches `crypto-bigint` exactly: `Limb::mac` casts all inputs to `WideWord`, computes `ret = a + b*c + carry`, and returns `(ret as Word, ret >> Self::BITS)` at `src/limb/mul.rs:10-16`. The maximum value is `(2^64-1)^2 + 2*(2^64-1) = 2^128-1`, so the `u128` intermediate cannot overflow on the modeled target.
+
+`mul_wide`/`square_wide` ordering also matches: Lean says `(lo, hi)` at `FunsExternal.lean:545-573` and `:575-602`. The crate documents and implements `(lo, hi)` at `src/uint/mul.rs:20-31` and returns `(lo, hi)` at `:66-67`; `square_wide` returns `(lo, hi)` at `:89-90` and `:160`. Helioselene’s `red512` expects exactly this order, copying `wide.0` into lower limbs and `wide.1` into upper limbs at `crypto/helioselene/src/field/verified/red.rs:38-40`; multiplication and squaring feed it directly at `verified/mod.rs:109-119`. The internal `red512` `mac` calls at `red.rs:49-55` and `:89-96` are consistent with low/high carry semantics.
+
+Test evidence: `cargo test --manifest-path .../crypto-bigint-0.5.5/Cargo.toml --target-dir /tmp/crypto-bigint-0.5.5-audit-target --lib` passed 211/211 tests, including upstream `sbb_with_borrow` tests asserting `Limb::MAX` borrow-out (`src/limb/sub.rs:153-158`, `src/uint/sub.rs:170-175`) and `mul_wide` ordering tests (`src/uint/mul.rs:328-344`). `cargo test -p helioselene --lib` passed 11/11 tests, including reduction and field tests. Temporary build artifacts were removed.
+
+EXPLOITABILITY / PROOF IMPACT:
+No exploitable arithmetic bug or proof-invalidating mismatch found. The Lean field proofs’ subtraction/reduction and multiplication assumptions match the actual 0.5.5 dependency behavior on the modeled 64-bit target.
+
+If these conventions had differed, impact would have been severe: `sbb` mask mismatch would break `red1`/field subtraction/final invert reduction; `mac` or `(lo,hi)` mismatch would invalidate `red512` and therefore all multiplication/squaring. That hypothetical does not apply to the current locked dependency.
+
+RECOMMENDATIONS:
+Add small dependency-fidelity regression tests in the audit/validation layer for: `sbb` with initial `Limb::MAX`, `sbb` underflow returning `Limb::MAX`, max-value `mac` returning `(MAX, MAX)`, and `U256::mul_wide/square_wide` low/high ordering into `red512`.
+
+Keep the dependency pinned or re-run this check on any `crypto-bigint` upgrade, especially because `mul_wide` ordering changed in older pre-0.3 history.
+
+RESIDUAL RISK:
+The Lean artifact is 64-bit-specific. `crypto-bigint` also supports 32-bit limbs (`src/limb.rs:36-42`), whose analogous behavior is not modeled by this Aeneas snapshot. This is not a mismatch for the current verified 64-bit target, but 32-bit deployments would need their own model/proof or CI story.
+
+===== AGENT 04: subtle Choice/CtOption external fidelity (II.3, VIII.1) =====
+SCOPE:
+Audited `subtle` 2.6.1 `Choice`, `CtOption`, `ConditionallySelectable`, `ConditionallyNegatable`, conversion/bit-op semantics, Lean models in `TypesExternal.lean`/`FunsExternal.lean`, and helioselene call sites in `field`, `point`, and `ciphersuite`.
+
+FINDINGS: NONE
+
+EVIDENCE:
+`Cargo.lock:1566-1569` resolves `subtle` to 2.6.1. Lean models `subtle.Choice := Bool` and `subtle.CtOption T := T × Bool` at `crypto/helioselene/aeneas/HelioseleneCore/TypesExternal.lean:16-34` and `:57-74`.
+
+Argument order matches subtle: the crate specifies `conditional_select(a,b,choice)` returns `a` for `0`, `b` for `1` at `/home/user/.cargo/.../subtle-2.6.1/src/lib.rs:393-420`; the integer implementation computes that at `:513-517`, and `Choice` delegates through `u8` at `:568-572`. Lean models this as `if c then b else a` for `Uint` at `FunsExternal.lean:837-862`, `u8` at `:2071-2087`, and `CtOption` at `:2191-2214`. Heliolselene’s field/point wrappers preserve order at `crypto/helioselene/src/field/mod.rs:58-62` and `crypto/helioselene/src/point.rs:88-95`; call sites relying on polarity are consistent, e.g. zero negation `verified/mod.rs:91-100`, identity double `point.rs:253-257`, and negative-zero rejection `point.rs:371-377`.
+
+`CtOption` semantics match. Rust stores payload plus flag at `subtle-2.6.1/src/lib.rs:647-650`, constructs without clearing payload at `:678-683`, converts to `Option` only when `is_some().unwrap_u8() == 1` at `:652-668`, calls `map` closures on `select(default,value,flag)` at `:751-763`, calls `and_then` similarly then ANDs the flags at `:774-786`, and selects CtOptions component-wise at `:820-826`. Lean transcribes these at `FunsExternal.lean:928-930`, `:2130-2132`, `:2151-2161`, `:2179-2189`, and `:2208-2214`. Therefore `from_repr(...).and_then(...)` in `point.rs:357-378` cannot expose a noncanonical field payload from a false option; the closure may run on a dummy/default value, but the final flag remains false.
+
+`conditional_negate` matches: subtle computes `self_neg = -self` unconditionally and assigns/selects it iff choice is 1 at `subtle-2.6.1/src/lib.rs:614-623`; Lean models `select t (-t) choice` at `FunsExternal.lean:2105-2112`. Heliolselene uses it for sqrt even-root normalization at `crypto/helioselene/src/field/verified/sqrt.rs:76-80` and decompression sign handling at `crypto/helioselene/src/point.rs:360-362`.
+
+No reachable non-0/1 `Choice` construction found. The explicit sources are masked/shifted to one bit: `Choice::from((limb & 1) as u8)` at `verified/mod.rs:132-135`, `Choice::from(bytes[31] >> 7)` at `point.rs:349-352`, and `0.into()/1.into()` at `point.rs:367` and `:374`. Other choices come from canonical `ct_eq`/`is_odd`: subtle integer `ct_eq` returns 0/1 at `subtle-2.6.1/src/lib.rs:344-358`; crypto-bigint `CtChoice` converts through `to_u8()` at `/home/user/.cargo/.../crypto-bigint-0.5.5/src/ct_choice.rs:75-83`; `Uint::ct_eq` builds a canonical `CtChoice` at `uint/cmp.rs:52-63` and converts at `:123-127`; dalek field `ct_eq`/select delegate through crypto-bigint residue/uint code at `/home/user/.cargo/.../dalek-ff-group-0.5.0/src/lib.rs:79-90` and `/home/user/.cargo/.../crypto-bigint-0.5.5/src/uint/modular/constant_mod.rs:170-188`.
+
+`Choice` bit operations and exits match on canonical inputs: Rust `unwrap_u8`, `From<Choice> for bool`, `bitand`, `bitor`, and `ct_eq` are at `subtle-2.6.1/src/lib.rs:122-156`, `:159-179`, and `:334-338`; Lean models them at `FunsExternal.lean:1986-2069`. `to_bytes` uses `unwrap_u8` only after `is_odd()` and zeroes the sign with canonical `x.ct_eq(ZERO)` at `point.rs:385-395`; ciphersuite decoding converts `CtOption` to `Option` only at the API boundary at `ciphersuite.rs:51-52` and `:90-91`.
+
+`cargo test -p helioselene --lib` passed 11/11 tests.
+
+EXPLOITABILITY / PROOF IMPACT:
+No exploitable behavior or proof-invalidating model mismatch found for current code. The Bool model is faithful for all reachable, canonical `Choice` values.
+
+If future code constructs `Choice::from(n)` with `n ∉ {0,1}`, proofs can diverge sharply from release Rust: `bool::from` treats nonzero as true, `unwrap_u8` exposes the raw byte, integer `conditional_select` uses that byte as a mask, and `CtOption -> Option` accepts exactly byte `1`. That hazard is real but not reachable in the audited helioselene sources.
+
+RECOMMENDATIONS:
+Add a small audit regression test or lint-style check covering all `Choice::from` / `into()` call sites and asserting inputs are 0/1. Keep the subtle-version pin or re-run this review on any subtle upgrade.
+
+RESIDUAL RISK:
+The existing decoded-identity/projective-representation issue noted in prior artifacts is not caused by a subtle model mismatch; the model faithfully represents the `CtOption::conditional_select` behavior used there. Residual risk is future maintenance: adding an unchecked `Choice::from` source would invalidate the Bool abstraction immediately.
+
+===== AGENT 05: byte/limb order, shifts, remaining externals (II.4-II.6, VIII.1) =====
+SCOPE:
+Audited II.4-II.6 and the straightforward VIII.1 externals not already covered by Agents 03-04: endian conventions, repr serialization, `from_be_hex`, `from_le_slice`, `to_le_bytes`, `shl_vartime`/`shr_vartime`, constants, limb bit ops, wrapping add/sub, `CtOption::new`, and simple `Uint`/`CtChoice` helpers.
+
+FINDINGS: NONE
+
+EVIDENCE:
+Cargo pins match the modeled versions: `crypto-bigint` 0.5.5 at `Cargo.lock:177-181`, `subtle` 2.6.1 at `Cargo.lock:1565-1569`.
+
+Lean models `Uint<LIMBS>` as a little-endian limb array at `crypto/helioselene/aeneas/HelioseleneCore/TypesExternal.lean:36-55`; `toNat/ofNat` assign limb `i` weight `2^(64*i)` at `FunsExternal.lean:60-70`. This matches `crypto-bigint`’s storage, “least significant to most significant,” at `/home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/uint.rs:73-75`, and `as_limbs`/`as_limbs_mut` at `uint.rs:156-164`.
+
+Byte order matches. Rust `from_be_hex` decodes big-endian chunks and stores them into reversed limb slots at `uint/encoding.rs:37-67`; Lean parses big-endian hex at `FunsExternal.lean:458-487`. Rust `from_le_slice` writes byte chunk `i` to limb `i` using `from_le_bytes` at `uint/encoding.rs:69-90`; Lean uses little-endian `leBytesToNat` at `FunsExternal.lean:489-514`. Rust `to_le_bytes` calls `write_le_bytes`, which iterates limbs in stored order and writes each limb little-endian at `uint/macros.rs:31-34` and `uint/encoding.rs:142-155`; Lean emits byte `i = value >> 8*i` at `FunsExternal.lean:516-543`.
+
+Current Rust call sites use fixed-size inputs, so modeled panic paths are unreachable: `from_repr` passes `[u8;32]` to `U256::from_le_slice` at `crypto/helioselene/src/field/verified/mod.rs:138-155`; `to_repr` is `to_le_bytes` at `mod.rs:158-160`; `wide_reduce` slices `[u8;64]` into two 32-byte halves at `crypto/helioselene/src/field/mod.rs:177-180`; `Field::random` uses two `[u8;32]` buffers at `field/mod.rs:192-198`.
+
+The formal repr contracts use the same convention: `from_repr_ok` proves little-endian decoding and canonicity at `Spec/Repr.lean:452-474`; `to_repr_ok` proves little-endian emission at `Spec/Repr.lean:476-480`. Supporting external lemmas are at `Spec/Externals.lean:552-580` and `:862-873`.
+
+Big-endian hex constants are static, valid-length literals at current call sites: field modulus at `field/mod.rs:24-26`, U128 reduction constants at `field/verified/mod.rs:25-26` and `field/verified/red.rs:3-4`, invert XOR constant at `field/verified/invert.rs:127-128`, sqrt exponent at `field/verified/sqrt.rs:3-6`, and curve constants at `point.rs:450-455` and `point.rs:488-493`.
+
+The known shift divergence is real but unreachable. Rust `Uint::shl_vartime` returns zero for `n >= Limb::BITS * LIMBS` at `uint/shl.rs:42-60`; Rust `shr_vartime` returns zero for `shift > width`, and also zero at `shift == width` because no limbs are copied, at `uint/shr.rs:48-79`. Lean instead returns `fail panic` for `s >= 64*LIMBS` at `FunsExternal.lean:604-660`. All translated production calls shift by constant `1`: field double at `field/verified/mod.rs:103-106`, invert halving at `field/verified/invert.rs:170-172`, reflected in `Funs.lean:3723-3725` and `Funs.lean:3998`. The spec only relies on shift-by-1 lemmas at `Spec/Externals.lean:487-523`.
+
+Constants and simple ops match on the modeled 64-bit target. Rust `Limb::{ZERO,ONE,MAX,BITS}` are `0`, `1`, `Word::MAX`, `64` at `limb.rs:67-93`; Lean models them at `FunsExternal.lean:350-428`. Rust `Uint::{ZERO,ONE,LIMBS}` are `from_u8(0)`, `from_u8(1)`, and the const generic at `uint.rs:78-101`; Lean models them at `FunsExternal.lean:724-785`. Rust wrapping add/sub discard final carry/borrow at `uint/add.rs:30-32` and `uint/sub.rs:31-34`; Lean models modular addition/subtraction at `FunsExternal.lean:430-456` and `:698-722`. Limb bit ops and wrapping neg are direct word operations in `limb/bit_*.rs` and `limb/neg.rs`, matching the BitVec models at `FunsExternal.lean:98-201` and `:258-279`.
+
+VIII.1 one-liners checked: `Uint::ct_eq` XOR-accumulates limbs at `uint/cmp.rs:50-63` and converts at `:123-127`, matching `FunsExternal.lean:1018-1039`; `const_rem` returns `(self, false)` for divisor zero in crate tests at `uint/div.rs:87-105` and `:672-676`, matching Lean’s `a % b` with `Nat % 0 = a` at `FunsExternal.lean:1041-1067`; `from_u8` places the byte in limb 0 at `uint/from.rs:5-13`, matching `FunsExternal.lean:1068-1088`; `Default` is `ZERO` at `uint.rs:208-210`, matching `FunsExternal.lean:1090-1106`. `CtOption::new` stores value and flag unchanged in Rust at `subtle/src/lib.rs:671-683`, matching the pair constructor at `FunsExternal.lean:910-930`.
+
+EXPLOITABILITY / PROOF IMPACT:
+No reachable/exploitable divergence found. The only confirmed mismatch is oversized `Uint` shifts, where Lean is conservative (`panic`) and Rust returns zero. Current proof/call sites use only `1`, so any successful Lean `ok` proof excludes the divergent region. If a future translated call site shifts by attacker-controlled or width-sized values, the model must be updated or the call guarded.
+
+The prior malformed decoded-identity issue in `point.rs` is not duplicated here; it is not caused by byte order or external-model mismatch.
+
+RECOMMENDATIONS:
+Keep `crypto-bigint`/`subtle` pinned or re-run this audit on upgrade. Add small regression/fidelity tests for endian round trips, `from_be_hex` literal parsing, shift `1`, oversized shift behavior, and `const_rem(0)` so future model changes surface quickly. Document the oversized-shift divergence next to the Lean models.
+
+RESIDUAL RISK:
+The Lean external model is 64-bit-specific (`Limb = U64`, `BITS = 64`, `U256::LIMBS = 4`). `crypto-bigint`’s 32-bit configuration is not covered by this artifact. New call sites using large shifts or variable-length slices would need fresh review.
+
+===== AGENT 06: raw and PrimeField constants (III.1-III.2) =====
+SCOPE:
+Audited raw curve/sqrt constants, `PrimeField` associated constants, and related field constants in `crypto/helioselene/src/field/mod.rs`, `field/verified/{mod,red,invert,sqrt}.rs`, and `crypto/helioselene/src/point.rs`. Checked both Helios and Selene `curve!` instantiations.
+
+FINDINGS:
+NONE
+
+EVIDENCE:
+Exact bigint recomputation confirms `MODULUS` at `crypto/helioselene/src/field/mod.rs:25-26` equals the `PrimeField::MODULUS` string at `field/mod.rs:228-229` and has bit length 255, so `NUM_BITS=255` and `CAPACITY=254` at `field/mod.rs:231-232` are correct.
+
+All `HelioseleneField` raw/associated constants are reduced `< p`: `MODULUS_PLUS_ONE_DIV_FOUR` at `field/verified/sqrt.rs:4-6`, `TWO_INV`, `MULTIPLICATIVE_GENERATOR=2`, `ROOT_OF_UNITY`, `ROOT_OF_UNITY_INV`, and `DELTA=4` at `field/mod.rs:234-245`.
+
+Semantic checks passed: `MODULUS_PLUS_ONE_DIV_FOUR == (p+1)/4`; `TWO_INV == 2^-1 mod p`; `S=1` because `p-1` has exactly one factor of 2; `ROOT_OF_UNITY == p-1`, is self-inverse, and equals `2^((p-1)/2) mod p`; `DELTA == 2^(2^S) == 4`. Using the factorization recorded in `Spec/Prime.lean:10-14` and `:325-356`, exact modular exponentiation also confirms `2` has full order `p-1`, satisfying the `ff` requirement for `MULTIPLICATIVE_GENERATOR`.
+
+Selene raw curve constants at `crypto/helioselene/src/point.rs:484-493` are both `< p`; with `G_X=1` from the macro at `point.rs:29`, exact recomputation gives `G_Y^2 == 1^3 - 3*1 + B mod p`, `G_Y` even, and `B` a quadratic nonresidue. This matches the local Selene proof constants in `Spec/Selene/Curve.lean:63-76` and generator-on-curve theorem at `:182-227`.
+
+Helios constants at `point.rs:446-455` are not raw `HelioseleneField` values, but were checked against the Ed25519 field modulus `2^255-19`: both literals are reduced before `Field25519::from_u256`, `G_Y^2 == B-2 mod (2^255-19)`, `G_Y` is even, and `B` is a quadratic nonresidue.
+
+Related reduction/mask constants are semantically correct: `MODULUS_255_DISTANCE == 2^255-p` at `field/verified/mod.rs:25-26`; `TWO_MODULUS_255_DISTANCE == 2*(2^255-p)` at `field/verified/red.rs:3-4`; `MODULUS_XOR_TWO_MODULUS == p XOR 2p` at `field/verified/invert.rs:127-128`. The last is intentionally not `< p`, but it is a `U256` mask constant, not a field element.
+
+`cargo test -p helioselene --lib` passed 11/11, including both generator tests and zero-x invalid tests.
+
+EXPLOITABILITY / PROOF IMPACT:
+No proof-impacting mismatch found. The raw Selene field constants and `PrimeField` associated constants are inside the reduced carrier and match their intended algebraic meanings, so Lean proofs over reduced `HField` are not bypassed by these constants. The Helios macro literals also do not silently reduce to different values.
+
+RECOMMENDATIONS:
+Add explicit regression checks or const/test assertions for these identities: all raw field constants `< p`, sqrt exponent `(p+1)/4`, `PrimeField` root/generator identities, curve generator equations, and both curves’ `B` nonresidue checks. Prefer a checked/reducing const constructor or documented invariant for future raw `HelioseleneField(...)` literals.
+
+RESIDUAL RISK:
+This pass is exact bigint audit evidence, not an in-repo machine-checked Rust assertion. Future constant edits could regress unless covered by tests. Helios point constants rely on the external `dalek_ff_group::FieldElement` implementation and remain outside the Selene Lean group-law proof scope, though the literals themselves checked out.
+
+===== AGENT 07: reducedness invariant and from_u256/const_rem (III.3-III.4) =====
+SCOPE:
+Audited all `crypto/helioselene/src/**/*.rs`, `crypto/helioselene/benches/helioselene.rs`, prior Agent 01-06 sections, and `crypto-bigint` 0.5.5 `Uint::const_rem`.
+
+FINDINGS:
+NONE
+
+EVIDENCE:
+`HelioseleneField`’s inner `U256` is `pub(crate)` at `crypto/helioselene/src/field/mod.rs:22`; external callers cannot raw-construct it. A full grep found crate-internal raw constructions only in the field module, verified field module, and Selene constants in `point.rs`.
+
+`From<u8/u16/u32/u64>` at `field/mod.rs:28-46` is reduced trivially because every `u64 <= 2^64-1 < p`.
+
+`HelioseleneField::from_u256` at `field/mod.rs:166-167` reduces via `value.const_rem(&MODULUS).0`. `MODULUS` is the nonzero 255-bit constant at `field/mod.rs:24-26`, so the ignored `CtChoice` cannot be false. In `crypto-bigint` 0.5.5, `const_rem` is the shift/subtract remainder loop at `/home/user/.cargo/registry/src/.../crypto-bigint-0.5.5/src/uint/div.rs:87-104`; for this 255-bit modulus and a 256-bit input it conditionally subtracts `2p` then `p`, yielding `< p`. Cargo.lock pins this dependency to 0.5.5 at `Cargo.lock:177-181`.
+
+Current production use of `HelioseleneField::from_u256` is only the curve macro’s `G_X = from_u256(U256::from_u8(1))` at `crypto/helioselene/src/point.rs:29`, hence reduced even without relying on the general reduction path.
+
+`wide_reduce` at `field/mod.rs:177-180`, `Field::random` at `field/mod.rs:192-198`, `FromUniformBytes` at `field/mod.rs:272-274`, and `Helios::hash_to_F` at `ciphersuite.rs:32-40` all delegate to `verified::red512`, whose reducedness was already covered by the verified module/prior agents.
+
+Direct constants not already new in this pass: `ZERO`/`ONE` at `field/mod.rs:183-185` are reduced; `PrimeField` constants at `field/mod.rs:234-245`, sqrt constant at `field/verified/sqrt.rs:4-6`, and Selene `B`/`G_Y` raw constants at `point.rs:488-492` were covered by Agent 06 and are `< p`.
+
+`from_repr` constructs `CtOption::new(HelioseleneField(res), reduced)` at `field/verified/mod.rs:138-155`. For invalid encodings, `res` may be `>= p`, but it is carried only as a false `CtOption` payload. `subtle::CtOption` documents/stores false payloads as unexposed at `subtle-2.6.1/src/lib.rs:671-678`; `Option` conversion, `unwrap`, `map`, and `and_then` gate or replace the payload at `subtle-2.6.1/src/lib.rs:652-667,697-704,751-786`. Point decoding uses `from_repr(...).and_then(...)` at `point.rs:357-378`, so invalid noncanonical `x` is not exposed to point arithmetic.
+
+Tests/benches add no raw construction beyond these paths. `cargo test -p helioselene --lib` passed 11/11. Upstream `crypto-bigint` reduction tests filtered by `reduce` passed 5/5.
+
+EXPLOITABILITY / PROOF IMPACT:
+No usable non-reduced `HelioseleneField` escape was found. `PartialEq`, `ct_eq`, `to_repr`, and Lean HField reasoning remain sound for values obtainable as actual `HelioseleneField` results from public or current crate-internal production paths.
+
+The only syntactic non-reduced wrapper possibility is the false payload inside `from_repr`’s `CtOption`; this does not bypass equality/serialization because it is not extractable as `Some`.
+
+RECOMMENDATIONS:
+Keep `crypto-bigint` pinned or re-audit `const_rem` on upgrade. Add regression tests asserting `from_u256` on `{0,1,p-1,p,2p-1,2p,U256::MAX}` returns `< p` and expected residues. Consider replacing raw tuple constants with a checked/reducing const constructor, or add tests that grep/validate all `HelioseleneField(...)` literals remain reduced.
+
+RESIDUAL RISK:
+The tuple field remains crate-visible, so future in-crate code can violate reducedness with a single raw constructor. `const_rem` is external-code trust, not part of the Lean verified module. Invalid `from_repr` still creates a non-reduced false payload internally, so proof statements should be phrased as “observable/accepted values are reduced,” not “no wrapper is ever syntactically created around `>= p`.”
+
+===== AGENT 08: un-translated field API surface (IV.3) =====
+SCOPE:
+Audited non-proof field API surface: `Field::random`, `sqrt_ratio`, `PrimeFieldBits`, `Sum`/`Product`, `ct_eq`/`PartialEq`, `Field::ONE`, canonical serialization, and reachable callers using these APIs.
+
+FINDINGS: NONE
+
+EVIDENCE:
+`Field::random` and `FromUniformBytes<64>` both feed 64 uniform bytes into `red512`: `crypto/helioselene/src/field/mod.rs:192-198`, `:272-274`; `red512` treats `(lo, hi)` as the full little-endian 512-bit integer at `field/verified/red.rs:38-40` and reduces via `red256` at `:118-121`. Exact bias from reducing 512 bits mod the 255-bit modulus is negligible, about `4.04e-80` total variation.
+
+`sqrt_ratio` delegates to `ff::helpers::sqrt_ratio_generic` at `field/mod.rs:220-222`. The helper calls `div.invert().unwrap_or(0)`, then `sqrt(a)`/`sqrt(ROOT_OF_UNITY*a)` and asserts one branch succeeds at `ff-0.13.1/src/helpers.rs:95-127`. This impl overrides `sqrt` with verified sqrt at `field/mod.rs:216-218`, avoiding the recursion warned about by ff at `helpers.rs:86-91`. `ROOT_OF_UNITY = p-1` at `field/mod.rs:240-243`; prior constant audit and exact recomputation confirm it is a nonsquare.
+
+`PrimeFieldBits` uses `FieldBits = BitArray<_, Lsb0>` in `ff-0.13.1/src/lib.rs:25-38`; `to_le_bits = to_repr().into()` and `char_le_bits = MODULUS.to_le_bytes().into()` at `field/mod.rs:260-269`, matching `to_repr` little-endian encoding at `field/verified/mod.rs:158-160`. `Spec/Repr.lean:452-480` proves `from_repr` accepts exactly little-endian values `< p` and `to_repr` emits that value.
+
+`Sum` starts at `ZERO` and `Product` starts at `ONE`, with reference variants delegating through `copied()`: `field/mod.rs:84-97`, `:146-158`. `Field::ONE` is literal `U256::ONE` at `field/mod.rs:183-185`; the spec-side `HField.one` is the literal 1 at `Spec/Field.lean:88-94`.
+
+`ct_eq` delegates to `U256::ct_eq` at `field/mod.rs:51-55`; `crypto-bigint` implements `Uint::ct_eq` by XOR-OR over all limbs at `crypto-bigint-0.5.5/src/uint/cmp.rs:50-63`, and its `PartialEq` delegates to `ct_eq` at `:163-166`. Semantics are raw limb equality, sound for field equality because observable constructors preserve reducedness.
+
+`cargo test -p helioselene --lib` passed 11/11. This includes `ff_group_tests::prime_field::test_prime_field_bits` at `field/mod.rs:316-318`, which exercises equality, random sanity, sqrt/sqrt_ratio edge cases, `Sum`/`Product` identities, encoding, bit order, `ONE`, `NUM_BITS`/`CAPACITY`, and root constants.
+
+EXPLOITABILITY / PROOF IMPACT:
+No exploitable field API mismatch found. The main proof boundary remains reducedness: raw limb equality and canonical serialization are valid only for values `< p`. Current public paths preserve that invariant; the only non-reduced wrapper is an unextractable false `CtOption` payload from invalid `from_repr`.
+
+`sqrt_ratio` would amplify a broken/incomplete `sqrt` into a possible panic via the ff helper assertion, but Agent 02’s audit found the sqrt ladder complete and self-checked. No current proof assumption is invalidated.
+
+RECOMMENDATIONS:
+Add explicit regression tests for `sqrt_ratio` on `(0,0)`, `(nonzero,0)`, square ratios, nonsquare ratios, and random divisors.
+
+Document that `Field::random`/`FromUniformBytes` use standard 512-bit wide reduction with negligible, not mathematically exact, uniformity; use rejection sampling only if strict exact-uniform `ff::Field::random` wording is required.
+
+Keep tests/assertions for all raw constructors and constants reduced `< p`, since equality/serialization depend on canonical representatives.
+
+RESIDUAL RISK:
+Future crate-internal raw `HelioseleneField(U256)` construction can still violate reducedness and break `ct_eq`, `PartialEq`, `to_repr`, and proof correspondence. `Field::random` is statistically, not exactly, uniform. `PrimeFieldBits` correctness depends on the same little-endian `ff::FieldBits` contract and should be rechecked on `ff` upgrades.
+
+===== AGENT 09: point decoding, identity, recover_y/from_xy (IV.2, VIII.6) =====
+SCOPE:
+Audited `crypto/helioselene/src/point.rs`, `src/ciphersuite.rs`, Selene Lean specs under `aeneas/HelioseleneCore/Spec/Selene`, and prior audit artifacts for point decoding, identity encoding, sign handling, `recover_y`, `from_xy`, `ct_eq`, and `is_identity`.
+
+FINDINGS:
+[MEDIUM] Corroborated: `GroupEncoding::from_bytes([0;32])` decodes the canonical identity encoding into malformed `{ x: 0, y: 1, z: 1 }`, not the crate identity `{ x: 0, y: 1, z: 0 }`. This accepted point is off-curve but passes `is_identity`, `ct_eq(identity)`, and `to_bytes() == [0;32]`.
+
+No other non-identity decompression soundness issue found. Canonical `x`, sign bit handling, negative-zero rejection, `from_xy` curve check, and `recover_y` soundness align with the Selene proof assumptions for non-identity accepted points.
+
+EVIDENCE:
+`from_bytes` clears the sign bit and parses canonical `x` at `crypto/helioselene/src/point.rs:349-357`; detects identity by `x.is_zero()` at `:358`; forces `y = ONE` for identity at `:365-367`; then always constructs `z = ONE` at `:369`. Negative zero is rejected at `:371-377`. The real identity is `z = ZERO` at `:224-226`. `from_bytes_unchecked` is only an alias at `:381-383`.
+
+`to_bytes` serializes true identity as `[0;32]` because `z.invert()` fails at `point.rs:385-387`, and it also normalizes sign to zero when `x == 0` at `:393-395`, so the malformed decoded identity reserializes canonically and evades round-trip checks.
+
+Lean’s verified group carrier is only on-curve projective points: `OnCurveP`/`SPt` require the homogeneous curve equation at `Spec/Selene/GroupLaw.lean:141-151`. Lean identity is explicitly `(0,1,0)` at `Spec/Selene/Ops.lean:423-427` and `GroupLaw.lean:1026-1048`. The generated Lean code reflects the Rust bug: Selene `from_bytes` maps accepted `y` to `{ x, y, z := ONE }` at `HelioseleneCore/Funs.lean:5858-5859`, and Helios likewise at `:6052-6053`.
+
+`recover_y` is `curve_equation(x).sqrt()` at `point.rs:40-42`; Lean proves its soundness at `Spec/Selene/Ops.lean:1062-1076`. `from_xy` accepts only if `y² == curve_equation(x)` at `point.rs:408-410`, with Lean contract at `Ops.lean:633-659`.
+
+EXPLOITABILITY / PROOF IMPACT:
+The Lean Selene group-law proof is not internally broken: it proves operations over `SPt`, not arbitrary decoded bytes. But any external claim that `from_bytes/read_G` returns an `SPt` representative is false for `[0;32]`.
+
+This is reachable through `Ciphersuite::read_G` at `src/ciphersuite.rs:47-52` and `:86-91`; higher-level code reads untrusted proof points via transcript `read_point/read_commitments` at `crypto/generalized-bulletproofs/src/transcript.rs:162-195` and queues additional MSM terms in FCMP root-blind verification at `crypto/fcmps/src/lib.rs:908-930`. Direct forgery was not demonstrated, but malformed identity can make verification compute outside the proven group model and may cause verifier/reference divergence or batch pollution.
+
+RECOMMENDATIONS:
+Decode `x == 0, sign == 0` as `Self::identity()` or set `z` to `ZERO` when `is_identity`. Add regression tests for both curves: `from_bytes([0;32]).unwrap() + generator == generator`, `generator + decoded_identity == generator`, negative-zero rejection, noncanonical `x` rejection, and `from_bytes_unchecked` parity with `from_bytes`.
+
+After fixing, add a Lean/Rust-facing theorem or validation case: accepted `from_bytes` output is either canonical identity or an `SPt` affine representative; valid encodings round-trip canonically.
+
+RESIDUAL RISK:
+Selene decompression completeness still depends on `sqrt_complete` until fully proved, though soundness is self-checked. Helios uses the same macro and same identity bug, but Helios point arithmetic is outside the Selene Lean proof scope.
+
+===== AGENT 10: point formulas, scalar multiplication, Sum, trait axioms (IV.2, VIII.2, VIII.6) =====
+SCOPE:
+Reviewed `crypto/helioselene/src/point.rs`, `src/lib.rs`, `src/ciphersuite.rs`, prior Agents 08-09, `audit_leads.txt`, `helioselene_audit_findings.txt`, and Selene Lean specs under `crypto/helioselene/aeneas/HelioseleneCore/Spec/Selene`.
+
+FINDINGS:
+[MEDIUM, inherited from Agent 09] The malformed decoded identity is not contained by arithmetic. It is not a new independent bug, but it directly affects `add`, `Sum`, and scalar multiplication: decoded `{x=0,y=1,z=1}` is outside Lean’s `SPt` carrier yet is accepted by Rust operations. For valid/on-curve points, I found no new add/double/neg/sub formula bug, no scalar-ladder table-index bug, and no trait-axiom leakage into the Selene group-law proof.
+
+EVIDENCE:
+`from_bytes` builds accepted points with `z = ONE` at `crypto/helioselene/src/point.rs:357-377`; true identity is `{x:0,y:1,z:0}` at `point.rs:224-226`. `is_identity` only tests `x == 0` at `point.rs:230-232`; `double` explicitly canonicalizes any `x == 0` input to identity at `point.rs:253-257`, but `add` has no such guard and runs the RCB chain directly at `point.rs:98-155`.
+
+`Sum` starts from identity and repeatedly calls `+=` at `point.rs:261-274`, so a malformed decoded identity can pollute later additions. Scalar multiplication precomputes via `double`/`add` at `point.rs:277-296`, then runs a fixed 4-bit ladder at `point.rs:298-324`; for the malformed identity, `double` collapses it to true identity while odd precomputed entries can remain malformed, so scalar multiplication is not a proven group action on that input.
+
+The scalar ladder’s secret handling looks structurally sound: bits are read through `u8_from_bool`/`black_box` at `src/lib.rs:11-20`, consumed at `point.rs:300-304`, selected by scanning all table entries at `point.rs:313-318`, and the scalar is zeroized at `point.rs:322`.
+
+Lean’s proved carrier requires reduced, on-curve, nonzero projective representatives: `OnCurveP`/`SPt` at `Spec/Selene/GroupLaw.lean:141-151`. The Selene proof ties translated `add/neg/sub/double/identity` to the quotient group at `GroupLaw.lean:936-1048` and `1177-1321`; scalar actions there are transported definitions, not Rust scalar multiplication, at `GroupLaw.lean:1292-1298` and `1431-1434`.
+
+The intentionally opaque/axiomatized adjacent APIs are explicit: Selene scalar-mul, `Sum`, `Group::random`, and `Zeroize` at `FunsExternal.lean:2216-2292`; Helios counterparts at `FunsExternal.lean:2463-2544`. The axiom audit states these are outside the Selene group-law cone at `GroupLaw.lean:1436-1467`.
+
+Helios uses the same macro but different field/constants at `point.rs:446-455`; Selene constants are at `point.rs:484-493`. A read-only numeric check found Helios’ discriminant nonzero and `x^3 - 3x + B` root-free over `2^255-19`, so no formula-side Helios red flag was found, but there is no Lean Helios group-law theorem.
+
+EXPLOITABILITY / PROOF IMPACT:
+The Selene Lean proof is not internally invalidated: it proves Rust operations only on `SPt`. The exploitable boundary is decoded untrusted bytes: arithmetic/scalar multiplication can run outside the proven group model after Agent 09’s malformed identity. This can cause verifier/reference divergence, batch pollution, or unexpected `is_identity` success on off-curve `x=0` results. No targeted forgery was demonstrated here.
+
+Trait-evidence axioms do not affect Rust behavior and do not appear in the proved Selene group-law cone, but any future theorem about scalar multiplication, `Sum`, `random`, `zeroize`, or Helios must not inherit these as if they were behavioral specs.
+
+RECOMMENDATIONS:
+Fix identity decoding by returning/selecting `Self::identity()` when `x == 0, sign == 0`. Add tests for decoded identity with `+`, `Sum`, scalar multiplication, and both operand orders.
+
+Add Rust and/or Lean specs for scalar multiplication and `Sum`, or keep proof claims explicitly limited to `add/neg/sub/double` on `SPt`. Consider instantiating the Selene group-law proof for Helios or adding dedicated Helios algebra/order validation.
+
+RESIDUAL RISK:
+Until the identity fix lands, Rust point arithmetic remains reachable outside the Selene proof via canonical zero encoding. Scalar multiplication, `Sum`, `Group::random`, `Zeroize`, Helios group law, and `PrimeGroup` order semantics remain outside the current formal proof.
+
+===== AGENT 11: ciphersuite/hash-to-point/read_G reachability (IV.2, VI) =====
+SCOPE:
+Audited `crypto/helioselene/src/ciphersuite.rs`, `point.rs`, `field/mod.rs`, prior Agent 09-10 findings, FCMP/generalized-bulletproof consumers, and FCMP++ generator hash-to-curve code. No files edited.
+
+FINDINGS:
+[MEDIUM, corroborated/inherited] `Helios::read_G` / `Selene::read_G` accept the canonical identity encoding `[0;32]` as the malformed decoded point `{x=0,y=1,z=1}`. This is reachable from attacker-controlled FCMP++ proof bytes and generalized-bulletproof transcript points, so verifier arithmetic can leave the proved group model.
+
+No additional exploitable issue found in `hash_to_F`, ciphersuite `generator()`, or hash-to-point generator loops. `hash_to_F` has ambiguous `dst || msg` framing, but Helios/Selene implementations have no in-repo production caller.
+
+EVIDENCE:
+`read_G` only calls `GroupEncoding::from_bytes` and converts the `CtOption` to `Option`: `crypto/helioselene/src/ciphersuite.rs:47-52`, `:86-91`.
+
+`from_bytes` parses `x`, treats `x == 0` as identity, forces `y = ONE`, but always constructs `z = ONE`: `crypto/helioselene/src/point.rs:357-369`. The real identity is `{x:0,y:1,z:0}` at `point.rs:224-226`; `is_identity` checks only `x == 0` at `point.rs:230-232`; `to_bytes` normalizes sign when `x == 0`, so malformed identity reserializes as `[0;32]` at `point.rs:385-395`.
+
+Reachability is real: FCMP reads attacker-provided `root_blind_pok` bytes at `crypto/fcmps/src/lib.rs:990-996`, decodes `R` with Helios/Selene `read_G` at `:908` / `:921`, and queues it into verifier MSM terms at `:916` / `:929`. Generalized-bulletproof transcripts read points via `C::read_G` at `crypto/generalized-bulletproofs/src/transcript.rs:162-174`, including commitments at `:180-195`; verifier paths queue read points at `inner_product.rs:339-368` and `arithmetic_circuit_proof.rs:655-670`, `:718-724`, `:737-745`, `:770`.
+
+MSM does not normalize the bad point away: `multiexp-0.4.2/src/straus.rs:10-20` builds per-point tables by repeated `accum += pair.1`, and `:67-73` adds selected table entries.
+
+`hash_to_F` uses `Blake2b512::digest([dst, msg].concat())`: `crypto/helioselene/src/ciphersuite.rs:32-40`, `:71-79`. The trait explicitly warns this may transpose DST/message boundaries: `ciphersuite-0.4.2/src/lib.rs:68-75`. Current FCMP challenges instead use `FromUniformBytes<64>` at `crypto/generalized-bulletproofs/src/transcript.rs:21-29`; grep found no production Helios/Selene `hash_to_F` caller.
+
+FCMP++ generator hash-to-curve is outside helioselene but relevant setup code: it rejection-samples `G::from_bytes`, requires `point.to_bytes() == buf`, and rejects `is_identity()` at `monero-oxide/ringct/fcmp++/generators/src/lib.rs:45-58`; tags are fixed at `:62-100`. The malformed identity would be rejected there.
+
+EXPLOITABILITY / PROOF IMPACT:
+The malformed identity is attacker-reachable through proof bytes, so any proof argument assuming `read_G` returns a valid group element is false. This does not invalidate the Selene group-law theorem internally, because that theorem is over valid on-curve projective representatives, but it breaks protocol-facing use of decoded points as theorem inputs.
+
+Concrete impact is verifier/reference divergence and batch pollution: a correct implementation may treat `[0;32]` as identity while this implementation computes with an off-curve affine-looking point. I did not find a direct forgery path; the queued terms are multiplied by transcript/verifier weights, including random batch weights, so the attacker cannot straightforwardly tune the malformed contribution.
+
+RECOMMENDATIONS:
+Fix identity decoding in `point.rs`: when `x == 0, sign == 0`, return/select `Self::identity()` or set `z = ZERO`.
+
+Add regression tests for both Helios and Selene: `read_G([0;32]) + generator == generator`, `generator + decoded_identity == generator`, `Sum`, scalar multiplication, negative-zero rejection, and FCMP/GBP transcript read paths.
+
+Add a Rust/Lean-facing invariant: accepted `from_bytes/read_G` output is either canonical identity or a valid on-curve representative.
+
+If Helios/Selene `hash_to_F` ever becomes protocol-facing, replace raw `dst || msg` with length-framed input and include fixed curve/protocol DSTs.
+
+RESIDUAL RISK:
+Helios group law, scalar multiplication, `Sum`, ciphersuite `read_G`, and FCMP++ rejection-sampled hash-to-point remain outside the current formal model. Generator derivation appears guarded against the known identity bug, but its random-oracle/setup assumptions are still human-audit assumptions, not proved artifacts.
+
+===== AGENT 12: toolchain snapshot and target/config assumptions (V.1-V.2) =====
+SCOPE:
+Audited V.1-V.2 against current `fcmp++` HEAD, Aeneas docs/mapping, generated Lean types/models, Cargo feature/dependency configuration, debug/release conditionals, and 64-bit/32-bit target boundaries. No files edited.
+
+FINDINGS:
+[LOW / PROOF-SCOPE] The artifact matches the current source snapshot only under the documented configuration: patched copy, `--release`, `--no-default-features`, `x86_64-unknown-linux-gnu`. 32-bit, default `std`/`alloc`, debug, and current local compiler builds are outside the formal proof claim. No exploitable Rust behavior found in current 64-bit builds.
+
+[LOW / REPRODUCIBILITY] The workspace lacks the `.llbc` Charon output and raw `*External_Template.lean` files, and `aeneas`/`charon` are not on PATH, so the extraction options/tool versions cannot be independently rechecked from this checkout alone.
+
+EVIDENCE:
+Current branch/source matches the snapshot: `git rev-parse HEAD` = `6313959f906fe754909754ac642134237dae42a9`; assumptions cite the same commit at `crypto/helioselene/aeneas/human_audit_assumptions.txt:5-6`, and `MAPPING.md:3` pins links to it. `git diff -- crypto/helioselene/Cargo.toml crypto/helioselene/src` was empty.
+
+Tool/config recorded: Charon/Aeneas/rustc versions and dependency versions at `aeneas/README.md:150-159`; second Charon command uses `--no-default-features --release` at `README.md:183-195`; documented target is `x86_64-unknown-linux-gnu` at `README.md:202-209`.
+
+64-bit baked in: `Types.lean:128-145` models `Limb := Std.U64`; `Types.lean:375` models `HelioseleneField := Uint 4`; `FunsExternal.lean:409-428` models `Limb::BITS = 64`. `crypto-bigint` selects `Word = u32/BITS=32` on 32-bit and `Word = u64/BITS=64` on 64-bit at registry `crypto-bigint-0.5.5/src/limb.rs:36-54,79-90`; `nlimbs!(256)` is 8 on 32-bit and 4 on 64-bit at `src/macros.rs:62-77`.
+
+Feature boundary: `crypto/helioselene/Cargo.toml:51-71` defaults to `std`, while proof run is no-default-features. `alloc` gates extra `read_G`/divisor code at `src/ciphersuite.rs:1-13,45-52,84-91` and `src/point.rs:413-438`, outside the translated proof scope.
+
+Debug/release: debug-only checks are `u8_from_bool` at `src/lib.rs:11-20` and inversion progress checks at `src/field/verified/invert.rs:31-33,174-180`; README confirms they are absent from the release model at `aeneas/README.md:472-476`. README also records release-MIR wrapping semantics at `README.md:697-711`.
+
+Dependency pins match current lockfile: `crypto-bigint 0.5.5` at `Cargo.lock:177-181`, `ff 0.13.1` at `:390-399`, `group 0.13.0` at `:570-578`, `subtle 2.6.1` at `:1565-1569`.
+
+Command observations: `cargo test -p helioselene --lib --release --no-default-features`, `--release`, debug `--no-default-features`, and debug default all passed 11/11 tests on this 64-bit host. `aeneas -version` and `charon version` were unavailable; local rustc is `1.94.1`, while the extraction documents `nightly-2026-06-01`.
+
+EXPLOITABILITY / PROOF IMPACT:
+No target/config-specific exploit found. The main impact is proof misuse: theorems should not be cited for 32-bit builds, default-feature ciphersuite/divisor APIs, debug-only behavior, or future dependency/compiler resolutions without regeneration/re-audit. A 32-bit consensus-critical deployment would need its own proof or CI story; otherwise a target-specific arithmetic divergence could become verifier/consensus risk.
+
+RECOMMENDATIONS:
+State proof claims as: current commit, patched translation input, 64-bit release, `--no-default-features`, locked dependency versions.
+
+Add CI/regression gates for `cargo test -p helioselene --lib --release --no-default-features` and a 32-bit target if supported. Either explicitly unsupported-document 32-bit for proof-backed deployments or generate a 32-bit Charon/Aeneas artifact.
+
+Commit or archive the `.llbc`, extraction command log/options block, tool hashes, and raw external templates, or add a reproducible script that regenerates and diffs them.
+
+Re-run translator/model review on any dependency, feature-surface, rustc, Charon, or Aeneas update.
+
+RESIDUAL RISK:
+Charon/Aeneas remain unverified translators; generated source-span comments and `MAPPING.md` are audit aids, not a proof of extraction fidelity. Constant-time, zeroization, LLVM/codegen, Helios group law, scalar multiplication, `Sum`, `random`, `ciphersuite.rs`, and default-feature APIs remain outside V.1-V.2’s verified artifact.
+
+===== AGENT 13: Aeneas source patch equivalence (V.3, VIII.5) =====
+SCOPE:
+Reviewed `human_audit_assumptions.txt`, prior agents 01-12, `helioselene-aeneas.patch`, README section 4, touched shipped sources, and prior audit artifacts. Scope was only patch equivalence: `Cargo.toml`, `field/verified/{invert.rs,mod.rs,sqrt.rs}`, and `point.rs`.
+
+FINDINGS:
+No in-scope semantic mismatch found for the documented proof target: 64-bit, `--release`, `--no-default-features`.
+
+[LOW / OUT-OF-SCOPE] The `sqrt.rs` index-loop rewrite is only semantics-preserving on 64-bit limbs. The patch hard-codes `i / 64` and `i % 64` (`helioselene-aeneas.patch:90-94`) while shipped Rust uses `to_le_bits()` (`src/field/verified/sqrt.rs:60`). This is fine for the Aeneas 64-bit model, but would not be equivalent on a 32-bit `crypto-bigint` limb build. V.2 already excludes that target.
+
+EVIDENCE:
+`Cargo.toml` hunks are build-only: `[lints] workspace = true` to `[workspace]`, and `ec-divisors` relative to absolute path (`helioselene-aeneas.patch:4-19`; shipped `Cargo.toml:16-35`). Under `--no-default-features`, optional `ec-divisors` is not enabled.
+
+The bool-OR lifts are exact truth-table equalities: shipped `Word::from(borrow1 | borrow2)` / `Word::from(carry1 | carry2)` at `invert.rs:12-15` and `mod.rs:35-38`; patched forms at `helioselene-aeneas.patch:26-32,39-45`. `Word::from(bool)` is 0/1, so bitwise OR after conversion equals bool OR before conversion in release and debug.
+
+`from_repr::reduced` iterator-to-index rewrite is equivalent on limb sequence and panic behavior: shipped loop zips `a.as_limbs()` with `MODULUS_255_DISTANCE` padded by zero (`mod.rs:143-151`); patch iterates `0..U256::LIMBS` and guards `i < U128::LIMBS` (`helioselene-aeneas.patch:49-66`). This yields the same `(a_i, d_i-or-zero)` sequence and no out-of-bounds path.
+
+`sqrt.rs` is equivalent on the 64-bit target. Shipped code iterates `to_le_bits().iter().take(253).rev().skip(128)` (`sqrt.rs:59-74`); `PrimeFieldBits` uses little-endian repr bits (`field/mod.rs:260-268`, `ff-0.13.1/src/lib.rs:26,38`). The sequence is exactly bit indices `124..0`, matching the patched `for k in 0..125 { i = 124-k }` (`helioselene-aeneas.patch:71-103`). Generated Lean confirms the patched 125-iteration loop and copied limb array (`Funs.lean:2889-3036`).
+
+`point.rs` shift-type changes are type-only: shipped sign clear/set uses shifts by 7 (`point.rs:349-355,393-395`); patch uses `7u32` and `1u8` (`helioselene-aeneas.patch:107-145`). All amounts are below width, so no release/debug difference on the shipped byte operations.
+
+The `point` to `candidate_point` change is a pure alpha-rename. Shipped construction is `let point = y.map(...)` and selected at `point.rs:365-376`; patched lines are `helioselene-aeneas.patch:121-136`; generated Lean has `candidate_point` but the same selection (`Funs.lean:5926-5941`). It still constructs `z := ONE` (`point.rs:369`; `Funs.lean:5858-5859`), so the known decoded-identity bug is preserved, not introduced or hidden by the patch.
+
+The `point.rs` hunks are inside the `curve!` macro body (`point.rs:21-440`), so they apply identically to Helios and Selene instantiations (`point.rs:446-456,484-494`). Only Selene is in the proved group-law theorem cone.
+
+EXPLOITABILITY / PROOF IMPACT:
+For the documented Aeneas target, the proof is not about behaviorally different patched code. No exploitable shipped-code issue found from V.3/VIII.5.
+
+The low caveat matters only if someone reuses this patch or proof story for 32-bit builds: then the patched `sqrt` bit extraction can diverge or hit debug shift checks, while shipped `to_le_bits()` remains width-generic.
+
+RECOMMENDATIONS:
+State patch equivalence as “64-bit only” next to the `sqrt.rs` hunk. Add a small regression/equivalence check for the sqrt bit-index sequence and `from_repr` limb padding. Keep proof claims tied to the documented build tuple.
+
+RESIDUAL RISK:
+Patch equivalence remains a human argument, not machine-checked. The absolute `ec-divisors` path is reproducibility-sensitive. Known point decoding identity behavior remains a separate Rust/proof-boundary issue, but it is not a patch-equivalence mismatch.
+
+===== AGENT 14: constant-time, zeroization, compiler/codegen boundaries (VI.1-VI.3) =====
+SCOPE:
+Audited VI.1-VI.3 across `crypto/helioselene/src/**/*.rs`, with spot checks of `subtle 2.6.1`, `crypto-bigint 0.5.5`, `ff 0.13.1`, and `dalek-ff-group 0.5.0`. Focused on field invert/pow/sqrt, point scalar multiplication, ciphersuite hashing/decoding, zeroization, and proof/codegen boundaries.
+
+FINDINGS:
+[LOW / PROOF-SCOPE, HARDENING] Zeroization is partial and manual. The code has `Zeroize` impls, but not zeroize-on-drop for field elements/points, and several secret-bearing temporaries are left to ordinary stack/heap lifetime. This does not create an active timing leak, but it invalidates any claim that the implementation reliably clears all secret intermediates.
+
+No new exploitable secret-dependent branch or table-index issue found in the Rust source. The prior decoded-identity bug is functional/proof-boundary relevant but not a side-channel finding, so I do not duplicate it here.
+
+EVIDENCE:
+`HelioseleneField` is `Copy` and only implements `DefaultIsZeroes`/`Zeroize`, not `ZeroizeOnDrop`: `crypto/helioselene/src/field/mod.rs:20-22`, `:49`. Points implement explicit `Zeroize` but not drop zeroization: `crypto/helioselene/src/point.rs:54-63`.
+
+Uncleared/intermittently cleared temporaries:
+- `pow` zeroizes per-window bit copies, but not the `exp` parameter or 16-entry base-power table: `field/verified/pow.rs:4-28`, `:37-47`.
+- `invert` keeps secret-dependent `a,b,u,v` without clearing them: `field/verified/invert.rs:23-27`, `:184-194`.
+- `sqrt` keeps `table` and `res` until return without clearing unused powers: `field/verified/sqrt.rs:9-25`, `:59-80`.
+- `Field::random` leaves RNG buffers `a` and `b` uncleared: `field/mod.rs:192-198`.
+- `hash_to_F` zeroizes `hash` and `uniform`, but the temporary `[dst, msg].concat()` allocation is not separately zeroized: `ciphersuite.rs:32-40`, `:71-79`.
+
+Constant-time source structure checked:
+- `u8_from_bool` uses `black_box` and zeroizes the source bit copy: `src/lib.rs:11-20`.
+- Field select/reduction uses masks, fixed limb loops, and constant shifts: `field/verified/mod.rs:45-65`, `:103-106`, `:122-135`.
+- `invert` runs fixed 510-step loops and uses masks/selects; debug-only `bits()` checks are under `#[cfg(debug_assertions)]`: `field/verified/invert.rs:29-33`, `:35-78`, `:89-172`, `:184-194`.
+- `pow` scans all 16 entries with `conditional_select`, not a secret index: `field/verified/pow.rs:24-45`.
+- `sqrt` uses direct table indices only from the public constant exponent: `field/verified/sqrt.rs:59-74`.
+- Point scalar multiplication scans all precomputed entries and zeroizes the scalar copy: `point.rs:277-323`.
+
+Dependency/codegen boundary:
+- `subtle::Choice` uses best-effort optimizer barriers and documents that this is not a formal compiler guarantee: `subtle-2.6.1/src/lib.rs:102-112`, `:212-243`.
+- `subtle` integer selection is mask-based: `subtle-2.6.1/src/lib.rs:511-518`.
+- `crypto-bigint::Uint` selection and equality are fixed-limb loops: `crypto-bigint-0.5.5/src/uint.rs:196-205`, `uint/cmp.rs:52-63`.
+- `ff::Field::pow_vartime` remains available and branches on exponent bits; no internal helioselene misuse found, but callers must not use it with secret exponents: `ff-0.13.1/src/lib.rs:170-185`.
+
+Tests run: `cargo test -p helioselene --lib` and `cargo test -p helioselene --lib --release --no-default-features` both passed 11/11.
+
+EXPLOITABILITY / PROOF IMPACT:
+The zeroization gap is exploitable only with a separate memory-disclosure, core-dump, swap, or post-compromise memory-read primitive. It does not affect functional correctness or the Lean field/group theorems, but it means VI.2 must remain outside the proof claim.
+
+Constant-time behavior is source-audited, not proved. The Lean model erases timing, memory access, `black_box`, volatile barriers, LLVM transforms, and hardware instruction latency. Overreading the functional proof as a constant-time or zeroization proof would be incorrect.
+
+RECOMMENDATIONS:
+Use `Zeroizing<T>` or explicit cleanup for secret temporaries in `pow`, `invert`, `sqrt`, `Field::random`, and `hash_to_F`; consider `ZeroizeOnDrop` wrappers for secret scalar/field handling where compatible with `Copy` API constraints.
+
+Add dudect/ctgrind-style tests and assembly review for the release build tuple actually deployed. Keep proof claims phrased as functional correctness only, under pinned compiler/dependency/target assumptions.
+
+Document `pow_vartime` as public-exponent-only for downstream users, and prefer the inherent constant-time `HelioseleneField::pow` or `ff::Field::pow` for secret exponents.
+
+RESIDUAL RISK:
+Residual VI.1/VI.3 risk is compiler, target, and microarchitecture behavior: mask code could be transformed, integer multiply/loads may have target-specific leakage, and no binary-level CT proof was performed. Zeroization remains best-effort and incomplete for intermediates.
+
+===== AGENT 15: synthesis and risk ordering =====
+SCOPE:
+Reviewed the complete 15-agent assumption report, the assumption inventory, and prior local audit context. This synthesis de-duplicates inherited findings and separates exploitable issues from proof-scope and residual trust boundaries.
+
+CONFIRMED FINDINGS:
+1. [MEDIUM, high confidence] `GroupEncoding::from_bytes([0;32])` decodes the canonical identity encoding into malformed `{x:0,y:1,z:1}` instead of canonical identity `{x:0,y:1,z:0}`. This affects both Helios and Selene via the shared macro. Agents 09-11 are the same finding, not separate issues.
+Impact: accepted untrusted `read_G` inputs can leave the proved group model and poison addition/MSM tables, creating verifier/reference divergence or batch-pollution risk. Direct forgery was not demonstrated because the malformed term is weighted by verifier/transcript randomness.
+Proof impact: Selene group-law proof over valid `SPt` representatives remains intact, but any claim that `from_bytes/read_G` always returns a valid group element is false for `[0;32]`.
+
+No confirmed field arithmetic, reduction, inversion, sqrt, serialization, external-model, or constant-time source-level exploit was found.
+
+ASSUMPTIONS MATERIALly SUPPORTED:
+I.1 invert step congruence: strongly supported by limb-level audit, valid-state simulation on 64/32-bit models, 510-step traces, and Dafny/reference alignment; still a Lean `sorry` until discharged.
+
+I.2 sqrt completeness: materially supported by exact exponent reconstruction for `(p+1)/4`, table-bound analysis, random/edge tests, and final self-check. A failure would be decompression completeness/availability, not soundness.
+
+External models II/VIII.1: crypto-bigint `sbb`, `mac`, endian conversions, `const_rem`, shifts at current call sites, and subtle `Choice`/`CtOption`/selection semantics match locked dependencies on the modeled 64-bit target.
+
+Reducedness/constants III/IV.3: raw constants, PrimeField constants, curve constants, `from_u256`, field constructors, canonical `from_repr`, `to_repr`, bits, wide reduction, `sqrt_ratio`, equality, Sum/Product were all supported. Non-reduced `CtOption` false payloads do not escape.
+
+Patch/tool snapshot V.3/VIII.5: source patch equivalence is materially supported for the documented 64-bit release no-default-features target.
+
+Constant-time VI.1: source audit supports fixed schedules and no secret-dependent array index/branch in release, but this is not a formal CT proof.
+
+RESIDUAL TRUST BOUNDARIES:
+The two Lean `sorry`s remain residual formal trust despite strong audit support.
+
+Charon/Aeneas translation, handwritten external models, source patch equivalence, native_decide validation vectors, dependency pins, compiler/codegen, and the Lean/kernel standard trust base remain outside full proof.
+
+Proof claims apply only to the documented patched snapshot, 64-bit release, `--no-default-features`, locked dependencies. 32-bit, debug behavior, default/alloc APIs, and future dependency/compiler changes need separate review.
+
+Helios group law, scalar multiplication, Sum, random, zeroization, ciphersuite/read_G protocol surface, and hash-to-point/generator derivation remain mostly human-audited or unmodeled.
+
+Zeroization is partial and manual; constant-time remains compiler/microarchitecture trust. `hash_to_F` has unframed `dst || msg` but no current production Helios/Selene caller.
+
+PRIORITIZED RECOMMENDATIONS:
+1. Fix identity decoding: for `x == 0, sign == 0`, return/select `Self::identity()` or set `z = ZERO`. Add tests for both curves: `decode([0;32]) + G == G`, `G + decode([0;32]) == G`, Sum/MSM/scalar-mul behavior, negative-zero rejection, and noncanonical x rejection.
+
+2. Add protocol defense-in-depth: reject identity at `read_G` call sites where identity is invalid, especially FCMP root-blind and proof commitment paths.
+
+3. Discharge `step_congruence` and `sqrt_complete` in Lean, then add a theorem/validation that accepted `from_bytes` output is either canonical identity or a valid on-curve representative.
+
+4. Keep proof claims explicitly scoped; archive regeneration artifacts and add CI for release no-default-features, dependency-fidelity tests, constant checks, and optionally 32-bit or an explicit unsupported statement.
+
+5. Run binary-level CT tooling and improve memory hygiene with `Zeroizing`/explicit cleanup for secret temporaries.
+
+FINAL ASSESSMENT:
+The 15-agent review materially supports the core field proof assumptions and the Selene group-law theorem for valid representatives. The single actionable security-relevant defect is the decoded identity representation bug, which sits at the proof-to-protocol boundary rather than inside field arithmetic. Risk is medium, confidence high, and remediation is small. After that fix and regression coverage, remaining risk is chiefly proof-scope clarity and standard residual trust in translation, external models, compiler behavior, CT/zeroization, and unmodeled protocol-facing APIs.

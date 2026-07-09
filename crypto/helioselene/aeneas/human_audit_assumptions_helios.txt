@@ -1,0 +1,162 @@
+================================================================================
+HUMAN AUDIT ASSUMPTIONS — Helios group-law formalization (Stage 3)
+================================================================================
+
+Status snapshot: 2026-07-08/09, monero-oxide commit
+6313959f906fe754909754ac642134237dae42a9, artifact crypto/helioselene/aeneas/,
+files HelioseleneCore/Spec/Helios/{Prime25519,Curve,Ops,GroupLaw}.lean.
+COMPANION FILES: human_audit_assumptions.txt (field stage) and
+human_audit_assumptions_selene.txt (Selene stage). Sections of those files
+covering tool trust, the translation patches, and package-wide axioms are
+inherited; this file lists what the HELIOS stage adds — above all its
+DELIBERATELY DIFFERENT trust boundary.
+
+The Lean development proves (adversarially audited, 0 high findings):
+  * ThetaAddEquiv : HClass ≃+ W.toAffine.Point   (SORRY-FREE)
+      HClass = on-curve projective Helios representatives modulo projective
+      equivalence, with 0 / + / unary - / binary - definitionally the
+      descended, Aeneas-translated Rust identity/add/neg/sub;
+      W : WeierstrassCurve (ZMod q), y^2 = x^3 - 3x + B_helios, q = 2^255-19.
+  * AddCommGroup HClass                           (sorry-free)
+  * ct_eq / eq / is_identity deciders             (sorry-free)
+  * Kernel-only: q_prime : Nat.Prime (2^255-19) (Pratt certificate);
+    B_helios is a quadratic non-residue mod q; the Helios cubic has NO root
+    (no 2-torsion, polynomial Fermat/Bezout certificate); discriminant
+    nonzero; generator (1, gY) on-curve.
+  * The two package-wide sorries are UNCHANGED (Invert.step_congruence,
+    Selene.sqrt_complete) and neither is in any Helios proof cone.
+
+--------------------------------------------------------------------------------
+I. THE CENTERPIECE ASSUMPTION: THE IDEALIZED COORDINATE FIELD
+--------------------------------------------------------------------------------
+
+Unlike the Selene stage — where the coordinate field arithmetic is the
+helioselene limb code we PROVED correct — the Helios coordinate field is an
+IDEALIZED boundary, by design (agreed staging decision):
+
+    dalek_ff_group.field.FieldElement := ZMod (2^255 - 19)
+
+and the 23 operational field items the translated Helios group law references
+(26 concrete defs including the toZMod/ofZMod helpers; 12 actually computed
+with, the rest trait-instance evidence) are Lean definitions that are
+LITERALLY the ZMod ring operations
+(FunsExternal.lean, dalek section). Every headline Helios theorem is a
+theorem about the group law AS IF the 25519 field arithmetic were perfect.
+
+I.1  ASSUMED: dalek-ff-group 0.5.0's FieldElement arithmetic implements
+     arithmetic in ZMod (2^255 - 19).
+
+  WHAT THE CODE ACTUALLY IS (audit finding — sharper than folklore): the
+  fidelity target is NOT curve25519-dalek. dalek-ff-group 0.5.0 implements
+  FieldElement as its own type over crypto-bigint 0.5.5's constant-modulus
+  MONTGOMERY RESIDUE (field.rs: 'FieldElement(ResidueType)').
+  curve25519-dalek appears in the dependency tree only for dalek-ff-group's
+  Ed25519/Ristretto point wrappers; no Helios field-arithmetic path touches
+  it, the workspace sets no curve25519_dalek_backend cfg, and fiat-crypto's
+  formally verified arithmetic is NOT in any relevant code path. The human
+  obligation is therefore: review crypto-bigint 0.5.5 Montgomery Residue
+  arithmetic (mul/add/sub/neg/retrieve) + dalek-ff-group 0.5.0's field.rs
+  wrappers against "value semantics mod 2^255-19".
+
+  IF FALSE: every Helios theorem is about a different curve/group than the
+  code computes. This is the single largest trust item of the Helios stage.
+
+  MITIGATIONS IN PLACE: (a) each concrete model's doc comment cites the
+  exact dalek/crypto-bigint source it models, and the audit verified all 23
+  operational models
+  against the vendored sources — including the three subtle items:
+  from_u256's reduction semantics INCLUDING inputs >= q, ct_eq's
+  equal-iff-equal-mod-q argument (canonical Montgomery retrieval), and
+  conditional_select's argument order; (b) the upstream crate's own test
+  suite (ff-group-tests over HeliosPoint, 11/11 on the patched copy)
+  exercises the real arithmetic; (c) crypto-bigint 0.5.5 Residue is widely
+  used and reviewed. NOT in place: any differential test between the ZMod
+  models and the real Rust field code (see I.2).
+
+  POSSIBLE HARDENING (future): differential-test dalek-ff-group's
+  FieldElement against big-int ground truth from Rust (like the crate's own
+  tests, but vectorized), or replace the idealization with a verified
+  limb-level model (the "full transpile + quotient" path we deliberately
+  deferred).
+
+I.2  VALIDATION SIGNAL IS WEAKER THAN SELENE'S — BY CONSTRUCTION.
+  ValidationHelios.lean (75 vectors, all pass, negative controls) exercises
+  the TRANSLATED GROUP-LAW CODE through the ideal models: it validates the
+  RCB/doubling/negation/ct_eq translation, the constants pipeline
+  (from_be_hex -> from_u256 -> ZMod), CtOption/Choice plumbing, and the
+  projective identity handling. It CANNOT catch a divergence between the
+  ideal field and real dalek arithmetic (the field ops are correct by
+  definition in the model). The file header says this explicitly.
+
+--------------------------------------------------------------------------------
+II. NEW AXIOMS AND SCOPE ITEMS INTRODUCED BY THE HELIOS RUN
+--------------------------------------------------------------------------------
+
+II.1  The third charon run added one trust-relevant opacity:
+      HelioseleneField's ff::Field::sqrt_ratio is now opaque (a fresh
+      existence-only axiom). Reason: the Helios GROUP impl's PrimeField
+      bound on its scalar (HelioseleneField) pulls trait items the
+      iterator-adapter limitation cannot translate. VERIFIED not referenced
+      by any proof cone (group law, field theorems, Selene theorems all
+      unchanged). Human note: sqrt_ratio's Rust body is ff's generic
+      helper; it is exercised by the crate's own tests only.
+
+II.2  Existence-only axiom inventory after the Helios run: 48 total,
+      exactly: 24 dalek items (sqrt, invert, sqrt_ratio, from_repr/to_repr,
+      random, PrimeField constants, ...), 8 SelenePoint + 8 HeliosPoint
+      out-of-scope items (Mul/MulAssign ladder, Sum, Group::random,
+      Zeroize), 4 HelioseleneField Sum/Product, 1 HelioseleneField
+      sqrt_ratio (II.1), 2 Uint (PartialEq/From<u64>), 1 Uint Debug::fmt.
+      (Was 54 before the run: 21 dalek arithmetic axioms became concrete
+      behavioural defs.) All verified OUTSIDE every
+      proof cone (kernel #print axioms on each headliner). They only
+      assert function-type inhabitation (consistent by construction).
+
+II.3  New string-length `_native.decide.ax_1` constants (same benign class
+      as before): point.helios.B and point.helios.G_Y. The parsed VALUES
+      are kernel-re-proved in Spec/Helios/Curve.lean.
+
+--------------------------------------------------------------------------------
+III. SCOPE BOUNDARIES (mirror of the Selene list, Helios-specific notes)
+--------------------------------------------------------------------------------
+
+III.1  Scalar multiplication: untranslated (ladder; opaque). The Helios
+       scalar field is HelioseleneField — our VERIFIED field — so when the
+       ladder stage happens, Helios scalars are already on proven ground.
+III.2  Curve order / the cycle property (|Helios(F_q)| = p): not provable
+       in current mathlib (no Hasse); external design fact. The full cycle
+       claim (|Helios| = p AND |Selene| = q) remains entirely outside the
+       formalization.
+III.3  Encodings: recover_y/from_bytes/to_bytes for Helios cross the
+       AXIOMATIC dalek sqrt/invert/to_repr boundary — fully out of scope
+       (Selene at least has the sqrt soundness half). No encoding theorem
+       exists for Helios; encodings feed consensus, so this is a real gap
+       for a later stage.
+III.4  PartialEq::eq and point sub: covered via eq = ct_eq and
+       sub = add ∘ neg (proved), same as Selene.
+
+--------------------------------------------------------------------------------
+IV. CLOSED BY THE KERNEL (do not re-audit by hand)
+--------------------------------------------------------------------------------
+
+IV.1  q = 2^255 - 19 is prime (7-node Pratt tree; the P236 chain follows
+      the published Curve25519 factorization, reconstructed and
+      re-verified; one 27-digit cofactor split locally with msieve;
+      certificate + generator in tools/).
+IV.2  B_helios is a non-residue mod q (is_identity soundness); the Helios
+      cubic is rootless (RCB completeness); delta != 0; generator on-curve;
+      translated constants equal the Rust hex literals through the full
+      parse chain.
+IV.3  The RCB case-certificates are B-GENERIC: the Helios cofactor
+      polynomials are identical to Selene's (audit re-derived 3 of 7
+      independently). The two curves' group-law proofs cross-validate each
+      other structurally.
+
+--------------------------------------------------------------------------------
+Suggested review order for maximal risk reduction per hour:
+  I.1 (crypto-bigint 0.5.5 Residue + dalek-ff-group 0.5.0 field.rs vs
+  "mod q value semantics" — the one big item, a few focused hours) ->
+  II.1/II.2 (confirm the axiom inventory stays outside proof cones on
+  rebuild) -> III.3 (decide whether Helios encodings need their own stage)
+  -> the inherited ledgers (unchanged).
+================================================================================

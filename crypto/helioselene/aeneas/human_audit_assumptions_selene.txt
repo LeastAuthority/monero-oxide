@@ -86,8 +86,19 @@ II.3  Encoding round-trips. from_bytes/to_bytes are translated and pass the
       round-trip theorem (from_bytes ∘ to_bytes = id on classes) is proved
       yet. Encodings feed consensus — worth its own stage later.
 
-II.4  Helios entirely (coordinates in the 25519 field; dalek boundary), plus
-      point::Sum, Group::random, Zeroize, hash-to-curve (ciphersuite.rs).
+II.4  [SUPERSEDED 2026-07-08 — kept for the record] This item originally read
+      "Helios entirely (coordinates in the 25519 field; dalek boundary)".
+      That is no longer true: Stage 3 (third charon run, 2026-07-08) translated
+      the Helios group-law core (point::helios) and proved its own
+      ThetaAddEquiv : HClass ≃+ W.Point sorry-free — over an IDEALIZED dalek
+      coordinate boundary (FieldElement := ZMod (2^255 - 19) with concrete
+      ZMod operation models). See HelioseleneCore/Spec/Helios/ and the
+      dedicated ledger human_audit_assumptions_helios.txt (its I.1
+      idealization assumption is the centerpiece). Still out of scope, for
+      BOTH curves: scalar multiplication, point::Sum, Group::random, Zeroize,
+      hash-to-curve (ciphersuite.rs); and for Helios additionally the point
+      encodings (from_bytes/to_bytes go through the still-axiomatic dalek
+      sqrt/to_repr).
 
 II.5  Rust `sub` and `PartialEq::eq` have no dedicated test vectors; they are
       covered by kernel proofs instead (sub = add ∘ neg definitionally in the
@@ -116,14 +127,25 @@ III.3  Uint::const_rem — NOW LOAD-BEARING: G_X = from_u256(1) reduces through
        checked, so exposure is minimal, but const_rem's model fidelity for
        OTHER inputs matters if from_u256 is theoremized later.
        HUMAN FOCUS: crypto-bigint-0.5.5 src/uint/div.rs const_rem.
-III.4  54 existence-only axioms (45 dalek_ff_group::FieldElement items, Uint
-       Debug::fmt, 8 out-of-scope SelenePoint items: Mul/MulAssign ladder,
-       Sum, Group::random, Zeroize). These assert only that functions of the
-       given types EXIST (all such types are inhabited, so no consistency
-       risk) and are PROVEN absent from every group-law/field proof cone
-       (kernel #print axioms + dependency-cone analysis). They become real
-       obligations only if a later stage proves things about the trait
-       RECORDS (e.g. Helios).
+III.4  [UPDATED 2026-07-08 — the Helios stage happened] As of this ledger's
+       2026-07-07 snapshot there were 54 existence-only axioms (45
+       dalek_ff_group::FieldElement items, Uint Debug::fmt, 8 out-of-scope
+       SelenePoint items: Mul/MulAssign ladder, Sum, Group::random, Zeroize),
+       all proven absent from every group-law/field proof cone. The closing
+       caveat ("they become real obligations only if a later stage proves
+       things about the trait RECORDS (e.g. Helios)") HAS SINCE FIRED: the
+       2026-07-08 Helios stage made the dalek boundary load-bearing and
+       converted 21 of the 45 dalek axioms into concrete BEHAVIOURAL ZMod
+       models that the Helios headline theorems compute through. The shared
+       FunsExternal.lean now holds 48 existence-only axioms (24 dalek, 8
+       SelenePoint, 8 HeliosPoint, 4 HelioseleneField Sum/Product, 1
+       HelioseleneField sqrt_ratio, 2 Uint PartialEq/From<u64>, 1 Uint
+       Debug::fmt) — still all outside every proof cone of BOTH curves'
+       headline theorems — plus 26 concrete dalek defs whose fidelity is a
+       genuine per-item human assumption FOR THE HELIOS STAGE ONLY (the
+       Selene proofs never consume them). Inventory and per-item checklist:
+       human_audit_assumptions_helios.txt. Nothing changes for the Selene
+       theorems themselves: their axiom cones are unchanged.
 
 --------------------------------------------------------------------------------
 IV. NEW TOOL-TRUST ITEMS

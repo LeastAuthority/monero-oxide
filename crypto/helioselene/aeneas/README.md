@@ -1,11 +1,12 @@
-# Aeneas translation of the helioselene verified field arithmetic and the Selene group-law core
+# Aeneas translation of the helioselene verified field arithmetic and the Selene and Helios group-law cores
 
 This directory contains a Lean 4 model of `crypto/helioselene`'s
 `field::verified` module — the code
 [formally verified by Veridise in Dafny](https://github.com/VeridiseAuditing/helioselene-dafny-proofs)
 per the header of `src/field/verified/mod.rs` — and, since the widened
-second translation run of 2026-07-07, of `verified::sqrt` and the Selene
-group-law core of `src/point.rs`, mechanically translated from
+second (2026-07-07) and third (2026-07-08) translation runs, of
+`verified::sqrt` and the **Selene and Helios group-law cores** of
+`src/point.rs`, mechanically translated from
 the Rust source with [Charon](https://github.com/AeneasVerif/charon) (MIR →
 LLBC extraction) and [Aeneas](https://github.com/AeneasVerif/aeneas) (LLBC →
 pure Lean functions).
@@ -21,10 +22,11 @@ theorem about this model says anything about the compiled Rust.
 
 ### What was translated
 
-Translation roots (second run, 2026-07-07, see [§3](#3-toolchain-and-provenance)):
-`helioselene::field::verified` **and** `helioselene::point::selene`, i.e.
-everything reachable from those modules except the explicit exclusions
-below. Concretely, `HelioseleneCore/Funs.lean` contains definitions for:
+Translation roots (third run, 2026-07-08, see [§3](#3-toolchain-and-provenance)):
+`helioselene::field::verified`, `helioselene::point::selene` **and**
+`helioselene::point::helios`, i.e. everything reachable from those modules
+except the explicit exclusions below. Concretely,
+`HelioseleneCore/Funs.lean` contains definitions for:
 
 - **Reduction** (`src/field/verified/red.rs`): `red256`, `red512`, and the
   constant `TWO_MODULUS_255_DISTANCE`.
@@ -61,11 +63,29 @@ below. Concretely, `HelioseleneCore/Funs.lean` contains definitions for:
   field-layer/`dalek_ff_group` trait-instance records and helpers) and 20
   new `Types.lean` trait/type declarations (see `MAPPING.md`, appended
   section, for the per-declaration index).
+- **The Helios group-law core** (`src/point.rs` via the same `curve!`
+  macro, NEW with the third run, 2026-07-08): the `point.helios.*`
+  namespace — the same item list as for Selene (constants `B`, `G_X`,
+  `G_Y`, the generator `G`, `curve_equation`, `recover_y`,
+  `HeliosPoint.from_xy`, the `Add`/`Sub`/`Neg` (and
+  `AddAssign`/`SubAssign`, owned and shared) impls, `Group::{identity,
+  double, generator, is_identity}`, `ct_eq`, `PartialEq::eq`,
+  `conditional_select`, and `GroupEncoding::{from_bytes, to_bytes}`) — 60
+  new `point.helios.*` declarations. Helios' coordinate type is the
+  foreign `dalek_ff_group::FieldElement` (the 25519 field — see §5c for
+  the idealized boundary this creates), and `HelioseleneField` is its
+  *scalar* type, so the third run also materialised `HelioseleneField`'s
+  `ff::Field`/`ff::PrimeField`/`Assign`-variant trait records (38 new
+  declarations, required as `Group` scalar evidence for `HeliosPoint`) and
+  one `&`-`Neg` record for `FieldElement`. In total the third run added 99
+  new `Funs.lean` declarations and 4 new `Types.lean` declarations, plus
+  20 new externals (§5c); see `MAPPING.md`'s 2026-07-08 appendix for the
+  per-declaration index.
 
 All of this translated with **zero `sorry`s** in the generated model — the
 hand-written proof tree under `HelioseleneCore/Spec/` adds exactly two
 (`Invert.step_congruence` and `Selene.sqrt_complete`, see
-[§7](#7-formalization-status-2026-07-07)) —
+[§7](#7-formalization-status-2026-07-08)) —
 and the resulting Lean package builds (`lake build`; `.olean` artifacts for
 all modules are present in `.lake/build`). Rust `for` loops are extracted as
 separate
@@ -73,10 +93,15 @@ separate
 [§5e](#e-loop-and-divergence-modeling)).
 
 On top of the generated model, the `Spec/Selene/` proof tree
-(`Curve.lean`/`Ops.lean`/`GroupLaw.lean`) proves the Selene group law: the
-headline `ΘAddEquiv : SClass ≃+ W.toAffine.Point` is **sorry-free** — see
-[§7](#7-formalization-status-2026-07-07) for the full status, including the
-exact taint cones of the two remaining `sorry`s.
+(`Curve.lean`/`Ops.lean`/`GroupLaw.lean`) proves the Selene group law — the
+headline `ΘAddEquiv : SClass ≃+ W.toAffine.Point` is **sorry-free** — and
+the `Spec/Helios/` proof tree
+(`Prime25519.lean`/`Curve.lean`/`Ops.lean`/`GroupLaw.lean`) proves the
+Helios group law over the **idealized** dalek coordinate boundary:
+`Helios.ΘAddEquiv : HClass ≃+ W.toAffine.Point`, also **sorry-free** — see
+[§7](#7-formalization-status-2026-07-08) for the full status, including the
+exact taint cones of the two remaining `sorry`s and the Helios
+boundary-fidelity assumption.
 
 ### What was NOT translated, and why
 
@@ -94,27 +119,46 @@ exact taint cones of the two remaining `sorry`s.
   a scalar, owned and shared — uses `u8_from_bool`/`black_box` for bit
   handling), the `Sum` impls (iterator adapters), `Group::random`
   (`RngCore` + retry loop) and `Zeroize::zeroize` were declared **opaque**
-  ([§3](#3-toolchain-and-provenance)); they surface only as existence-only
+  ([§3](#3-toolchain-and-provenance)) — since the third run for **both**
+  `curve!` instantiations; they surface only as existence-only
   axioms ([§5c](#c-trusted-base-external-models-and-residual-axioms)) needed
-  to state the `Group`/`GroupEncoding` trait bounds. The **Helios**
-  instantiation of the `curve!` macro and `ciphersuite.rs` (hash-to-curve)
-  remain entirely outside the translation roots.
+  to state the `Group`/`GroupEncoding` trait bounds. (The **Helios**
+  instantiation of the `curve!` macro, entirely outside the translation
+  roots through the second run, is **translated since the third run**;
+  `ciphersuite.rs` (hash-to-curve) remains entirely outside.) The third
+  run also declared `HelioseleneField`'s `ff::Field::sqrt_ratio` opaque —
+  a NEW trust-relevant opacity: unlike the other opaque items it surfaces
+  as a fresh existence-only axiom
+  (`field.HelioseleneField.Insts.FfField.sqrt_ratio`, FunsExternal.lean),
+  because the now-materialised `ff.Field HelioseleneField` record must
+  state the method; see [§3](#3-toolchain-and-provenance) for why it had
+  to be opaque and §5c for its status (outside every proof cone).
 - The `Sum`/`Product` impls for `HelioseleneField` were declared **opaque**
-  (see [§3](#3-toolchain-and-provenance)) and do not appear in the output at
-  all. No translated function depends on their bodies (verified by grep
+  (see [§3](#3-toolchain-and-provenance)). Through the second run they did
+  not appear in the output at all; since the third run they surface as
+  four existence-only axioms (§5c), because the now-materialised
+  `ff.Field HelioseleneField` record must state its `Sum`/`Product` parent
+  clauses. No translated function depends on their bodies (verified by grep
   over `Funs.lean`; see [§5g](#g-struct-flattening-and-trait-encoding)).
   (`ff::Field::sqrt` for `HelioseleneField`, opaque in the first run, is now
-  translated.)
+  translated; `ff::Field::sqrt_ratio` is opaque since the third run — see
+  above.)
 - Foreign crates (`crypto-bigint`, `subtle`, and — new in the second run's
-  call graph — `dalek-ff-group`, Selene's scalar type) are **not
-  translated** — Charon's default treatment of foreign bodies leaves them
-  as external declarations. `crypto-bigint`/`subtle` are instantiated here
-  with concrete definitional models (`TypesExternal.lean` /
-  `FunsExternal.lean`); the `dalek_ff_group::FieldElement` surface (needed
-  only as trait-instance evidence) is covered by existence-only axioms; the
-  fidelity of the concrete models to the Rust crates is the trusted base of
-  the model; see
-  [§5c](#c-trusted-base-external-models-and-residual-axioms).
+  call graph — `dalek-ff-group`, Selene's scalar type **and, since the
+  third run, Helios' coordinate type**) are **not translated** — Charon's
+  default treatment of foreign bodies leaves them as external
+  declarations. `crypto-bigint`/`subtle` are instantiated here with
+  concrete definitional models (`TypesExternal.lean` /
+  `FunsExternal.lean`). The `dalek_ff_group::FieldElement` surface was
+  covered by existence-only axioms through the second run (it was needed
+  only as trait-instance evidence); since the third run it is the
+  **load-bearing idealized boundary** of the Helios stage: 26 of its items
+  are concrete `ZMod (2^255 − 19)` definitional models that every Helios
+  headline theorem computes through, and 24 remain existence-only axioms
+  (outside every proof cone). The fidelity of the concrete models to the
+  Rust crates is the trusted base of the model; see
+  [§5c](#c-trusted-base-external-models-and-residual-axioms) and, for the
+  per-item Helios obligations, `human_audit_assumptions_helios.txt`.
 
 ## 2. Directory contents
 
@@ -122,11 +166,12 @@ exact taint cones of the two remaining `sorry`s.
 |---|---|---|
 | `HelioseleneCore.lean` | Library entry point: `import HelioseleneCore.Funs` (the `aeneas -gen-lib-entry` output) plus `import HelioseleneCore.Spec.Field` (the proof tree). | Import list only |
 | `HelioseleneCore/Types.lean` | Generated type definitions: `Add`/`Sub`/`Mul`/`Neg` trait declaration records, `crypto_bigint.limb.Limb := Std.U64`, `field.HelioseleneField := crypto_bigint.uint.Uint 4#usize`. | No — regenerate |
-| `HelioseleneCore/Funs.lean` | Generated function definitions (~4,900 lines including added documentation comments): the translated call graph listed in §1 (214 declarations; the 130 added by the second run carry only the generated Aeneas metadata comments so far). | No — regenerate |
-| `HelioseleneCore/TypesExternal.lean` | Concrete computable **definitions** (not axioms) modeling the 3 external types: `Uint LIMBS := Aeneas.Std.Array U64 LIMBS` (little-endian limb vector), `subtle.Choice := Bool`, `subtle.CtOption T := T × Bool`. Instantiated from the generated template; each `def` carries a doc comment citing the `crypto-bigint` 0.5.5 / `subtle` 2.6.1 source it models. | **Yes** — hand-written models (§5c) |
-| `HelioseleneCore/FunsExternal.lean` | Concrete computable **definitions** modeling the external functions/constants of `crypto-bigint`/`subtle`/`ff` (the original 34 = 27 functions + 7 constants, plus 19 added for the second run's scope), each defined as the exact computation on the modeled values, documented against the crate sources — plus 54 **existence-only axioms** for externals that appear only as trait-instance evidence (45 `dalek_ff_group::FieldElement` items, 8 out-of-scope `SelenePoint` items, 1 `crypto-bigint` `Debug::fmt`); see §5c. | **Yes** — hand-written models (§5c) |
+| `HelioseleneCore/Funs.lean` | Generated function definitions (~6,300 lines including added documentation comments): the translated call graph listed in §1 (313 declarations; the 130 added by the second run and the 99 added by the third carry only the generated Aeneas metadata comments so far). | No — regenerate |
+| `HelioseleneCore/TypesExternal.lean` | Concrete computable **definitions** (not axioms) modeling the 6 external types: the original 3 — `Uint LIMBS := Aeneas.Std.Array U64 LIMBS` (little-endian limb vector), `subtle.Choice := Bool`, `subtle.CtOption T := T × Bool` — plus, appended for the second run, `crypto_bigint.ct_choice.CtChoice := Bool`, `dalek_ff_group.field.FieldElement := ZMod (2^255 − 19)` (since the third run the Helios coordinate type — a **load-bearing** identification, see §5c) and `rand_core.error.Error`. Instantiated from the generated template; each `def` carries a doc comment citing the crate source it models. | **Yes** — hand-written models (§5c) |
+| `HelioseleneCore/FunsExternal.lean` | Concrete computable **definitions** modeling the external functions/constants of `crypto-bigint`/`subtle`/`ff`/`dalek-ff-group` (the original 34 = 27 functions + 7 constants, plus 19 added for the second run's scope, plus — with the 2026-07-08 Helios run — the 26-strong concrete dalek boundary and the other third-run additions: **85 concrete `def`s in total**), each defined as the exact computation on the modeled values, documented against the crate sources — plus **48 existence-only axioms** for externals that appear only as trait-instance evidence (24 `dalek_ff_group::FieldElement` items, 8 out-of-scope `SelenePoint` and 8 `HeliosPoint` items, 4 `HelioseleneField` `Sum`/`Product`, 1 `HelioseleneField` `sqrt_ratio`, 2 `Uint` derived `PartialEq`/`From<u64>`, 1 `crypto-bigint` `Debug::fmt`); see §5c. | **Yes** — hand-written models (§5c) |
 | `HelioseleneCore/Validation.lean` | Generated differential validation of the (computable) model against 964 independent test vectors, checked by `native_decide` (§7). **Not imported by the library entry point** — built only via the lakefile's submodule glob, so its `native_decide` axioms stay out of every proof's dependency cone. | No — regenerate (`gen_validation.py`) |
 | `HelioseleneCore/ValidationSelene.lean` | Same pattern for the Selene scope: 100 independent vectors (sqrt/add/double/neg/ct_eq/from_xy) through the translated `point.selene.*` code, plus ad-hoc structural checks and per-class corrupted-vector **negative controls**, checked by `native_decide`. Imported by nothing. | No — regenerate (`gen_validation_selene.py`) |
+| `HelioseleneCore/ValidationHelios.lean` | Same pattern for the Helios scope: 75 independent vectors (add/double/neg/ct_eq/from_xy) through the translated `point.helios.*` code, plus structural checks and per-class corrupted-vector **negative controls**, checked by `native_decide`. Imported by nothing. **Weaker signal than `ValidationSelene.lean`**: the Helios coordinate field is idealized (§5c), so the vectors validate the translated group-law formulas and model plumbing, not any field-arithmetic implementation (scope caveat in the file header). | No — regenerate (`tools/gen_validation_helios.py`) |
 | `HelioseleneCore/Spec/Externals.lean` | Spec lemmas for the external models, plus kernel-only re-derivation of the generated hex-string constants (`MODULUS_ok` etc.). | **Yes** — proofs |
 | `HelioseleneCore/Spec/Phi.lean` | The abstraction layer: reduced carrier `HField`, bijection `φ`/`equivZMod` with `ZMod p`, `Fintype HField`, `card_hfield`. | **Yes** — proofs |
 | `HelioseleneCore/Spec/Prime.lean` | Kernel-only Pratt-certificate proof of `p_prime` (§7). | No — regenerate (`gen_prime.py`) |
@@ -138,6 +183,10 @@ exact taint cones of the two remaining `sorry`s.
 | `HelioseleneCore/Spec/Selene/Curve.lean` | Kernel-checkable Selene curve constants and number theory: `B_ok`/`G_Y_ok`/`G_X_ok`/`G_ok` constant agreement, `B_nonresidue`, `cubic_no_root`/`no_two_torsion`, `delta_ne_zero`, generator-on-curve (§7). | **Yes** — proofs |
 | `HelioseleneCore/Spec/Selene/Ops.lean` | ZMod-level coordinate contracts for every translated Selene operation (`add_coords_ok`, `double_coords_ok`, …, `sqrt_ok`, `recover_y_ok`); contains the second `sorry` (`sqrt_complete`, a leaf — §7). | **Yes** — proofs |
 | `HelioseleneCore/Spec/Selene/GroupLaw.lean` | The Selene group law: `SClass` quotient with the descended translated operations, `AddCommGroup SClass`, deciders, and the sorry-free headline `ΘAddEquiv : SClass ≃+ W.toAffine.Point`; axiom audit in its §9 (§7). | **Yes** — proofs |
+| `HelioseleneCore/Spec/Helios/Prime25519.lean` | Kernel-only Pratt-certificate proof of `q_prime : Nat.Prime (2^255 − 19)`, the Helios coordinate prime (7 Lucas nodes; §7). | No — regenerate (`tools/gen_prime25519.py`) |
+| `HelioseleneCore/Spec/Helios/Curve.lean` | Kernel-checkable Helios curve constants and number theory over `Fq = ZMod (2^255 − 19)`: `B_ok`/`G_Y_ok`/`G_X_ok`/`G_ok` constant agreement with the `point.rs` hex literals, `B_nonresidue`, `cubic_no_root`/no-2-torsion, `delta_ne_zero`, generator-on-curve (§7). | **Yes** — proofs |
+| `HelioseleneCore/Spec/Helios/Ops.lean` | Coordinate-level contracts for every translated Helios point operation — all precondition-free: the coordinate type IS `Fq` (no limb layer, no `Reduced` invariant) and the dalek coordinate ops are concrete `ZMod` models, so the field-op specs are `rfl` lemmas (§7). | **Yes** — proofs |
+| `HelioseleneCore/Spec/Helios/GroupLaw.lean` | The Helios group law over the idealized dalek boundary: `HClass` quotient with the descended translated operations, `AddCommGroup HClass`, deciders, non-degeneracy (`gen_ne_zero`, `Nontrivial HClass`), and the sorry-free headline `Helios.ΘAddEquiv : HClass ≃+ W.toAffine.Point`; axiom audit in its §9 (§7). | **Yes** — proofs |
 | `helioselene-aeneas.patch` | The diff against `crypto/helioselene` that the translation was produced from (§4). The repository tree itself is untouched; the patch was applied to a scratch **copy**. | — |
 | `MAPPING.md` | Machine-generated per-declaration Lean-to-Rust index with pinned links. | No — regenerate |
 | `lakefile.lean` | Lake package; `require aeneas from` the Aeneas Lean support library **by absolute path** — adjust to your extraction of the Aeneas release. | Path only |
@@ -157,7 +206,7 @@ exact taint cones of the two remaining `sorry`s.
 | `crypto-bigint` | 0.5.5 | `Cargo.lock` of the translated copy |
 | `subtle` | 2.6.1 | `Cargo.lock` of the translated copy |
 
-Charon and Aeneas were run **twice** on a patched copy of
+Charon and Aeneas were run **three times** on a patched copy of
 `crypto/helioselene` (§4).
 
 **First run (2026-07-06, superseded)** — field scope only; kept here for
@@ -174,11 +223,10 @@ charon cargo --preset aeneas --hide-marker-traits \
   --dest-file helioselene_core.llbc -- --no-default-features --release
 ```
 
-**Second run (2026-07-07, widened scope)** — the run that produced the
-**checked-in** `Types.lean`/`Funs.lean`/`*External_Template` files. It adds
-the `point::selene` root, drops the `sqrt` exclusion and the
-`ff::Field::sqrt` opacity (the §4 hunk-5/6 rewrites made `sqrt`
-translatable), and marks the out-of-scope `SelenePoint` items opaque:
+**Second run (2026-07-07, Selene widening, superseded)** — kept for
+provenance. It added the `point::selene` root, dropped the `sqrt` exclusion
+and the `ff::Field::sqrt` opacity (the §4 hunk-5/6 rewrites made `sqrt`
+translatable), and marked the out-of-scope `SelenePoint` items opaque:
 
 ```sh
 charon cargo --preset aeneas --hide-marker-traits \
@@ -195,18 +243,53 @@ charon cargo --preset aeneas --hide-marker-traits \
   --dest-file helioselene_selene.llbc -- --no-default-features --release
 ```
 
+**Third run (2026-07-08, Helios group-law core)** — the run that produced
+the **checked-in** `Types.lean`/`Funs.lean`/`*External_Template` files. It
+adds the `point::helios` root, duplicates the five `point::selene` opacity
+patterns for `point::helios` (same blockers, same items), and adds one NEW
+opacity on `HelioseleneField`'s `ff::Field::sqrt_ratio` (rationale in the
+flag list below; unlike the other opacities it surfaces as a fresh
+existence-only axiom — §5c):
+
 ```sh
-aeneas -backend lean -split-files -gen-lib-entry -dest . helioselene_selene.llbc
+charon cargo --preset aeneas --hide-marker-traits \
+  --start-from 'helioselene::field::verified' \
+  --start-from 'helioselene::point::selene' \
+  --start-from 'helioselene::point::helios' \
+  --exclude 'helioselene::field::verified::pow' \
+  --opaque 'helioselene::field::{impl core::iter::traits::accum::Sum<_> for _}' \
+  --opaque 'helioselene::field::{impl core::iter::traits::accum::Product<_> for _}' \
+  --opaque 'helioselene::field::{impl ff::Field for _}::sqrt_ratio' \
+  --opaque 'helioselene::point::selene::{impl core::iter::traits::accum::Sum<_> for _}' \
+  --opaque 'helioselene::point::selene::{impl core::ops::arith::Mul<_> for _}' \
+  --opaque 'helioselene::point::selene::{impl core::ops::arith::MulAssign<_> for _}' \
+  --opaque 'helioselene::point::selene::{impl group::Group for _}::random' \
+  --opaque 'helioselene::point::selene::{impl zeroize::Zeroize for _}' \
+  --opaque 'helioselene::point::helios::{impl core::iter::traits::accum::Sum<_> for _}' \
+  --opaque 'helioselene::point::helios::{impl core::ops::arith::Mul<_> for _}' \
+  --opaque 'helioselene::point::helios::{impl core::ops::arith::MulAssign<_> for _}' \
+  --opaque 'helioselene::point::helios::{impl group::Group for _}::random' \
+  --opaque 'helioselene::point::helios::{impl zeroize::Zeroize for _}' \
+  --dest-file helioselene_helios.llbc -- --no-default-features --release
+```
+
+```sh
+aeneas -backend lean -split-files -gen-lib-entry -dest . helioselene_helios.llbc
 ```
 
 This flag set is **verified against reality**: Charon serializes its full
 option record into the `.llbc` output, and the `options` block of
-`helioselene_selene.llbc` records exactly
-`start_from = [helioselene::field::verified, helioselene::point::selene]`,
-`exclude = [helioselene::field::verified::pow]`, the seven `--opaque`
-patterns above, `hide_marker_traits = true` and `preset = Aeneas`
-(target `x86_64-unknown-linux-gnu`). The same flag set is summarized in
-`human_audit_assumptions.txt` §VIII.
+`helioselene_helios.llbc` records exactly
+`start_from = [helioselene::field::verified, helioselene::point::selene,
+helioselene::point::helios]` (three roots),
+`exclude = [helioselene::field::verified::pow]`, the **thirteen** `--opaque`
+patterns above (in that order), `hide_marker_traits = true` and
+`preset = Aeneas` (charon 0.1.218, target `x86_64-unknown-linux-gnu`). The
+second run's flag set (two roots, seven opaque patterns,
+`dest_file = helioselene_selene.llbc`) was verified against its own `.llbc`
+options block the same way and is summarized in
+`human_audit_assumptions.txt` §VIII (frozen at the 2026-07-07 stage); the
+third run's is summarized in `human_audit_assumptions_helios.txt`.
 
 Why each flag:
 
@@ -221,9 +304,11 @@ Why each flag:
   and `Clone` are *not* hidden: they appear as explicit instance records in
   `Funs.lean`.
 - `--start-from 'helioselene::field::verified'` /
-  `--start-from 'helioselene::point::selene'` — restrict translation
-  roots to the verified field module and the Selene group-law core instead
-  of the whole crate; only items reachable from them are extracted.
+  `--start-from 'helioselene::point::selene'` /
+  `--start-from 'helioselene::point::helios'` (the third root is NEW with
+  the third run) — restrict translation roots to the verified field module
+  and the two group-law cores instead of the whole crate; only items
+  reachable from them are extracted.
 - `--exclude …::pow` — drop the one function Aeneas cannot handle even
   after patching (§1); nothing in the translated scope calls it. (The first
   run also excluded `…::sqrt`; the second run translates it, after the §4
@@ -234,11 +319,30 @@ Why each flag:
   drags in `Iterator::copied`/`sum`/`product` adapters whose signatures
   crash Aeneas' signature translation. Opacity keeps the trait resolvable
   while dropping the bodies. Since no translated function calls them, this
-  is scope reduction, not an extra assumption ([§5g](#g-struct-flattening-and-trait-encoding)).
-  (The first run's `--opaque` on `ff::Field::sqrt` is gone: `sqrt` is now
-  translated.)
-- `--opaque` on the `SelenePoint` `Sum` impls, `Mul`/`MulAssign` (the
-  scalar-multiplication ladder), `Group::random` and `Zeroize::zeroize` —
+  is scope reduction, not an extra behavioural assumption
+  ([§5g](#g-struct-flattening-and-trait-encoding)) — though since the
+  third run the impls DO surface as four existence-only axioms (§5c),
+  because the materialised `ff.Field HelioseleneField` record must state
+  its `Sum`/`Product` parent clauses. (The first run's `--opaque` on
+  `ff::Field::sqrt` is gone: `sqrt` is now translated.)
+- `--opaque 'helioselene::field::{impl ff::Field for _}::sqrt_ratio'` —
+  NEW with the third run, and the one opacity that adds a fresh trust
+  item. `sqrt_ratio`'s body is the `ff::PrimeField`-generic
+  `ff::helpers::sqrt_ratio_generic`, so translating it would make the
+  `ff::Field` impl, this method and the `ff::PrimeField` impl for
+  `HelioseleneField` a mixed-recursive declaration group, which Aeneas
+  does not support — and the third run MUST materialise the
+  `ff.Field HelioseleneField` record (it is `Group` *scalar* evidence for
+  `HeliosPoint`). Unlike the field-layer `Sum`/`Product` case the method
+  surfaces in the output: as the existence-only axiom
+  `field.HelioseleneField.Insts.FfField.sqrt_ratio`
+  ([§5c](#c-trusted-base-external-models-and-residual-axioms)), verified
+  outside every proof cone — neither curve's translated group law calls
+  `sqrt_ratio` (Selene's decompression uses the translated
+  `verified::sqrt`; Helios' the axiomatised dalek `sqrt`).
+- `--opaque` on the `SelenePoint` — and, third run, `HeliosPoint` —
+  `Sum` impls, `Mul`/`MulAssign` (the scalar-multiplication ladders),
+  `Group::random` and `Zeroize::zeroize` —
   same iterator-adapter/`black_box`/`RngCore` blockers as §1; these items
   are required by the `Group`/`GroupEncoding` trait bounds, so opacity
   keeps the traits resolvable. Unlike the field-layer case they DO surface
@@ -425,7 +529,8 @@ the right-hand operand (only on its value), and all amounts are far below
 the shifted type's width, so no overflow-behaviour edge is touched. The
 change is purely type-level — the same machine operation on the same
 values. (The `point.rs` hunks sit in the `curve!` macro body, so they apply
-to the Helios instantiation identically; Helios remains untranslated.)
+to the Helios instantiation identically; since the third run both
+instantiations are translated from the same patched macro body.)
 
 ### Hunk 7 — `point.rs` `from_bytes`: rename the local `point` to `candidate_point`
 
@@ -506,42 +611,89 @@ two very different kinds:
   `is_zero`/`sqrt` trait defaults, the derived-`Eq` marker functions, and
   the type models `crypto_bigint.ct_choice.CtChoice := Bool`,
   `dalek_ff_group.field.FieldElement := ZMod (2^255 − 19)`
-  (cardinality-faithful; nothing in scope constructs or consumes one) and
+  (cardinality-faithful for the second run's scope, where nothing
+  constructs or consumes one; since the third run the **load-bearing**
+  Helios coordinate type — see the third-run block below) and
   `rand_core.error.Error` (nonzero `U32` code). Each is documented in place
   against the crate sources; inventory and review notes in
   `human_audit_assumptions.txt` §VIII.1/VIII.4.
-- **54 existence-only axioms** (`FunsExternal.lean`, appended section) for
-  externals that appear ONLY as trait-instance evidence — records needed to
-  state the `Group`/`GroupEncoding`/`PrimeField` trait bounds: 45
-  `dalek_ff_group::FieldElement` items (Selene's scalar type; scalar
-  multiplication itself is out of scope), 8 deliberately-untranslated
-  `SelenePoint` items (the scalar-mul ladder, `Sum`, `Group::random`,
-  `Zeroize::zeroize` — the §3 opaque list), and 1 `crypto-bigint`
-  `Debug::fmt`. Every axiom's type is inhabited (`fun _ => fail .panic`),
-  so each is a conservative extension; none makes a behavioural claim.
+- **Existence-only axioms** (`FunsExternal.lean`) for externals that
+  appear ONLY as trait-instance evidence — records needed to state the
+  `Group`/`GroupEncoding`/`PrimeField` trait bounds. The second run left
+  **54** of these (45 `dalek_ff_group::FieldElement` items, 8
+  `SelenePoint` items, 1 `crypto-bigint` `Debug::fmt`); the 2026-07-08
+  third run **converted 21 of the 45 dalek axioms into concrete
+  definitional models** (the Helios coordinate arithmetic — see the
+  third-run block below) and added 15 new axioms, so the audited inventory
+  now stands at **48 existence-only axioms**: 24
+  `dalek_ff_group::FieldElement` items (`sqrt`, `sqrt_ratio`, `invert`,
+  `random`, `from_repr`/`to_repr`/`is_odd`, the nine `PrimeField`
+  constants, `Clone`/`PartialEq`/`Default`/`Debug`, 4 `Sum`/`Product`), 8
+  deliberately-untranslated `SelenePoint` items and 8 `HeliosPoint` items
+  (each curve's scalar-mul ladder, `Sum`, `Group::random`,
+  `Zeroize::zeroize` — the §3 opaque lists), 4 `HelioseleneField`
+  `Sum`/`Product` items, 1 `HelioseleneField` `sqrt_ratio` (the NEW
+  third-run opacity, §3), 2 `Uint` items (derived `PartialEq::eq`,
+  `From<u64>`), and 1 `crypto-bigint` `Debug::fmt`. Every axiom's type is
+  inhabited (`fun _ => fail .panic`), so each is a conservative extension;
+  none makes a behavioural claim.
   **Dependency-cone caveat (verified by kernel `#print axioms` on every
-  exported theorem)**: no goal-scope function or theorem — the Selene
-  `add`/`neg`/`sub`/`double`/`identity`/`generator`/`is_identity`/`ct_eq`/
-  `eq`/`conditional_select`/`from_bytes`/`to_bytes`/`from_xy`/
-  `curve_equation`/`recover_y`/`G`/`G_X`/`G_Y`/`B`, `verified::sqrt`, the
-  field-layer additions, or anything in `Spec/` — depends on ANY of the 54
-  (see `human_audit_assumptions.txt` §VIII.2 and the audit in
-  `GroupLaw.lean` §9). They sit outside every proof cone; they exist so the
-  generated trait-instance records typecheck.
+  exported theorem)**: no goal-scope function or theorem — Selene's and
+  Helios' `add`/`neg`/`sub`/`double`/`identity`/`generator`/`is_identity`/
+  `ct_eq`/`eq`/`conditional_select`/`from_xy`/`curve_equation`/`G`/`G_X`/
+  `G_Y`/`B`, Selene's `from_bytes`/`to_bytes`/`recover_y`,
+  `verified::sqrt`, the field-layer additions, or anything in `Spec/` —
+  depends on ANY of the 48 (see `human_audit_assumptions.txt` §VIII.2 with
+  its 2026-07-08 update note, `Spec/Selene/GroupLaw.lean` §9 and
+  `Spec/Helios/GroupLaw.lean` §9). They sit outside every proof cone; they
+  exist so the generated trait-instance records typecheck. (The only
+  translated functions that consume one are the out-of-scope Helios
+  encoding path — Helios `recover_y`/`from_bytes`/`to_bytes` go through
+  the dalek `sqrt`/`to_repr` axioms — exactly as recorded in
+  `Spec/Helios/GroupLaw.lean` §9.)
+
+The **third run (2026-07-08, Helios)** changed the *kind* of the dalek
+boundary. Helios' coordinate field is `Field25519 =
+dalek_ff_group::FieldElement`, so the translated Helios group law *computes
+through* the dalek surface. Accordingly, 26 dalek items are now concrete
+definitional models over the type model
+`FieldElement := ZMod (2^255 − 19)`: 23 operational models
+(owned/`&`/`*Assign` `Add`/`Sub`/`Mul`, both `Neg`s, `Field::{ZERO, ONE,
+double, square, is_zero}`, `ct_eq`, `conditional_select`, `From<u64>`,
+`from_u256`) plus the `toZMod`/`ofZMod` identity helpers and the
+derived-`Eq` marker. Of the 23, the group law actually computes with 12;
+the `*Assign`/`&`-RHS variants and `From<u64>` are trait-record evidence,
+modeled concretely anyway for uniformity (see the FunsExternal.lean dalek
+section header). This is the **idealized-boundary assumption** of the
+Helios stage: the models are the mathematically obvious `ZMod` operations,
+and their fidelity target is **dalek-ff-group 0.5.0's own field
+implementation on crypto-bigint 0.5.5's constant-modulus Montgomery
+`Residue`** — NOT curve25519-dalek, whose code (in particular the
+formally-verified fiat backend) is on no Helios code path. Per-item review
+obligations and the human verification checklist live in
+`human_audit_assumptions_helios.txt`. `FunsExternal.lean`'s grand totals
+after the third run: **85 concrete `def`s and 48 existence-only axioms**.
 
 What remains trusted:
 
 1. **Tool trust** (§5a) — unchanged.
-2. **Fidelity of the 56 concrete external models** (the original 37 plus
-   the second run's 19 + 3) to the actual `crypto-bigint` 0.5.5 /
-   `subtle` 2.6.1 / `ff` 0.13.1 semantics. A subtly wrong model
+2. **Fidelity of the concrete external models** — now 85 `def`s in
+   `FunsExternal.lean` plus the 6 type models of `TypesExternal.lean` (the
+   original 34 + 3, the second run's 19 + 3, and the third run's
+   dalek-boundary/Helios additions, §5c third-run block) — to the actual
+   `crypto-bigint` 0.5.5 / `subtle` 2.6.1 / `ff` 0.13.1 /
+   `dalek-ff-group` 0.5.0 semantics. A subtly wrong model
    yields proofs about a different program. Mitigations: every model
    carries a doc comment citing the crate source it implements (the table
    below is the review checklist for the original 34; the appended
-   `FunsExternal.lean` section plays the same role for the 19 new ones);
-   the 964-vector differential validation
-   (`Validation.lean`, §7) and the 100-vector Selene validation
-   (`ValidationSelene.lean`, §7) exercise the translated functions — and
+   `FunsExternal.lean` sections play the same role for the newer ones, and
+   `human_audit_assumptions_helios.txt` is the per-item checklist for the
+   26 dalek models); the 964-vector differential validation
+   (`Validation.lean`, §7), the 100-vector Selene validation
+   (`ValidationSelene.lean`, §7) and the 75-vector Helios validation
+   (`ValidationHelios.lean`, §7 — a strictly weaker signal for field
+   arithmetic, since the Helios coordinate field is ideal by construction)
+   exercise the translated functions — and
    therefore the models under them — against independently generated
    vectors; and `Spec/Externals.lean` proves a value-level spec lemma for
    each original model. One known, benign divergence: `shl_vartime`/`shr_vartime`
@@ -554,15 +706,16 @@ What remains trusted:
    `sub`, `red256`, `red512`, `from_repr::reduced`, and the inversion path
    (`invert`, `invert.step`, `invert.step.select`): a wrong value would
    change iteration counts, not just values.
-3. **Seven generated `native_decide` constant axioms** (plus two `Debug`
-   bodies, below). The seven hex-string constants
+3. **Nine generated `native_decide` constant axioms** (plus three `Debug`
+   bodies, below). The nine hex-string constants
    in `Funs.lean` — the original four (`field.MODULUS`,
    `field.verified.MODULUS_255_DISTANCE`,
    `field.verified.red.TWO_MODULUS_255_DISTANCE`,
-   `field.verified.invert.invert.step.MODULUS_XOR_TWO_MODULUS`) and, new
-   with the second run's scope, `point.selene.B`, `point.selene.G_Y` and
-   `field.verified.sqrt.MODULUS_PLUS_ONE_DIV_FOUR` (`G_X` is built by
-   `from_u8` and carries none) — call
+   `field.verified.invert.invert.step.MODULUS_XOR_TWO_MODULUS`), the three
+   added with the second run's scope (`point.selene.B`, `point.selene.G_Y`,
+   `field.verified.sqrt.MODULUS_PLUS_ONE_DIV_FOUR`) and the two added with
+   the third run (`point.helios.B`, `point.helios.G_Y`; neither curve's
+   `G_X` carries one — both are built by `from_u8`) — call
    `Aeneas.Std.toStr`, whose length side-condition autoParam is
    `by decide +native`. This bakes one `<const>._native.decide.ax_1` axiom
    into each generated *definition*, and every theorem that mentions those
@@ -574,36 +727,41 @@ What remains trusted:
    `Spec/Externals.lean` (the `toStr_val` rewrite plus plain kernel
    `decide`: `MODULUS = p`, `MODULUS_255_DISTANCE = 2^255 − p`,
    `TWO_MODULUS_255_DISTANCE = 2·(2^255 − p)`,
-   `MODULUS_XOR_TWO_MODULUS = p XOR 2p`) and in `Spec/Selene/Curve.lean`
-   (`B_ok`/`G_Y_ok` against the `src/point.rs` hex literals) and
-   `Spec/Selene/Ops.lean` (the `(p+1)/4` value on the sqrt cone).
-   Additionally, the two generated `Debug::fmt` bodies
+   `MODULUS_XOR_TWO_MODULUS = p XOR 2p`), in `Spec/Selene/Curve.lean`
+   (`B_ok`/`G_Y_ok` against the `src/point.rs` hex literals),
+   `Spec/Selene/Ops.lean` (the `(p+1)/4` value on the sqrt cone) and
+   `Spec/Helios/Curve.lean` (`B_ok`/`G_Y_ok` for the Helios constants).
+   Additionally, the three generated `Debug::fmt` bodies
    (`field.HelioseleneField…CoreFmtDebug.fmt`,
-   `point.selene.SelenePoint…CoreFmtDebug.fmt`) contain `toStr` string
+   `point.selene.SelenePoint…CoreFmtDebug.fmt`,
+   `point.helios.HeliosPoint…CoreFmtDebug.fmt`) contain `toStr` string
    literals of the same shape; they are reachable from trait-evidence
    records only and sit in no proof cone. Eliminating these axioms
    entirely would require regenerating `Funs.lean` with explicit autoParam
    proofs, or patching the Aeneas Std library's `toStr` default tactic —
    both touch generated/vendored code, so they are recorded as trust
    instead (see §7, remaining work).
-4. **The 54 existence-only axioms** (above): conservative extensions,
+4. **The 48 existence-only axioms** (above): conservative extensions,
    behaviour-free, and — verified — outside the dependency cone of every
    exported theorem. Trust here consists only of the *claim* that nothing
    proof-relevant depends on them, which is machine-checkable at any time
    via `#print axioms`.
 
-Aside from the seven constant axioms (+ the two `Debug` bodies), the 54
+Aside from the nine constant axioms (+ the three `Debug` bodies), the 48
 existence-only axioms (in no proof cone), and — in the never-imported
-`Validation.lean`/`ValidationSelene.lean` — one per-theorem native-decide
-axiom per validation theorem, the development uses no axioms beyond Lean's
-three standard ones (`propext`, `Classical.choice`, `Quot.sound`) — see the
-axiom audits at the bottom of `Spec/Field.lean` and
-`Spec/Selene/GroupLaw.lean` (§9).
+`Validation.lean`/`ValidationSelene.lean`/`ValidationHelios.lean` — one
+per-theorem native-decide axiom per validation theorem, the development
+uses no axioms beyond Lean's three standard ones (`propext`,
+`Classical.choice`, `Quot.sound`) — see the axiom audits at the bottom of
+`Spec/Field.lean`, `Spec/Selene/GroupLaw.lean` (§9) and
+`Spec/Helios/GroupLaw.lean` (§9).
 
-Full model list **of the original 34** (the 19 second-run models are
-documented in place in `FunsExternal.lean`'s appended section and
-inventoried in `human_audit_assumptions.txt` §VIII.1; `MAPPING.md` indexes
-both), grouped by crate, with the modeled semantics checked
+Full model list **of the original 34** (the 19 second-run models and the
+third run's dalek/Helios models are documented in place in
+`FunsExternal.lean`'s appended sections and inventoried in
+`human_audit_assumptions.txt` §VIII.1 resp.
+`human_audit_assumptions_helios.txt`; `MAPPING.md` indexes all), grouped
+by crate, with the modeled semantics checked
 against the vendored sources (`crypto-bigint-0.5.5`, `subtle-2.6.1`). Lean
 names are shown without the `crypto_bigint.` prefix; `Limb = Word = u64`.
 
@@ -779,37 +937,58 @@ nor threatens them.
   should target the underlying `….add` functions directly.
 - `--hide-marker-traits` removed `Sized`/`Sync`/`Send`-style clauses.
   `Copy`/`Clone` for `Limb` still appear as (trivial) instance records.
-- The `Sum`/`Product` impls and `ff::Field::sqrt` were opaque and are
-  **entirely absent** from the generated files (no declaration, no axiom).
-  This is sound for the verified-core functions because nothing in the
-  translated call graph references them — `ff::Field` machinery appears
-  only via the standalone `FfField.ZERO` / `FfField.is_zero` definitions,
-  whose bodies are fully translated.
+- The field-layer `Sum`/`Product` impls were opaque and **entirely
+  absent** from the generated files through the second run; since the
+  third run they (and the new `sqrt_ratio` opacity) surface as
+  existence-only axioms (§5c), referenced by the now-materialised
+  `ff.Field HelioseleneField` instance record — required as `Group`
+  *scalar* evidence for `HeliosPoint`. Nothing in the translated call
+  graph *calls* them, so this remains scope reduction plus conservative
+  axioms, not a behavioural assumption. (`ff::Field::sqrt`, opaque and
+  absent in the first run, is translated since the second; through the
+  second run `ff::Field` machinery appeared only via the standalone
+  `FfField.ZERO` / `FfField.is_zero` definitions.)
 
 ### h. Scope
 
 Modeled: `field::verified` **minus `pow`** (including, since the second
 run, `verified::sqrt`), the field-layer items pulled in by the widened call
 graph (`from_u256`, `ct_eq`/`PartialEq` on field elements, the
-`ff::Field`/`ff::PrimeField` items of §1), and the **Selene group-law
+`ff::Field`/`ff::PrimeField` items of §1), the **Selene group-law
 core** of `point.rs` (`add`/`sub`/`neg`/`double`/`identity`/`generator`/
 `is_identity`/`ct_eq`/`eq`/`conditional_select`/`curve_equation`/
-`recover_y`/`from_xy`/`from_bytes`/`to_bytes` and the curve constants). In
-particular:
+`recover_y`/`from_xy`/`from_bytes`/`to_bytes` and the curve constants),
+and — since the third run — the **Helios group-law core** (the same item
+list, `point.helios.*`, with coordinates in the idealized dalek field of
+§5c). In particular:
 
-- Statements about the Selene *curve group* are now in scope — and proved:
-  see §7 (`ΘAddEquiv`). Still **not** modeled: the Selene
-  scalar-multiplication ladder, `Sum`, `Group::random` and `zeroize` (kept
-  opaque; §5c's existence-only axioms), the **Helios** instantiation of
-  the `curve!` macro, `ciphersuite.rs`, and hash-to-curve — statements
-  about those remain entirely out of scope.
-- `Field::random`, `sqrt_ratio`, the `From<u8/u16/u32/u64>` conversions,
-  and the `PrimeFieldBits` bit decompositions are not modeled.
+- Statements about the Selene *curve group* are in scope — and proved:
+  see §7 (`ΘAddEquiv`). Since the third run the same holds for the
+  **Helios** curve group, over the idealized dalek coordinate boundary:
+  see §7 (`Helios.ΘAddEquiv` and the 'Helios group law' block). Still
+  **not** modeled: both curves' scalar-multiplication ladders, `Sum`,
+  `Group::random` and `zeroize` (kept opaque; §5c's existence-only
+  axioms), the Helios point encodings as *theorems* (`recover_y`/
+  `from_bytes`/`to_bytes` are translated but any contract for them would
+  go through the existence-only dalek `sqrt`/`to_repr` axioms),
+  `ciphersuite.rs`, and hash-to-curve — statements about those remain out
+  of scope.
+- `Field::random` and the `PrimeFieldBits` bit decompositions are not
+  modeled; `sqrt_ratio` is opaque (since the third run an existence-only
+  axiom, §3); the `From<u8/u16/u32>` conversions are not modeled
+  (`HelioseleneField`'s `From<u64>` is translated since the third run, as
+  `ff::PrimeField` trait evidence).
   (`from_u256` and `ct_eq` on field elements, unmodeled in the first run,
   now are — `from_u256` through the `const_rem` model of §5c.)
-- `dalek_ff_group::FieldElement` (Selene's scalar type) is modeled only up
-  to cardinality (`ZMod (2^255 − 19)`); all its operations are
-  existence-only axioms (§5c) and nothing in scope computes with one.
+- `dalek_ff_group::FieldElement` (Selene's scalar type and — since the
+  third run — Helios' coordinate type) is modeled as `ZMod (2^255 − 19)`.
+  For the Selene/field goal scope nothing computes with one and the
+  up-to-cardinality reading suffices; for the **Helios** goal scope the
+  identification is **load-bearing**: 26 dalek items are concrete `ZMod`
+  models the Helios group law computes through (§5c, third-run block;
+  per-item obligations in `human_audit_assumptions_helios.txt`), while
+  its remaining 24 operations are existence-only axioms outside every
+  proof cone.
 - The Veridise Dafny verification and this Lean model overlap on the
   `verified` module but neither subsumes the other:
   the Dafny proofs verified a Dafny translation of this code (as the crate
@@ -834,9 +1013,9 @@ particular:
    still pass: `cargo test --release` (expect 11 passed).
 
 2. With the Aeneas release binaries on `PATH` (they pin rustc
-   `nightly-2026-06-01` via their `rust-toolchain`), run the **second-run**
+   `nightly-2026-06-01` via their `rust-toolchain`), run the **third-run**
    `charon cargo` command from §3 in the patched copy. This produces
-   `helioselene_selene.llbc`. (Sanity check: the `options` block serialized
+   `helioselene_helios.llbc`. (Sanity check: the `options` block serialized
    at the head of the `.llbc` file must record the same
    `start_from`/`exclude`/`opaque` set — §3.)
 
@@ -857,7 +1036,7 @@ particular:
    (the mathlib olean cache is fetched automatically; expect the first
    build to take a while).
 
-## 7. Formalization status (2026-07-07)
+## 7. Formalization status (2026-07-08)
 
 The external axioms of the original translation have been eliminated (§5c)
 and a proof tree (`HelioseleneCore/Spec/`) has been built on the resulting
@@ -878,7 +1057,9 @@ functions have no dedicated vectors — `red1`, `is_zero`, `is_odd`,
 `invert`). `Validation.lean` is imported by nothing; its per-theorem
 `native_decide` axioms stay out of every proof below. (The Selene scope has
 its own 100-vector validation file, `ValidationSelene.lean`, with negative
-controls — see the 'Selene group law' block below.)
+controls — see the 'Selene group law' block below — and the Helios scope a
+75-vector one, `ValidationHelios.lean`, with a deliberately-documented
+weaker-signal caveat — see the 'Helios group law' block below.)
 
 ### Proved operation contracts (kernel-checked)
 
@@ -899,6 +1080,10 @@ The Selene scope adds its own layer of coordinate-level contracts in
 `is_identity_ok`, `ct_eq_ok`, `eq_ok`, `curve_equation_ok`, `from_xy_ok`,
 `sqrt_ok`, `recover_y_ok`) — all proved except the completeness half of
 `sqrt` (`sqrt_complete`, the second `sorry`, below/§'Selene group law').
+The Helios scope adds the sibling layer in `Spec/Helios/Ops.lean` — all
+proved, all precondition-free (the coordinate type IS `Fq` and the dalek
+coordinate ops are concrete `ZMod` models, so the field-op specs collapse
+to `rfl` lemmas; see the file header).
 
 ### Primality of `p`, kernel-only
 
@@ -916,6 +1101,14 @@ which was **not previously published**: factordb held the 73-digit cofactor
 p36·p37 as composite with no known factors. It was split with msieve (SIQS)
 and double-verified independently; the certificate data in
 `Spec/Prime.lean` was generated by `gen_prime.py`.
+
+The Helios stage adds the sibling
+`q_prime : Nat.Prime (2^255 − 19)` (`Spec/Helios/Prime25519.lean`,
+generated by `tools/gen_prime25519.py`): a 7-node Pratt tree, kernel-only,
+likewise no axioms beyond the three standard ones. Unlike p − 1, the
+factorization of q − 1 is well known from the Curve25519 literature; it
+was fully re-verified locally (one 27-digit interior cofactor split with
+msieve) — see `tools/prime25519-certificate.md`.
 
 ### Headline theorems
 
@@ -940,6 +1133,13 @@ and double-verified independently; the certificate data in
 - `HelioseleneSpec.Selene.ΘAddEquiv : SClass ≃+ W.toAffine.Point`
   (`Spec/Selene/GroupLaw.lean`) — the Selene group law; see the dedicated
   block below. **Sorry-free.**
+- `HelioseleneSpec.Helios.ΘAddEquiv : HClass ≃+ W.toAffine.Point`
+  (`Spec/Helios/GroupLaw.lean`) — the Helios group law, over the
+  **idealized** dalek coordinate boundary; see the dedicated block below.
+  **Sorry-free.**
+- `q_prime : Nat.Prime (2^255 − 19)` (`Spec/Helios/Prime25519.lean`) —
+  kernel-only Pratt certificate for the Helios coordinate prime; 3
+  standard axioms only.
 
 ### What the `Field` instance operations are
 
@@ -973,9 +1173,10 @@ curve group `y² = x³ − 3x + B` over `ZMod p`:
   `a₁ = a₂ = a₃ = 0`, `a₄ = −3`, `a₆ = B`. Kernel `#print axioms`: the 3
   standard axioms plus 4 of the §5c string-length constant axioms
   (`MODULUS`, `MODULUS_255_DISTANCE`, `point.selene.B`,
-  `TWO_MODULUS_255_DISTANCE`); **no `sorryAx`**, none of the 54
-  existence-only axioms (the per-theorem sets are recorded in
-  `GroupLaw.lean` §9).
+  `TWO_MODULUS_255_DISTANCE`); **no `sorryAx`**, none of the existence-only
+  axioms (54 at this stage's snapshot, 48 after the 2026-07-08 third run —
+  §5c; the per-theorem sets are recorded in
+  `Spec/Selene/GroupLaw.lean` §9).
 - **`instAddCommGroupSClass : AddCommGroup SClass`** whose `0`, `+`, unary
   `-` and binary `-` are definitionally (`rfl`, via
   `SClass_zero/add/neg/sub_def`) the descended Rust operations
@@ -1016,6 +1217,68 @@ curve group `y² = x³ − 3x + B` over `ZMod p`:
   (`validationSelene_negative_controls`) guarding the checkers against
   vacuous acceptance.
 
+### Helios group law (2026-07-08)
+
+The `Spec/Helios/` tree (`Prime25519.lean` → `Curve.lean` → `Ops.lean` →
+`GroupLaw.lean`; sibling of the Selene tree, same section structure and
+theorem names) proves that the translated Helios point operations implement
+the elliptic curve group `y² = x³ − 3x + B_helios` over
+`Fq = ZMod (2^255 − 19)` — **over the IDEALIZED dalek coordinate boundary**
+(fourth bullet below):
+
+- **`Helios.ΘAddEquiv : HClass ≃+ W.toAffine.Point` — sorry-free.**
+  `HClass` is the quotient of on-curve projective representatives by
+  projective equivalence; `W` is mathlib's short-Weierstrass curve with
+  `a₁ = a₂ = a₃ = 0`, `a₄ = −3`, `a₆ = B_helios`. Kernel `#print axioms`:
+  the 3 standard axioms plus `point.helios.B._native.decide.ax_1` (one of
+  the §5c.3 string-length axioms); **no `sorryAx`**, **none of the 48
+  existence-only axioms**, and — unlike Selene — no `field.MODULUS`-family
+  axiom (the Helios coordinate field has no limb layer). The per-theorem
+  sets are recorded in `Spec/Helios/GroupLaw.lean` §9.
+- **`instAddCommGroupHClass : AddCommGroup HClass`** whose `0`, `+`, unary
+  `-` and binary `-` are definitionally the descended translated Rust
+  operations (same choice-extracted-wrapper boundary as Selene, spelled
+  out in the file's §5 header). `HClass_double` proves the dedicated
+  dbl-2007-bl-2 doubling circuit computes `+` on classes;
+  `ct_eq_decides`/`eq_decides`/`is_identity_decides` prove the translated
+  equality tests decide class equality/identity-ness; `gen_ne_zero` and
+  the `Nontrivial HClass` instance pin non-degeneracy (the quotient
+  provably does not trivialize). The `ℕ`/`ℤ`-scalar actions are
+  `ΘEquiv`-transported auxiliaries, **not** Rust code (same pattern as
+  Selene).
+- **Kernel-proved number theory** (`Prime25519.lean`/`Curve.lean`, no
+  `native_decide`): `q_prime : Nat.Prime (2^255 − 19)` (7-node Pratt
+  certificate), `B_helios` is a quadratic non-residue mod q (so no affine
+  point has `x = 0` — the soundness of `is_identity`), the curve has **no
+  2-torsion** (`cubic_no_root`, the polynomial Fermat/Bézout certificate
+  technique instantiated at `(q, B_helios)` by `tools/gen_curve_helios.py`),
+  and the discriminant is nonzero (`W.IsElliptic`). The constants are
+  traced to the `point.rs` hex literals kernel-only (`B_ok`/`G_Y_ok`).
+- **THE assumption specific to this stage — boundary fidelity.** The
+  Helios coordinate type is the foreign `dalek_ff_group::FieldElement`,
+  DEFINED in the model as `ZMod (2^255 − 19)` with 26 concrete `ZMod`
+  operation models (§5c, third-run block). Everything above is therefore a
+  theorem about the translated group-law formulas over an **ideal field**:
+  it says nothing about dalek-ff-group's actual Montgomery arithmetic
+  (crypto-bigint 0.5.5 `Residue` under dalek-ff-group 0.5.0 — NOT
+  curve25519-dalek, and no fiat-crypto backend is involved). The per-item
+  fidelity obligations, and the human verification checklist for them, are
+  enumerated in **`human_audit_assumptions_helios.txt`** — the Helios
+  counterpart of `human_audit_assumptions_selene.txt`.
+- **Validation** (`ValidationHelios.lean`, imported by nothing): 75
+  independent Helios vectors — add 35, double 15, neg 5, ct_eq 12,
+  from_xy 8 (`tools/helios_vectors.json`, generated by
+  `tools/gen_validation_helios.py`) — pass through the *executable*
+  translated `point.helios.*` code by `native_decide`, plus structural
+  checks and per-class corrupted-vector **negative controls**. **This is a
+  strictly weaker signal than `ValidationSelene.lean`**: the field ops are
+  ideal by construction (the coordinate type IS `ZMod`), so the vectors
+  validate the translated group-law formulas and the model plumbing
+  (constants via `from_u256`/`from_be_hex`, `Choice`/`CtOption`
+  conventions, `conditional_select`, projective identity handling), not
+  any field-arithmetic implementation — the caveat is spelled out in the
+  file header.
+
 ### Remaining work
 
 1. Discharge `Invert.step_congruence` (the per-step lemmas of the
@@ -1023,11 +1286,13 @@ curve group `y² = x³ − 3x + B` over `ZMod p`:
    cover the same invariant and are the natural cross-reference).
 2. Discharge `Selene.sqrt_complete` (functional correctness of the
    125-iteration windowed exponentiation ladder; also in the Dafny scope).
-3. Optionally purge the seven `<const>._native.decide.ax_1` axioms by
+3. Optionally purge the nine `<const>._native.decide.ax_1` axioms by
    regenerating `Funs.lean` with explicit autoParam proofs, or by patching
    the Aeneas Std library's `toStr` default tactic (§5c).
 4. Optionally report the p − 1 factors to factordb so the Pratt
    certificate is independently reproducible.
-5. Add hand-written per-declaration review comments for the 130 new
-   generated declarations (they currently carry only the Aeneas metadata
-   comments; `MAPPING.md`'s appended section tracks this).
+5. Add hand-written per-declaration review comments for the 229 new
+   generated declarations (the second run's 130 plus the third run's 99,
+   and the 20 + 4 new `Types.lean` ones; they currently carry only the
+   generated Aeneas metadata comments; `MAPPING.md`'s appended sections
+   track this).

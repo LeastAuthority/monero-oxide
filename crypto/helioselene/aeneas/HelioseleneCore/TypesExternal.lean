@@ -97,20 +97,37 @@ def crypto_bigint.ct_choice.CtChoice : Type := Bool
     dalek-ff-group 0.5.0, src/field.rs:40 (crate source):
     https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#40
 
-    `pub struct FieldElement(U256)`: an element of GF(2^255 - 19), the Ed25519 base field,
-    represented reduced mod `2^255 - 19`. It is `SelenePoint`'s scalar type (Selene's
-    scalar field is the 25519 base field): the `Group` impl for `SelenePoint` binds
-    `type Scalar = dalek_ff_group::FieldElement`, whose `ff::PrimeField` bound pulls this
-    type in as trait-instance evidence.
+    `pub struct FieldElement(ResidueType)`: an element of GF(2^255 - 19), the Ed25519 base
+    field. In the pinned dalek-ff-group 0.5.0, `ResidueType` is crypto-bigint 0.5.5's
+    constant-modulus Montgomery form `Residue<FieldModulus, { U256::LIMBS }>` — dalek-ff-group's
+    OWN field implementation on top of crypto-bigint's Montgomery arithmetic, NOT
+    curve25519-dalek's (curve25519-dalek is in the dependency tree only for dalek-ff-group's
+    Ed25519/Ristretto wrappers; no code path of this field touches it, and no fiat-crypto
+    backend is involved). (`FieldElement(U256)` was the 0.4.x layout.)
 
-    The type only appears in the (axiomatised) `dalek_ff_group` method signatures and the
-    trait-instance records built from them, plus the signatures of the deliberately-opaque
-    `SelenePoint` scalar-mul items; no translated function in the goal scope constructs or
-    consumes a value of it (see the dependency-cone audit in the README).
+    Roles in the translation:
 
-    Model: `ZMod (2 ^ 255 - 19)` — the field of the intended cardinality, giving the
-    axiomatised operations honest, inhabited types. The representation details of the Rust
-    struct (a `U256`, kept reduced) are NOT modeled; nothing in scope depends on them. -/
+    * It is `SelenePoint`'s scalar type (Selene's scalar field is the 25519 base field): the
+      `Group` impl for `SelenePoint` binds `type Scalar = dalek_ff_group::FieldElement`,
+      whose `ff::PrimeField` bound pulls this type in as trait-instance evidence. For the
+      Selene goal scope nothing constructs or consumes a value of it.
+    * **Since the 2026-07-08 Helios widening it is the Helios COORDINATE type**
+      (`point.rs`: `curve!(helios, Field25519, ...)` with `Field25519 = FieldElement`):
+      every translated Helios group-law function constructs and consumes values of it, and
+      this `ZMod` identification is **load-bearing** for the whole Helios group law — the
+      `rfl`-lemmas of `Spec/Helios/Ops.lean` (`fadd_def`/`fmul_def`/...) hold definitionally
+      only because of this `def`, and 26 of the dalek items are concrete definitional models
+      over it (FunsExternal.lean, dalek boundary section).
+
+    Model: `ZMod (2 ^ 255 - 19)` — the field itself. The representation details of the Rust
+    struct (a canonical Montgomery residue, kept reduced) are NOT modeled: the model
+    identifies a `FieldElement` with its VALUE. For the Helios scope this identification —
+    together with the fidelity of the 26 concrete operation models to crypto-bigint 0.5.5's
+    `Residue` arithmetic — is a per-item human audit obligation (the Helios assumptions
+    ledger, `human_audit_assumptions_helios.txt`, is its home); the up-to-cardinality
+    reading suffices only for the remaining existence-only items (`sqrt`, `invert`,
+    `random`, `from_repr`/`to_repr`/`is_odd`, the `PrimeField` constants, ... — 24 axioms,
+    outside every Helios proof cone). -/
 @[rust_type "dalek_ff_group::field::FieldElement"]
 def dalek_ff_group.field.FieldElement : Type := ZMod (2 ^ 255 - 19)
 

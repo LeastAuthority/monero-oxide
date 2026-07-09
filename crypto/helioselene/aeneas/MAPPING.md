@@ -407,3 +407,145 @@ Generated mechanically from the Aeneas metadata of the widened translation (`poi
 | `crypto_bigint.ct_choice.CtChoice` | `?` | — |
 | `dalek_ff_group.field.FieldElement` | `?` | — |
 | `rand_core.error.Error` | `?` | — |
+
+## Appendix: Helios-scope declarations (added 2026-07-08)
+
+Generated mechanically from the Aeneas metadata of the third translation run (`point::helios` group-law core + the new field-layer trait records and externals it pulls in). Audited per-declaration review comments for these are pending (README §7, remaining work).
+
+### `HelioseleneCore/Funs.lean` (99 new)
+
+| Lean declaration | Rust item (Aeneas metadata) | Source span |
+|---|---|---|
+| `Shared0FieldElement.Insts.CoreOpsArithNegFieldElement` | `dalek_ff_group::field::{impl core::ops::arith::Neg<dalek_ff_group::field::FieldElement> for &'_0 dalek_ff_group::field::FieldElement}` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:96:0 |
+| `field.HelioseleneField.Insts.CoreCmpPartialEqHelioseleneField.eq` | `helioselene::field::{impl core::cmp::PartialEq<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::eq` | src/field/mod.rs:20:22 |
+| `field.HelioseleneField.Insts.CoreCmpPartialEqHelioseleneField` | `helioselene::field::{impl core::cmp::PartialEq<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:20:22 |
+| `field.HelioseleneField.Insts.CoreCmpEq.assert_fields_are_eq` | `helioselene::field::{impl core::cmp::Eq for helioselene::field::HelioseleneField}::assert_fields_are_eq` | src/field/mod.rs:20:33 |
+| `field.HelioseleneField.Insts.CoreCmpEq` | `helioselene::field::{impl core::cmp::Eq for helioselene::field::HelioseleneField}` | src/field/mod.rs:20:33 |
+| `field.HelioseleneField.Insts.CoreConvertFromU64.from` | `helioselene::field::{impl core::convert::From<u64> for helioselene::field::HelioseleneField}::from` | src/field/mod.rs:44:2 |
+| `field.HelioseleneField.Insts.CoreConvertFromU64` | `helioselene::field::{impl core::convert::From<u64> for helioselene::field::HelioseleneField}` | src/field/mod.rs:43:0 |
+| `field.HelioseleneField.Insts.SubtleConstantTimeEq` | `helioselene::field::{impl subtle::ConstantTimeEq for helioselene::field::HelioseleneField}` | src/field/mod.rs:51:0 |
+| `field.HelioseleneField.Insts.CoreOpsArithAddShared0HelioseleneFieldHelioseleneField.add` | `helioselene::field::{impl core::ops::arith::Add<&'_0 helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::add` | src/field/mod.rs:68:2 |
+| `field.HelioseleneField.Insts.CoreOpsArithAddShared0HelioseleneFieldHelioseleneField` | `helioselene::field::{impl core::ops::arith::Add<&'_0 helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:65:0 |
+| `field.HelioseleneField.Insts.CoreOpsArithAddAssignHelioseleneField.add_assign` | `helioselene::field::{impl core::ops::arith::AddAssign<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::add_assign` | src/field/mod.rs:74:2 |
+| `field.HelioseleneField.Insts.CoreOpsArithAddAssignHelioseleneField` | `helioselene::field::{impl core::ops::arith::AddAssign<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:72:0 |
+| `field.HelioseleneField.Insts.CoreOpsArithAddAssignShared0HelioseleneField.add_assign` | `helioselene::field::{impl core::ops::arith::AddAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::add_assign` | src/field/mod.rs:80:2 |
+| `field.HelioseleneField.Insts.CoreOpsArithAddAssignShared0HelioseleneField` | `helioselene::field::{impl core::ops::arith::AddAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:78:0 |
+| `field.HelioseleneField.Insts.CoreIterTraitsAccumSumHelioseleneField` | `helioselene::field::{impl core::iter::traits::accum::Sum<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:84:0 |
+| `field.HelioseleneField.Insts.CoreIterTraitsAccumSumSharedAHelioseleneField` | `helioselene::field::{impl core::iter::traits::accum::Sum<&'a helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:93:0 |
+| `field.HelioseleneField.Insts.CoreOpsArithSubShared0HelioseleneFieldHelioseleneField.sub` | `helioselene::field::{impl core::ops::arith::Sub<&'_0 helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sub` | src/field/mod.rs:110:2 |
+| `field.HelioseleneField.Insts.CoreOpsArithSubShared0HelioseleneFieldHelioseleneField` | `helioselene::field::{impl core::ops::arith::Sub<&'_0 helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:107:0 |
+| `field.HelioseleneField.Insts.CoreOpsArithSubAssignHelioseleneField.sub_assign` | `helioselene::field::{impl core::ops::arith::SubAssign<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sub_assign` | src/field/mod.rs:116:2 |
+| `field.HelioseleneField.Insts.CoreOpsArithSubAssignHelioseleneField` | `helioselene::field::{impl core::ops::arith::SubAssign<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:114:0 |
+| `field.HelioseleneField.Insts.CoreOpsArithSubAssignShared0HelioseleneField.sub_assign` | `helioselene::field::{impl core::ops::arith::SubAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sub_assign` | src/field/mod.rs:122:2 |
+| `field.HelioseleneField.Insts.CoreOpsArithSubAssignShared0HelioseleneField` | `helioselene::field::{impl core::ops::arith::SubAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:120:0 |
+| `field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField` | `helioselene::field::{impl core::ops::arith::Mul<&'_0 helioselene::field::HelioseleneField, helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:127:0 |
+| `field.HelioseleneField.Insts.CoreOpsArithMulAssignHelioseleneField` | `helioselene::field::{impl core::ops::arith::MulAssign<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:134:0 |
+| `field.HelioseleneField.Insts.CoreOpsArithMulAssignShared0HelioseleneField` | `helioselene::field::{impl core::ops::arith::MulAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:140:0 |
+| `field.HelioseleneField.Insts.CoreIterTraitsAccumProductHelioseleneField` | `helioselene::field::{impl core::iter::traits::accum::Product<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:146:0 |
+| `field.HelioseleneField.Insts.CoreIterTraitsAccumProductSharedAHelioseleneField` | `helioselene::field::{impl core::iter::traits::accum::Product<&'a helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}` | src/field/mod.rs:155:0 |
+| `field.HelioseleneField.Insts.FfField.random` | `helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::random` | src/field/mod.rs:192:2 |
+| `field.HelioseleneField.Insts.FfField` | `helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}` | src/field/mod.rs:183:0 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.DELTA` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:245:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.ROOT_OF_UNITY_INV` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:242:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.ROOT_OF_UNITY` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:240:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.S` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:238:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.MULTIPLICATIVE_GENERATOR` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:237:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.TWO_INV` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:234:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.CAPACITY` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:232:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.NUM_BITS` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:231:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832.MODULUS` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:228:2 |
+| `field.HelioseleneField.Insts.FfPrimeFieldArrayU832` | `helioselene::field::{impl ff::PrimeField<[u8; 32usize` | src/field/mod.rs:225:0 |
+| `point.helios.G_X` | `helioselene::point::helios::G_X` | src/point.rs:29:4 |
+| `point.helios.G_Y` | `helioselene::point::helios::G_Y` | src/point.rs:30:4 |
+| `point.helios.B` | `helioselene::point::helios::B` | src/point.rs:32:4 |
+| `point.helios.curve_equation` | `helioselene::point::helios::curve_equation` | src/point.rs:36:4 |
+| `point.helios.recover_y` | `helioselene::point::helios::recover_y` | src/point.rs:40:4 |
+| `point.helios.HeliosPoint.Insts.CoreCloneClone.clone` | `helioselene::point::helios::{impl core::clone::Clone for helioselene::point::helios::HeliosPoint}::clone` | src/point.rs:46:13 |
+| `point.helios.HeliosPoint.Insts.CoreCloneClone` | `helioselene::point::helios::{impl core::clone::Clone for helioselene::point::helios::HeliosPoint}` | src/point.rs:46:13 |
+| `point.helios.HeliosPoint.Insts.CoreMarkerCopy` | `helioselene::point::helios::{impl core::marker::Copy for helioselene::point::helios::HeliosPoint}` | src/point.rs:46:20 |
+| `point.helios.HeliosPoint.Insts.CoreFmtDebug.fmt` | `helioselene::point::helios::{impl core::fmt::Debug for helioselene::point::helios::HeliosPoint}::fmt` | src/point.rs:46:26 |
+| `point.helios.HeliosPoint.Insts.CoreFmtDebug` | `helioselene::point::helios::{impl core::fmt::Debug for helioselene::point::helios::HeliosPoint}` | src/point.rs:46:26 |
+| `point.helios.HeliosPoint.Insts.ZeroizeZeroize` | `helioselene::point::helios::{impl zeroize::Zeroize for helioselene::point::helios::HeliosPoint}` | src/point.rs:54:4 |
+| `point.helios.G` | `helioselene::point::helios::G` | src/point.rs:66:4 |
+| `point.helios.HeliosPoint.Insts.SubtleConstantTimeEq.ct_eq` | `helioselene::point::helios::{impl subtle::ConstantTimeEq for helioselene::point::helios::HeliosPoint}::ct_eq` | src/point.rs:69:6 |
+| `point.helios.HeliosPoint.Insts.SubtleConstantTimeEq` | `helioselene::point::helios::{impl subtle::ConstantTimeEq for helioselene::point::helios::HeliosPoint}` | src/point.rs:68:4 |
+| `point.helios.HeliosPoint.Insts.CoreCmpPartialEqHeliosPoint.eq` | `helioselene::point::helios::{impl core::cmp::PartialEq<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::eq` | src/point.rs:81:6 |
+| `point.helios.HeliosPoint.Insts.CoreCmpPartialEqHeliosPoint` | `helioselene::point::helios::{impl core::cmp::PartialEq<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:80:4 |
+| `point.helios.HeliosPoint.Insts.CoreCmpEq` | `helioselene::point::helios::{impl core::cmp::Eq for helioselene::point::helios::HeliosPoint}` | src/point.rs:86:4 |
+| `point.helios.HeliosPoint.Insts.SubtleConditionallySelectable.conditional_select` | `helioselene::point::helios::{impl subtle::ConditionallySelectable for helioselene::point::helios::HeliosPoint}::conditional_select` | src/point.rs:89:6 |
+| `point.helios.HeliosPoint.Insts.SubtleConditionallySelectable` | `helioselene::point::helios::{impl subtle::ConditionallySelectable for helioselene::point::helios::HeliosPoint}` | src/point.rs:88:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithAddHeliosPointHeliosPoint.add` | `helioselene::point::helios::{impl core::ops::arith::Add<helioselene::point::helios::HeliosPoint, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::add` | src/point.rs:101:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithAddHeliosPointHeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::Add<helioselene::point::helios::HeliosPoint, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:98:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithAddAssignHeliosPoint.add_assign` | `helioselene::point::helios::{impl core::ops::arith::AddAssign<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::add_assign` | src/point.rs:159:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithAddAssignHeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::AddAssign<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:158:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithAddShared0HeliosPointHeliosPoint.add` | `helioselene::point::helios::{impl core::ops::arith::Add<&'_0 helioselene::point::helios::HeliosPoint, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::add` | src/point.rs:166:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithAddShared0HeliosPointHeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::Add<&'_0 helioselene::point::helios::HeliosPoint, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:164:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithAddAssignShared0HeliosPoint.add_assign` | `helioselene::point::helios::{impl core::ops::arith::AddAssign<&'_0 helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::add_assign` | src/point.rs:172:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithAddAssignShared0HeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::AddAssign<&'_0 helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:171:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithNegHeliosPoint.neg` | `helioselene::point::helios::{impl core::ops::arith::Neg<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::neg` | src/point.rs:179:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithNegHeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::Neg<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:177:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithSubHeliosPointHeliosPoint.sub` | `helioselene::point::helios::{impl core::ops::arith::Sub<helioselene::point::helios::HeliosPoint, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sub` | src/point.rs:187:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithSubHeliosPointHeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::Sub<helioselene::point::helios::HeliosPoint, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:184:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithSubAssignHeliosPoint.sub_assign` | `helioselene::point::helios::{impl core::ops::arith::SubAssign<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sub_assign` | src/point.rs:193:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithSubAssignHeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::SubAssign<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:192:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithSubShared0HeliosPointHeliosPoint.sub` | `helioselene::point::helios::{impl core::ops::arith::Sub<&'_0 helioselene::point::helios::HeliosPoint, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sub` | src/point.rs:200:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithSubShared0HeliosPointHeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::Sub<&'_0 helioselene::point::helios::HeliosPoint, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:198:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithSubAssignShared0HeliosPoint.sub_assign` | `helioselene::point::helios::{impl core::ops::arith::SubAssign<&'_0 helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sub_assign` | src/point.rs:206:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithSubAssignShared0HeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::SubAssign<&'_0 helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:205:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulAssignShared0HelioseleneField` | `helioselene::point::helios::{impl core::ops::arith::MulAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::point::helios::HeliosPoint}` | src/point.rs:340:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulShared0HelioseleneFieldHeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::Mul<&'_0 helioselene::field::HelioseleneField, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:333:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulAssignHelioseleneField` | `helioselene::point::helios::{impl core::ops::arith::MulAssign<helioselene::field::HelioseleneField> for helioselene::point::helios::HeliosPoint}` | src/point.rs:327:4 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulHelioseleneFieldHeliosPoint` | `helioselene::point::helios::{impl core::ops::arith::Mul<helioselene::field::HelioseleneField, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:277:4 |
+| `point.helios.HeliosPoint.Insts.CoreIterTraitsAccumSumSharedAHeliosPoint` | `helioselene::point::helios::{impl core::iter::traits::accum::Sum<&'a helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:271:4 |
+| `point.helios.HeliosPoint.Insts.CoreIterTraitsAccumSumHeliosPoint` | `helioselene::point::helios::{impl core::iter::traits::accum::Sum<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}` | src/point.rs:261:4 |
+| `point.helios.HeliosPoint.Insts.GroupGroupHelioseleneFieldArrayU832.is_identity` | `helioselene::point::helios::{impl group::Group<helioselene::field::HelioseleneField, [u8; 32usize` | src/point.rs:230:6 |
+| `point.helios.HeliosPoint.Insts.GroupGroupHelioseleneFieldArrayU832.identity` | `helioselene::point::helios::{impl group::Group<helioselene::field::HelioseleneField, [u8; 32usize` | src/point.rs:224:6 |
+| `point.helios.HeliosPoint.Insts.GroupGroupHelioseleneFieldArrayU832.double` | `helioselene::point::helios::{impl group::Group<helioselene::field::HelioseleneField, [u8; 32usize` | src/point.rs:234:6 |
+| `point.helios.HeliosPoint.Insts.GroupGroupHelioseleneFieldArrayU832.generator` | `helioselene::point::helios::{impl group::Group<helioselene::field::HelioseleneField, [u8; 32usize` | src/point.rs:227:6 |
+| `point.helios.HeliosPoint.Insts.GroupGroupHelioseleneFieldArrayU832` | `helioselene::point::helios::{impl group::Group<helioselene::field::HelioseleneField, [u8; 32usize` | src/point.rs:211:4 |
+| `point.helios.HeliosPoint.Insts.GroupGroupEncodingArrayU832.to_bytes` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:388:6 |
+| `point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure.closure_1.Insts.CoreOpsFunctionFnOnceTupleFieldElementHeliosPoint.call_once` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:372:38 |
+| `point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure.closure_1.Insts.CoreOpsFunctionFnOnceTupleFieldElementHeliosPoint` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:372:38 |
+| `point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure.closure.Insts.CoreOpsFunctionFnOnceTupleFieldElementFieldElement.call_once` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:361:35 |
+| `point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure.closure.Insts.CoreOpsFunctionFnOnceTupleFieldElementFieldElement` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:361:35 |
+| `point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleFieldElementCtOptionHeliosPoint.call_once` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:358:42 |
+| `point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure.Insts.CoreOpsFunctionFnOnceTupleFieldElementCtOptionHeliosPoint` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:358:42 |
+| `point.helios.HeliosPoint.Insts.GroupGroupEncodingArrayU832.from_bytes` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:349:6 |
+| `point.helios.HeliosPoint.Insts.GroupGroupEncodingArrayU832.from_bytes_unchecked` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:384:6 |
+| `point.helios.HeliosPoint.Insts.GroupGroupEncodingArrayU832` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:346:4 |
+| `point.helios.HeliosPoint.Insts.GroupPrimePrimeGroupHelioseleneFieldArrayU832ArrayU832` | `helioselene::point::helios::{impl group::prime::PrimeGroup<helioselene::field::HelioseleneField, [u8; 32usize` | src/point.rs:403:4 |
+| `point.helios.HeliosPoint.from_xy` | `helioselene::point::helios::{helioselene::point::helios::HeliosPoint}::from_xy` | src/point.rs:411:6 |
+
+### `HelioseleneCore/Types.lean` (4 new)
+
+| Lean declaration | Rust item (Aeneas metadata) | Source span |
+|---|---|---|
+| `point.helios.HeliosPoint` | `helioselene::point::helios::HeliosPoint` | src/point.rs:48:4 |
+| `point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure.closure_1` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:372:38 |
+| `point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure.closure` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:361:35 |
+| `point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure` | `helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize` | src/point.rs:358:42 |
+
+### `HelioseleneCore/FunsExternal.lean` (20 new)
+
+| Lean declaration | Rust item (Aeneas metadata) | Source span |
+|---|---|---|
+| `dalek_ff_group.field.FieldElement.toZMod` | `?` | — |
+| `dalek_ff_group.field.FieldElement.ofZMod` | `?` | — |
+| `crypto_bigint.uint.Uint.Insts.CoreCmpPartialEqUint.eq` | `crypto_bigint::uint::cmp::{impl core::cmp::PartialEq<crypto_bigint::uint::Uint<LIMBS>> for crypto_bigint::uint::Uint<LIMBS>}::eq` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/uint/cmp.rs:164:4 |
+| `crypto_bigint.uint.Uint.Insts.CoreConvertFromU64.from` | `crypto_bigint::uint::from::{impl core::convert::From<u64> for crypto_bigint::uint::Uint<LIMBS>}::from` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/uint/from.rs:128:4 |
+| `Shared0FieldElement.Insts.CoreOpsArithNegFieldElement.neg` | `dalek_ff_group::field::{impl core::ops::arith::Neg<dalek_ff_group::field::FieldElement> for &'_0 dalek_ff_group::field::FieldElement}::neg` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:98:2 |
+| `dalek_ff_group.field.FieldElement.from_u256` | `dalek_ff_group::field::{dalek_ff_group::field::FieldElement}::from_u256` | /cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs:223:2 |
+| `field.HelioseleneField.Insts.CoreIterTraitsAccumSumHelioseleneField.sum` | `helioselene::field::{impl core::iter::traits::accum::Sum<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sum` | src/field/mod.rs:85:2 |
+| `field.HelioseleneField.Insts.CoreIterTraitsAccumSumSharedAHelioseleneField.sum` | `helioselene::field::{impl core::iter::traits::accum::Sum<&'a helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sum` | src/field/mod.rs:94:2 |
+| `field.HelioseleneField.Insts.CoreIterTraitsAccumProductHelioseleneField.product` | `helioselene::field::{impl core::iter::traits::accum::Product<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::product` | src/field/mod.rs:147:2 |
+| `field.HelioseleneField.Insts.CoreIterTraitsAccumProductSharedAHelioseleneField.product` | `helioselene::field::{impl core::iter::traits::accum::Product<&'a helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::product` | src/field/mod.rs:156:2 |
+| `field.HelioseleneField.Insts.FfField.sqrt_ratio` | `helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::sqrt_ratio` | src/field/mod.rs:220:2 |
+| `point.helios.HeliosPoint.Insts.ZeroizeZeroize.zeroize` | `helioselene::point::helios::{impl zeroize::Zeroize for helioselene::point::helios::HeliosPoint}::zeroize` | src/point.rs:55:6 |
+| `point.helios.HeliosPoint.Insts.CoreCmpEq.assert_fields_are_eq` | `helioselene::point::helios::{impl core::cmp::Eq for helioselene::point::helios::HeliosPoint}::assert_fields_are_eq` | src/point.rs:86:19 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulAssignShared0HelioseleneField.mul_assign` | `helioselene::point::helios::{impl core::ops::arith::MulAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::point::helios::HeliosPoint}::mul_assign` | src/point.rs:341:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulShared0HelioseleneFieldHeliosPoint.mul` | `helioselene::point::helios::{impl core::ops::arith::Mul<&'_0 helioselene::field::HelioseleneField, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::mul` | src/point.rs:335:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign` | `helioselene::point::helios::{impl core::ops::arith::MulAssign<helioselene::field::HelioseleneField> for helioselene::point::helios::HeliosPoint}::mul_assign` | src/point.rs:328:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulHelioseleneFieldHeliosPoint.mul` | `helioselene::point::helios::{impl core::ops::arith::Mul<helioselene::field::HelioseleneField, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::mul` | src/point.rs:279:6 |
+| `point.helios.HeliosPoint.Insts.CoreIterTraitsAccumSumSharedAHeliosPoint.sum` | `helioselene::point::helios::{impl core::iter::traits::accum::Sum<&'a helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sum` | src/point.rs:272:6 |
+| `point.helios.HeliosPoint.Insts.CoreIterTraitsAccumSumHeliosPoint.sum` | `helioselene::point::helios::{impl core::iter::traits::accum::Sum<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sum` | src/point.rs:262:6 |
+| `point.helios.HeliosPoint.Insts.GroupGroupHelioseleneFieldArrayU832.random` | `helioselene::point::helios::{impl group::Group<helioselene::field::HelioseleneField, [u8; 32usize` | src/point.rs:213:6 |

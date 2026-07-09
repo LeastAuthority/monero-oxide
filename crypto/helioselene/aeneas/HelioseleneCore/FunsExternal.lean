@@ -997,7 +997,32 @@ end SanityChecks
       `fun _ => fail .panic`, so each axiom is a conservative extension); they make
       no behavioural claim. No goal-scope function depends on any of them — see the
       dependency-cone audit in the README. They are listed on the human-assumptions
-      list for the widened scope. -/
+      list for the widened scope.
+
+    **2026-07-08 (third run, Helios group-law core) update**: Helios' coordinate
+    field is `Field25519 = dalek_ff_group::FieldElement`, so the dalek arithmetic
+    boundary became load-bearing. The 21 dalek items **referenced** by the
+    translated Helios group law (`Add`/`Sub`/`Mul`/`Neg` and their
+    `*Assign`/`&`-variants, `Field::{ZERO, ONE, double, square, is_zero}`,
+    `ct_eq`, `conditional_select`, `From<u64>`) were **replaced by concrete
+    definitional models** over the `ZMod (2 ^ 255 - 19)` value model — each
+    marked "concrete since the 2026-07-08 Helios widening" in place below. Of
+    those 21, the group law actually **computes with 12** (the owned
+    `Add`/`Sub`/`Mul`, the owned `Neg`, `double`, `square`, `ZERO`, `ONE`,
+    `is_zero`, `ct_eq`, `conditional_select` — plus, from the appended third-run
+    section, `from_u256`); the eight `*Assign`/`&`-RHS arithmetic variants and
+    `From<u64>` appear only in trait-instance records (see the per-item doc
+    comments) and were modeled concretely anyway so the whole dalek arithmetic
+    surface carries the one `ZMod` semantics. Together with the third-run
+    additions (`from_u256` and the `&`-`Neg`), the concrete dalek surface is
+    **23 operational models** (26 concrete `def`s counting the `toZMod`/`ofZMod`
+    identity helpers and the derived-`Eq` marker). The remaining 24 dalek items
+    (`sqrt`, `sqrt_ratio`, `invert`, `random`, `from_repr`/`to_repr`/`is_odd`,
+    the `PrimeField` constants, `Clone`, `PartialEq`, `Default`, `Debug`,
+    `Sum`/`Product`) are still existence-only axioms, and no Helios goal-scope
+    function depends on them (axiom audit: `Spec/Helios/GroupLaw.lean` §9). See
+    the appended 2026-07-08 section at the end of this file for the new
+    externals of that run. -/
 
 /-- **Rust:** `<crypto_bigint::Uint<LIMBS> as subtle::ConstantTimeEq>::ct_eq` — trait-impl
     method (foreign: crypto-bigint 0.5.5)
@@ -1102,6 +1127,25 @@ axiom crypto_bigint.uint.Uint.Insts.CoreFmtDebug.fmt
   crypto_bigint.uint.Uint LIMBS → core.fmt.Formatter → Result
     ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
 
+/-! ### The `dalek_ff_group::FieldElement` boundary
+
+The two helpers below are the (definitional) bridge between the opaque-by-name
+`dalek_ff_group.field.FieldElement` and its value model `ZMod (2 ^ 255 - 19)`
+(TypesExternal.lean). `FieldElement` is a plain (non-reducible) `def`, so
+`ZMod`-instances are not found on it by instance resolution; the helpers are
+identity functions whose types make each concrete model below read as the exact
+`ZMod` computation. Introduced with the 2026-07-08 Helios widening. -/
+
+/-- Read a `dalek_ff_group.field.FieldElement` as its `ZMod (2 ^ 255 - 19)` model
+    value (a definitional identity; see the section comment above). -/
+def dalek_ff_group.field.FieldElement.toZMod
+  (a : dalek_ff_group.field.FieldElement) : ZMod (2 ^ 255 - 19) := a
+
+/-- Build a `dalek_ff_group.field.FieldElement` from its `ZMod (2 ^ 255 - 19)` model
+    value (a definitional identity; see the section comment above). -/
+def dalek_ff_group.field.FieldElement.ofZMod
+  (a : ZMod (2 ^ 255 - 19)) : dalek_ff_group.field.FieldElement := a
+
 /-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::clone::Clone for dalek_ff_group::field::FieldElement}::clone]:
     Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 38:9-38:14
     Name pattern: [dalek_ff_group::field::{core::clone::Clone<dalek_ff_group::field::FieldElement>}::clone]
@@ -1163,179 +1207,454 @@ axiom dalek_ff_group.field.FieldElement.Insts.CoreFmtDebug.fmt
   dalek_ff_group.field.FieldElement → core.fmt.Formatter → Result
     ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::convert::From<u64> for dalek_ff_group::field::FieldElement}::from]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 76:6-76:39
-    Name pattern: [dalek_ff_group::field::{core::convert::From<dalek_ff_group::field::FieldElement, u64>}::from]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::convert::From<u64>>::from` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/field.rs:73-85 (the `from_wrapper!` macro, instantiated at
+    `u64` on line 85: `Self(ResidueType::new(&U256::from(a)))`; method span field.rs
+    76:6-76:39):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#73-85
+
+    Widens a `u64` into the field. Not called by any translated body: referenced only
+    as trait-instance evidence (the `From<u64>` parent clause of `FieldElement`'s
+    `ff::PrimeField` instance record). Modeled concretely with the other dalek
+    arithmetic so the record's value surface is uniform.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (x.val : ZMod (2 ^ 255 - 19))` — the cast reduces mod 2^255 - 19, a
+    no-op for `u64` values (2^64 < 2^255 - 19), matching `Residue::new` of the widened
+    integer. -/
 @[rust_fun
   "dalek_ff_group::field::{core::convert::From<dalek_ff_group::field::FieldElement, u64>}::from"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreConvertFromU64.from
-  : Std.U64 → Result dalek_ff_group.field.FieldElement
+def dalek_ff_group.field.FieldElement.Insts.CoreConvertFromU64.from
+  : Std.U64 → Result dalek_ff_group.field.FieldElement :=
+  fun x =>
+    ok (.ofZMod x.val)
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Neg<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::neg]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 91:2-91:30
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::Neg<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::neg]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::Neg>::neg` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/field.rs:89-94 (method at line 91):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#89-94
+
+    `fn neg(self) -> Self { Self(self.0.neg()) }` — negation in GF(2^255 - 19).
+    Called by the translated Helios group law: `HeliosPoint::neg` (`-self.y`), hence
+    also `Sub` (`self + other.neg()`); additionally `Neg` evidence for the blanket
+    `subtle::ConditionallyNegatable` used by `from_bytes`' sign handling.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (-a)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — negation mod 2^255 - 19, the crate's reduced-residue
+    negation (`Residue::neg`). -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::Neg<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::neg"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithNegFieldElement.neg
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithNegFieldElement.neg
   :
   dalek_ff_group.field.FieldElement → Result
-    dalek_ff_group.field.FieldElement
+    dalek_ff_group.field.FieldElement :=
+  fun a =>
+    ok (.ofZMod (-a.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::MulAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul_assign]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 159:6-159:49
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::mul_assign]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::MulAssign>::mul_assign` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:158-162 (fourth `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.mul(&y)`; method span lib.rs 159:6-159:49):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Multiplication in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `mul_assign(&mut self, other)` with a `&`-borrowed right-hand side; Aeneas models the
+    `&mut self` by state passing, so the translated signature returns the updated
+    receiver.
+    Not called by any translated body: referenced only as trait-instance evidence
+    (parent clauses of the `ff.Field`/`Add`/`Sub`/`Mul` instance records for
+    `FieldElement`). Modeled concretely anyway so the record's whole arithmetic
+    surface carries the one `ZMod` semantics.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a * b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `*` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::mul`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::mul_assign"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignSharedAFieldElement.mul_assign
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignSharedAFieldElement.mul_assign
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod * b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::SubAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub_assign]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 159:6-159:49
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::sub_assign]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::SubAssign>::sub_assign` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:158-162 (fourth `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.sub(&y)`; method span lib.rs 159:6-159:49):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Subtraction in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `sub_assign(&mut self, other)` with a `&`-borrowed right-hand side; Aeneas models the
+    `&mut self` by state passing, so the translated signature returns the updated
+    receiver.
+    Not called by any translated body: referenced only as trait-instance evidence
+    (parent clauses of the `ff.Field`/`Add`/`Sub`/`Mul` instance records for
+    `FieldElement`). Modeled concretely anyway so the record's whole arithmetic
+    surface carries the one `ZMod` semantics.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a - b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `-` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::sub`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::sub_assign"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignSharedAFieldElement.sub_assign
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignSharedAFieldElement.sub_assign
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod - b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::AddAssign<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add_assign]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 159:6-159:49
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::add_assign]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::AddAssign>::add_assign` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:158-162 (fourth `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.add(&y)`; method span lib.rs 159:6-159:49):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Addition in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `add_assign(&mut self, other)` with a `&`-borrowed right-hand side; Aeneas models the
+    `&mut self` by state passing, so the translated signature returns the updated
+    receiver.
+    Not called by any translated body: referenced only as trait-instance evidence
+    (parent clauses of the `ff.Field`/`Add`/`Sub`/`Mul` instance records for
+    `FieldElement`). Modeled concretely anyway so the record's whole arithmetic
+    surface carries the one `ZMod` semantics.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a + b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `+` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::add`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement>}::add_assign"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignSharedAFieldElement.add_assign
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignSharedAFieldElement.add_assign
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod + b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Mul<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 154:6-154:56
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::Mul<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::Mul>::mul` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:152-157 (third `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.mul(&y)`; method span lib.rs 154:6-154:56):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Multiplication in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `mul(self, other)` with a `&`-borrowed right-hand side.
+    Not called by any translated body: referenced only as trait-instance evidence
+    (parent clauses of the `ff.Field`/`Add`/`Sub`/`Mul` instance records for
+    `FieldElement`). Modeled concretely anyway so the record's whole arithmetic
+    surface carries the one `ZMod` semantics.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a * b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `*` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::mul`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::Mul<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulSharedAFieldElementFieldElement.mul
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulSharedAFieldElementFieldElement.mul
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod * b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Sub<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 154:6-154:56
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::Sub<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::Sub>::sub` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:152-157 (third `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.sub(&y)`; method span lib.rs 154:6-154:56):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Subtraction in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `sub(self, other)` with a `&`-borrowed right-hand side.
+    Not called by any translated body: referenced only as trait-instance evidence
+    (parent clauses of the `ff.Field`/`Add`/`Sub`/`Mul` instance records for
+    `FieldElement`). Modeled concretely anyway so the record's whole arithmetic
+    surface carries the one `ZMod` semantics.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a - b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `-` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::sub`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::Sub<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubSharedAFieldElementFieldElement.sub
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubSharedAFieldElementFieldElement.sub
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod - b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Add<&'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 154:6-154:56
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::Add<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::Add>::add` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:152-157 (third `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.add(&y)`; method span lib.rs 154:6-154:56):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Addition in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `add(self, other)` with a `&`-borrowed right-hand side.
+    Not called by any translated body: referenced only as trait-instance evidence
+    (parent clauses of the `ff.Field`/`Add`/`Sub`/`Mul` instance records for
+    `FieldElement`). Modeled concretely anyway so the record's whole arithmetic
+    surface carries the one `ZMod` semantics.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a + b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `+` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::add`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::Add<dalek_ff_group::field::FieldElement, &'a dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddSharedAFieldElementFieldElement.add
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddSharedAFieldElementFieldElement.add
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod + b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul_assign]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 148:6-148:45
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul_assign]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::MulAssign>::mul_assign` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:147-151 (second `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.mul(&y)`; method span lib.rs 148:6-148:45):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Multiplication in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `mul_assign(&mut self, other)` with an owned right-hand side; Aeneas models the
+    `&mut self` by state passing, so the translated signature returns the updated
+    receiver.
+    Not called by any translated body: referenced only as trait-instance evidence
+    (parent clauses of the `ff.Field`/`Add`/`Sub`/`Mul` instance records for
+    `FieldElement`). Modeled concretely anyway so the record's whole arithmetic
+    surface carries the one `ZMod` semantics.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a * b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `*` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::mul`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul_assign"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignFieldElement.mul_assign
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulAssignFieldElement.mul_assign
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod * b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub_assign]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 148:6-148:45
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub_assign]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::SubAssign>::sub_assign` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:147-151 (second `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.sub(&y)`; method span lib.rs 148:6-148:45):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Subtraction in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `sub_assign(&mut self, other)` with an owned right-hand side; Aeneas models the
+    `&mut self` by state passing, so the translated signature returns the updated
+    receiver.
+    Not called by any translated body: referenced only as trait-instance evidence
+    (parent clauses of the `ff.Field`/`Add`/`Sub`/`Mul` instance records for
+    `FieldElement`). Modeled concretely anyway so the record's whole arithmetic
+    surface carries the one `ZMod` semantics.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a - b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `-` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::sub`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::SubAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub_assign"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignFieldElement.sub_assign
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubAssignFieldElement.sub_assign
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod - b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add_assign]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 148:6-148:45
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add_assign]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::AddAssign>::add_assign` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:147-151 (second `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.add(&y)`; method span lib.rs 148:6-148:45):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Addition in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `add_assign(&mut self, other)` with an owned right-hand side; Aeneas models the
+    `&mut self` by state passing, so the translated signature returns the updated
+    receiver.
+    Not called by any translated body: referenced only as trait-instance evidence
+    (parent clauses of the `ff.Field`/`Add`/`Sub`/`Mul` instance records for
+    `FieldElement`). Modeled concretely anyway so the record's whole arithmetic
+    surface carries the one `ZMod` semantics.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a + b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `+` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::add`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::AddAssign<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add_assign"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignFieldElement.add_assign
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddAssignFieldElement.add_assign
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod + b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::mul]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 143:6-143:52
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::Mul>::mul` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:143-146 (first `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.mul(&y)`; method span lib.rs 143:6-143:52):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Multiplication in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `mul(self, other)` with an owned right-hand side.
+    Called by the translated Helios group law: the add-2015-rcb-3 addition circuit,
+    the dbl-2007-bl-2 doubling circuit, `curve_equation`, and the projective
+    cross-multiplied comparison `HeliosPoint::ct_eq`.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a * b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `*` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::mul`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::Mul<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::mul"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulFieldElementFieldElement.mul
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithMulFieldElementFieldElement.mul
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod * b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::sub]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 143:6-143:52
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::Sub>::sub` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:143-146 (first `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.sub(&y)`; method span lib.rs 143:6-143:52):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Subtraction in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `sub(self, other)` with an owned right-hand side.
+    Called by the translated Helios group law: the add-2015-rcb-3 addition circuit,
+    the dbl-2007-bl-2 doubling circuit and `curve_equation`.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a - b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `-` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::sub`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::Sub<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::sub"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubFieldElementFieldElement.sub
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithSubFieldElementFieldElement.sub
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod - b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::add]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 143:6-143:52
-    Name pattern: [dalek_ff_group::field::{core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as core::ops::arith::Add>::add` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:143-146 (first `impl` block of the `math_op!` macro,
+    expanded by the `math!` invocation at src/field.rs:64-70 with the residue
+    closure `|x: ResidueType, y: ResidueType| x.add(&y)`; method span lib.rs 143:6-143:52):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#131-164
+
+    Addition in GF(2^255 - 19), the Ed25519 base field (Helios' point coordinates are
+    `Field25519 = dalek_ff_group::FieldElement` values): `add(self, other)` with an owned right-hand side.
+    Called by the translated Helios group law: the add-2015-rcb-3 addition circuit,
+    the dbl-2007-bl-2 doubling circuit and `curve_equation`.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a + b)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — mathlib's `+` on `ZMod` is exactly the field operation
+    mod 2^255 - 19. The crate computes on reduced Montgomery residues
+    (`Residue::add`), which implements the same operation on represented values; the
+    Montgomery representation is a layout detail below the modeled value semantics. -/
 @[rust_fun
   "dalek_ff_group::field::{core::ops::arith::Add<dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::add"]
-axiom dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddFieldElementFieldElement.add
+def dalek_ff_group.field.FieldElement.Insts.CoreOpsArithAddFieldElementFieldElement.add
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result dalek_ff_group.field.FieldElement
+    Result dalek_ff_group.field.FieldElement :=
+  fun a b =>
+    ok (.ofZMod (a.toZMod + b.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl subtle::ConditionallySelectable for dalek_ff_group::field::FieldElement}::conditional_select]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 88:6-88:71
-    Name pattern: [dalek_ff_group::field::{subtle::ConditionallySelectable<dalek_ff_group::field::FieldElement>}::conditional_select]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as subtle::ConditionallySelectable>::
+    conditional_select` — trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:87-92 (the `constant_time!` macro, instantiated for
+    `FieldElement` at src/field.rs:63; method span lib.rs 88:6-88:71):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#79-94
+
+    Constant-time selection, delegating to `ResidueType::conditional_select` on the
+    wrapped residues: returns `a` if `choice` is falsy and `b` if truthy (the `subtle`
+    convention). Called by the translated Helios group law: `HeliosPoint`'s
+    `ConditionallySelectable` (component-wise on x/y/z) and through it `Group::double`'s
+    identity fix-up.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (if c then b else a)` — with the `subtle.Choice` model `Bool`
+    (`true` ↔ `Choice(1)` selects `b`), value-level selection needs no arithmetic. -/
 @[rust_fun
   "dalek_ff_group::field::{subtle::ConditionallySelectable<dalek_ff_group::field::FieldElement>}::conditional_select"]
-axiom dalek_ff_group.field.FieldElement.Insts.SubtleConditionallySelectable.conditional_select
+def dalek_ff_group.field.FieldElement.Insts.SubtleConditionallySelectable.conditional_select
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    subtle.Choice → Result dalek_ff_group.field.FieldElement
+    subtle.Choice → Result dalek_ff_group.field.FieldElement :=
+  fun a b c =>
+    ok (if c then b else a)
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl subtle::ConstantTimeEq for dalek_ff_group::field::FieldElement}::ct_eq]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/lib.rs', lines 82:6-82:45
-    Name pattern: [dalek_ff_group::field::{subtle::ConstantTimeEq<dalek_ff_group::field::FieldElement>}::ct_eq]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as subtle::ConstantTimeEq>::ct_eq` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/lib.rs:81-86 (the `constant_time!` macro, instantiated for
+    `FieldElement` at src/field.rs:63; method span lib.rs 82:6-82:45):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/lib.rs.html#79-94
+
+    Constant-time equality, delegating to `ct_eq` on the wrapped residues: `Choice(1)`
+    iff the two field elements are equal (dalek keeps residues reduced, and equal
+    Montgomery forms correspond exactly to equal values). Called by the translated
+    Helios group law: `HeliosPoint::ct_eq` (cross-multiplied coordinate comparison),
+    `Group::is_identity` (`x.ct_eq(&ZERO)`) and `from_xy` (curve-equation check).
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (decide (a = b))` on the `ZMod (2 ^ 255 - 19)` values — with the
+    `subtle.Choice` model `Bool`, the flag is `true` iff the values are equal. -/
 @[rust_fun
   "dalek_ff_group::field::{subtle::ConstantTimeEq<dalek_ff_group::field::FieldElement>}::ct_eq"]
-axiom dalek_ff_group.field.FieldElement.Insts.SubtleConstantTimeEq.ct_eq
+def dalek_ff_group.field.FieldElement.Insts.SubtleConstantTimeEq.ct_eq
   :
   dalek_ff_group.field.FieldElement → dalek_ff_group.field.FieldElement →
-    Result subtle.Choice
+    Result subtle.Choice :=
+  fun a b =>
+    ok (decide (a.toZMod = b.toZMod))
 
 /-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl core::iter::traits::accum::Product<&'a dalek_ff_group::field::FieldElement> for dalek_ff_group::field::FieldElement}::product]:
     Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 342:2-342:75
@@ -1414,27 +1733,49 @@ axiom dalek_ff_group.field.FieldElement.Insts.FfField.invert
   dalek_ff_group.field.FieldElement → Result (subtle.CtOption
     dalek_ff_group.field.FieldElement)
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::double]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 116:2-116:26
-    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::double]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as ff::Field>::double` — trait-impl
+    method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/field.rs:116-118 (method at line 116):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#116-118
+
+    `fn double(&self) -> Self { FieldElement(self.0.add(&self.0)) }` — doubling as
+    self-addition in GF(2^255 - 19). Called by the translated Helios group law: the
+    add-2015-rcb-3 addition circuit, the dbl-2007-bl-2 doubling circuit and
+    `curve_equation` (`x.double()`).
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a + a)` on the `ZMod (2 ^ 255 - 19)` value model — exactly the crate's
+    self-addition. -/
 @[rust_fun
   "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::double"]
-axiom dalek_ff_group.field.FieldElement.Insts.FfField.double
+def dalek_ff_group.field.FieldElement.Insts.FfField.double
   :
   dalek_ff_group.field.FieldElement → Result
-    dalek_ff_group.field.FieldElement
+    dalek_ff_group.field.FieldElement :=
+  fun a =>
+    ok (.ofZMod (a.toZMod + a.toZMod))
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::square]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 113:2-113:26
-    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::square]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as ff::Field>::square` — trait-impl
+    method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/field.rs:113-115 (method at line 113):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#113-115
+
+    `fn square(&self) -> Self { FieldElement(self.0.square()) }` — squaring in
+    GF(2^255 - 19). Called by the translated Helios group law: `curve_equation`
+    (`x.square()`), the dbl-2007-bl-2 doubling circuit (`s.square()`, `R.square()`,
+    `w.square()`) and `from_xy` (`y.square()`).
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (a * a)` on the `ZMod (2 ^ 255 - 19)` value model — the crate's residue
+    squaring computes the same represented value. -/
 @[rust_fun
   "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::square"]
-axiom dalek_ff_group.field.FieldElement.Insts.FfField.square
+def dalek_ff_group.field.FieldElement.Insts.FfField.square
   :
   dalek_ff_group.field.FieldElement → Result
-    dalek_ff_group.field.FieldElement
+    dalek_ff_group.field.FieldElement :=
+  fun a =>
+    ok (.ofZMod (a.toZMod * a.toZMod))
 
 /-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::random]:
     Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 107:2-107:42
@@ -1446,32 +1787,61 @@ axiom dalek_ff_group.field.FieldElement.Insts.FfField.random
   {T0 : Type} (rand_coreRngCoreInst : rand_core.RngCore T0) :
   T0 → Result dalek_ff_group.field.FieldElement
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::ONE]
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 105:2-105:17
-    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::ONE]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as ff::Field>::ONE` — associated
+    constant (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/field.rs:105 (`const ONE: Self = Self(ResidueType::ONE)`):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#105
+
+    The multiplicative identity 1 of GF(2^255 - 19). Evaluated by the translated Helios
+    group law: `Group::identity` (`y = ONE`), the generator `G` (`z = ONE`), `from_xy`
+    (`z = ONE`) and `from_bytes`.
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok 1` in `ZMod (2 ^ 255 - 19)`. -/
 @[rust_const
   "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::ONE"]
-axiom dalek_ff_group.field.FieldElement.Insts.FfField.ONE
-  : Result dalek_ff_group.field.FieldElement
+def dalek_ff_group.field.FieldElement.Insts.FfField.ONE
+  : Result dalek_ff_group.field.FieldElement :=
+  ok (.ofZMod 1)
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::ZERO]
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 104:2-104:18
-    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::ZERO]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as ff::Field>::ZERO` — associated
+    constant (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/field.rs:104 (`const ZERO: Self = Self(ResidueType::ZERO)`):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#104
+
+    The additive identity 0 of GF(2^255 - 19). Evaluated by the translated Helios group
+    law: `Group::identity` (`x = z = ZERO`) and `Group::is_identity`
+    (`x.ct_eq(&ZERO)`).
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok 0` in `ZMod (2 ^ 255 - 19)`. -/
 @[rust_const
   "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::ZERO"]
-axiom dalek_ff_group.field.FieldElement.Insts.FfField.ZERO
-  : Result dalek_ff_group.field.FieldElement
+def dalek_ff_group.field.FieldElement.Insts.FfField.ZERO
+  : Result dalek_ff_group.field.FieldElement :=
+  ok (.ofZMod 0)
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::Field for dalek_ff_group::field::FieldElement}::is_zero]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 103:0-103:27
-    Name pattern: [dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::is_zero]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as ff::Field>::is_zero` — trait
+    **default** method instantiated for `FieldElement` (foreign: ff 0.13.1 /
+    dalek-ff-group 0.5.0)
+    ff 0.13.1, src/lib.rs:81-83 (`fn is_zero(&self) -> Choice { self.ct_eq(&Self::ZERO) }`;
+    dalek-ff-group does not override it — the metadata span points at the `impl Field`
+    header, dalek-ff-group 0.5.0 src/field.rs:103):
+    https://docs.rs/ff/0.13.1/src/ff/lib.rs.html#81-83
+
+    Zero test as constant-time comparison with `ZERO`. Called by the translated Helios
+    group law: `HeliosPoint::ct_eq`'s projective-zero handling
+    (`self.x.is_zero() & other.x.is_zero()`).
+
+    Model (concrete since the 2026-07-08 Helios widening; previously an existence-only
+    axiom): `ok (decide (a = 0))` on the `ZMod (2 ^ 255 - 19)` value model — the
+    composition of the `ct_eq` and `ZERO` models above. -/
 @[rust_fun
   "dalek_ff_group::field::{ff::Field<dalek_ff_group::field::FieldElement>}::is_zero"]
-axiom dalek_ff_group.field.FieldElement.Insts.FfField.is_zero
-  : dalek_ff_group.field.FieldElement → Result subtle.Choice
+def dalek_ff_group.field.FieldElement.Insts.FfField.is_zero
+  : dalek_ff_group.field.FieldElement → Result subtle.Choice :=
+  fun a =>
+    ok (decide (a.toZMod = 0))
 
 /-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::is_odd]:
     Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 198:2-198:28
@@ -1931,3 +2301,256 @@ axiom point.selene.SelenePoint.Insts.CoreIterTraitsAccumSumSelenePoint.sum
 axiom point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.random
   {T0 : Type} (rand_coreRngCoreInst : rand_core.RngCore T0) :
   T0 → Result point.selene.SelenePoint
+
+/-! ## Additions for the third translation run (2026-07-08): the Helios group-law core
+    (`point::helios`).
+
+    The third run added `--start-from 'helioselene::point::helios'` on top of the
+    2026-07-07 roots, with the same per-curve opaque set as Selene (`Sum`,
+    `Mul`/`MulAssign`, `Group::random`, `Zeroize` — the scalar type is now
+    `HelioseleneField`) plus one new opacity:
+    `helioselene::field::{impl ff::Field for _}::sqrt_ratio`, which breaks the
+    `ff::Field` ↔ `sqrt_ratio` ↔ `ff::PrimeField` mixed-recursive declaration group
+    that materialising the `HelioseleneField` trait records (required as `Group`
+    Scalar evidence for `HeliosPoint`) would otherwise form — `sqrt_ratio`'s body is
+    the `ff::PrimeField`-generic `ff::helpers::sqrt_ratio_generic`, and Aeneas does
+    not support mixed groups.
+
+    Same two kinds of entries as the 2026-07-07 section, in template order:
+    **concrete models** (`def`) for the externals the Helios goal scope evaluates
+    (`from_u256`, on which the Helios curve constants are built, the `&`-variant of
+    `Neg`, and the empty derived-`Eq` marker), and **existence-only axioms** for
+    trait-instance evidence: the derived `PartialEq`/`From<u64>` of `Uint` (used by
+    `HelioseleneField`'s derived `PartialEq` / `From<u64>` field-layer evidence),
+    the `HelioseleneField` `Sum`/`Product` items (opaque since the first run; they
+    now surface because the `ff.Field HelioseleneField` record must be stated) and
+    `sqrt_ratio` (above), and the deliberately-untranslated `HeliosPoint`
+    scalar-mul ladder, `Sum`, `Zeroize` and `Group::random`. Every axiom's type is
+    inhabited (e.g. by `fun _ => fail .panic`), so each is a conservative
+    extension; the axiom audit in `Spec/Helios/GroupLaw.lean` §9 (kernel
+    `#print axioms` on every headline theorem, summarized in README §7) verifies
+    no Helios goal-scope function depends on any of them. -/
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [crypto_bigint::uint::cmp::{impl core::cmp::PartialEq<crypto_bigint::uint::Uint<LIMBS>> for crypto_bigint::uint::Uint<LIMBS>}::eq]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/uint/cmp.rs', lines 164:4-164:38
+    Name pattern: [crypto_bigint::uint::cmp::{core::cmp::PartialEq<crypto_bigint::uint::Uint<@LIMBS>, crypto_bigint::uint::Uint<@LIMBS>>}::eq]
+    Visibility: public
+
+    Referenced only by `HelioseleneField`'s derived `PartialEq::eq` (Funs.lean), itself
+    only `Eq` trait evidence for the `ff::Field HelioseleneField` record (`Group`
+    Scalar bounds); the translated group laws compare via `ct_eq`, never this. -/
+@[rust_fun
+  "crypto_bigint::uint::cmp::{core::cmp::PartialEq<crypto_bigint::uint::Uint<@LIMBS>, crypto_bigint::uint::Uint<@LIMBS>>}::eq"]
+axiom crypto_bigint.uint.Uint.Insts.CoreCmpPartialEqUint.eq
+  {LIMBS : Std.Usize} :
+  crypto_bigint.uint.Uint LIMBS → crypto_bigint.uint.Uint LIMBS → Result
+    Bool
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [crypto_bigint::uint::from::{impl core::convert::From<u64> for crypto_bigint::uint::Uint<LIMBS>}::from]:
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/crypto-bigint-0.5.5/src/uint/from.rs', lines 128:4-128:27
+    Name pattern: [crypto_bigint::uint::from::{core::convert::From<crypto_bigint::uint::Uint<@LIMBS>, u64>}::from]
+    Visibility: public
+
+    Referenced only by `HelioseleneField`'s `From<u64>` impl (Funs.lean), itself only
+    `From<u64>` trait evidence for the `ff::PrimeField HelioseleneField` record
+    (`Group` Scalar bounds); no goal-scope function converts a `u64`. -/
+@[rust_fun
+  "crypto_bigint::uint::from::{core::convert::From<crypto_bigint::uint::Uint<@LIMBS>, u64>}::from"]
+axiom crypto_bigint.uint.Uint.Insts.CoreConvertFromU64.from
+  (LIMBS : Std.Usize) : Std.U64 → Result (crypto_bigint.uint.Uint LIMBS)
+
+/-- **Rust:** `<&dalek_ff_group::field::FieldElement as core::ops::arith::Neg>::neg` —
+    trait-impl method (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/field.rs:96-101 (method at line 98):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#96-101
+
+    `impl Neg for &FieldElement { fn neg(self) -> FieldElement { (*self).neg() } }` —
+    delegates to the owned negation (modeled concretely above). Not called by any
+    translated body: referenced only as `Neg`-on-references trait-instance evidence.
+    Modeled concretely anyway so the whole dalek arithmetic surface carries the one
+    `ZMod` semantics.
+
+    Model: `ok (-a)` on the `ZMod (2 ^ 255 - 19)` value model of `FieldElement`
+    (TypesExternal.lean) — identical to the owned `neg` model. -/
+@[rust_fun
+  "dalek_ff_group::field::{core::ops::arith::Neg<&'0 dalek_ff_group::field::FieldElement, dalek_ff_group::field::FieldElement>}::neg"]
+def Shared0FieldElement.Insts.CoreOpsArithNegFieldElement.neg
+  :
+  dalek_ff_group.field.FieldElement → Result
+    dalek_ff_group.field.FieldElement :=
+  fun a =>
+    ok (.ofZMod (-a.toZMod))
+
+/-- **Rust:** `dalek_ff_group::field::FieldElement::from_u256` — inherent method
+    (foreign: dalek-ff-group 0.5.0)
+    dalek-ff-group 0.5.0, src/field.rs:219-225 (method at line 223:
+    `pub const fn from_u256(u256: &U256) -> Self { FieldElement(Residue::new(u256)) }`):
+    https://docs.rs/dalek-ff-group/0.5.0/src/dalek_ff_group/field.rs.html#219-225
+
+    Constructs a field element from a `U256`, reducing by the modulus ("This will
+    reduce the `U256` by the modulus, into a member of the field" — the crate doc;
+    `crypto_bigint::Residue::new` accepts any `U256` and represents its value mod
+    2^255 - 19). Evaluated by the translated Helios curve constants: `point.helios.B`
+    and `point.helios.G_Y` (on `from_be_hex` literals) and `point.helios.G_X` (on
+    `from_u8 1`) — the Helios counterpart of `HelioseleneField::from_u256`, which the
+    Selene constants use with the `const_rem` model above.
+
+    Model: `ok (u.toNat : ZMod (2 ^ 255 - 19))` — the natural-number value of the
+    little-endian limb vector, reduced mod 2^255 - 19 by the `ZMod` cast: exactly the
+    crate's const-reduction semantics. -/
+@[rust_fun
+  "dalek_ff_group::field::{dalek_ff_group::field::FieldElement}::from_u256"]
+def dalek_ff_group.field.FieldElement.from_u256
+  :
+  crypto_bigint.uint.Uint 4#usize → Result dalek_ff_group.field.FieldElement :=
+  fun u =>
+    ok (.ofZMod u.toNat)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::field::{impl core::iter::traits::accum::Sum<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sum]:
+    Source: 'src/field/mod.rs', lines 85:2-91:3
+    Visibility: public
+
+    Opaque since the first run (iterator adapters, README §3); absent from the first
+    two runs' output, it now surfaces because the `ff.Field HelioseleneField` record
+    (`Group` Scalar evidence for `HeliosPoint`) must state its `Sum` parent clause. -/
+axiom field.HelioseleneField.Insts.CoreIterTraitsAccumSumHelioseleneField.sum
+  {I : Type} (coreitertraitsiteratorIteratorIHelioseleneFieldInst :
+  core.iter.traits.iterator.Iterator I field.HelioseleneField) :
+  I → Result field.HelioseleneField
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::field::{impl core::iter::traits::accum::Sum<&'a helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::sum]:
+    Source: 'src/field/mod.rs', lines 94:2-96:3
+    Visibility: public
+
+    See the owned `Sum` axiom above. -/
+axiom
+  field.HelioseleneField.Insts.CoreIterTraitsAccumSumSharedAHelioseleneField.sum
+  {I : Type} (coreitertraitsiteratorIteratorISharedAHelioseleneFieldInst :
+  core.iter.traits.iterator.Iterator I field.HelioseleneField) :
+  I → Result field.HelioseleneField
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::field::{impl core::iter::traits::accum::Product<helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::product]:
+    Source: 'src/field/mod.rs', lines 147:2-153:3
+    Visibility: public
+
+    Opaque since the first run (iterator adapters, README §3); absent from the first
+    two runs' output, it now surfaces because the `ff.Field HelioseleneField` record
+    (`Group` Scalar evidence for `HeliosPoint`) must state its `Product` parent
+    clause. -/
+axiom
+  field.HelioseleneField.Insts.CoreIterTraitsAccumProductHelioseleneField.product
+  {I : Type} (coreitertraitsiteratorIteratorIHelioseleneFieldInst :
+  core.iter.traits.iterator.Iterator I field.HelioseleneField) :
+  I → Result field.HelioseleneField
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::field::{impl core::iter::traits::accum::Product<&'a helioselene::field::HelioseleneField> for helioselene::field::HelioseleneField}::product]:
+    Source: 'src/field/mod.rs', lines 156:2-158:3
+    Visibility: public
+
+    See the owned `Product` axiom above. -/
+axiom
+  field.HelioseleneField.Insts.CoreIterTraitsAccumProductSharedAHelioseleneField.product
+  {I : Type} (coreitertraitsiteratorIteratorISharedAHelioseleneFieldInst :
+  core.iter.traits.iterator.Iterator I field.HelioseleneField) :
+  I → Result field.HelioseleneField
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::field::{impl ff::Field for helioselene::field::HelioseleneField}::sqrt_ratio]:
+    Source: 'src/field/mod.rs', lines 220:2-222:3
+    Visibility: public
+
+    `fn sqrt_ratio(num, div) { ff::helpers::sqrt_ratio_generic(num, div) }` — made
+    opaque in the third run (the new `--opaque` of README §3): its body is generic
+    over `ff::PrimeField`, so translating it makes the `ff::Field` impl, this method
+    and the `ff::PrimeField` impl for `HelioseleneField` a mixed-recursive
+    declaration group, which Aeneas does not support. It is referenced only by the
+    `ff.Field HelioseleneField` instance record (`Group` Scalar evidence for
+    `HeliosPoint`); neither curve's translated group law calls `sqrt_ratio` (Selene's
+    decompression uses the translated `verified::sqrt`, Helios' the axiomatised dalek
+    `sqrt`). -/
+axiom field.HelioseleneField.Insts.FfField.sqrt_ratio
+  :
+  field.HelioseleneField → field.HelioseleneField → Result (subtle.Choice
+    × field.HelioseleneField)
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl zeroize::Zeroize for helioselene::point::helios::HeliosPoint}::zeroize]:
+    Source: 'src/point.rs', lines 55:6-63:7
+    Visibility: public -/
+axiom point.helios.HeliosPoint.Insts.ZeroizeZeroize.zeroize
+  : point.helios.HeliosPoint → Result point.helios.HeliosPoint
+
+/-- **Rust:** `<helioselene::point::helios::HeliosPoint as core::cmp::Eq>::
+    assert_fields_are_eq` — derived-`Eq` marker method (this repository)
+    src/point.rs:86 (`impl Eq for HeliosPoint {}` via the `curve!` macro), commit
+    6313959f906fe754909754ac642134237dae42a9:
+    https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/point.rs#L86
+
+    rustc's `Eq` marker helper (`assert_receiver_is_total_eq`) — a compile-time
+    obligation with an empty runtime body; it computes nothing and cannot panic.
+
+    Referenced only by the `core.cmp.Eq` instance record for `HeliosPoint` (evidence for
+    `Group`'s `Eq` supertrait bound); never called by the translated group law.
+
+    Model: `ok ()` (the empty body). -/
+def point.helios.HeliosPoint.Insts.CoreCmpEq.assert_fields_are_eq
+  : point.helios.HeliosPoint → Result Unit :=
+  fun _ => ok ()
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::ops::arith::MulAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::point::helios::HeliosPoint}::mul_assign]:
+    Source: 'src/point.rs', lines 341:6-343:7
+    Visibility: public -/
+axiom
+  point.helios.HeliosPoint.Insts.CoreOpsArithMulAssignShared0HelioseleneField.mul_assign
+  :
+  point.helios.HeliosPoint → field.HelioseleneField → Result
+    point.helios.HeliosPoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::ops::arith::Mul<&'_0 helioselene::field::HelioseleneField, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::mul]:
+    Source: 'src/point.rs', lines 335:6-337:7
+    Visibility: public -/
+axiom
+  point.helios.HeliosPoint.Insts.CoreOpsArithMulShared0HelioseleneFieldHeliosPoint.mul
+  :
+  point.helios.HeliosPoint → field.HelioseleneField → Result
+    point.helios.HeliosPoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::ops::arith::MulAssign<helioselene::field::HelioseleneField> for helioselene::point::helios::HeliosPoint}::mul_assign]:
+    Source: 'src/point.rs', lines 328:6-330:7
+    Visibility: public -/
+axiom
+  point.helios.HeliosPoint.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign
+  :
+  point.helios.HeliosPoint → field.HelioseleneField → Result
+    point.helios.HeliosPoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::ops::arith::Mul<helioselene::field::HelioseleneField, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::mul]:
+    Source: 'src/point.rs', lines 279:6-324:7
+    Visibility: public -/
+axiom
+  point.helios.HeliosPoint.Insts.CoreOpsArithMulHelioseleneFieldHeliosPoint.mul
+  :
+  point.helios.HeliosPoint → field.HelioseleneField → Result
+    point.helios.HeliosPoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::iter::traits::accum::Sum<&'a helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sum]:
+    Source: 'src/point.rs', lines 272:6-274:7
+    Visibility: public -/
+axiom
+  point.helios.HeliosPoint.Insts.CoreIterTraitsAccumSumSharedAHeliosPoint.sum
+  {I : Type} (coreitertraitsiteratorIteratorISharedAHeliosPointInst :
+  core.iter.traits.iterator.Iterator I point.helios.HeliosPoint) :
+  I → Result point.helios.HeliosPoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::iter::traits::accum::Sum<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sum]:
+    Source: 'src/point.rs', lines 262:6-268:7
+    Visibility: public -/
+axiom point.helios.HeliosPoint.Insts.CoreIterTraitsAccumSumHeliosPoint.sum
+  {I : Type} (coreitertraitsiteratorIteratorIHeliosPointInst :
+  core.iter.traits.iterator.Iterator I point.helios.HeliosPoint) :
+  I → Result point.helios.HeliosPoint
+
+/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl group::Group<helioselene::field::HelioseleneField, [u8; 32usize]> for helioselene::point::helios::HeliosPoint}::random]:
+    Source: 'src/point.rs', lines 213:6-223:7
+    Visibility: public -/
+axiom point.helios.HeliosPoint.Insts.GroupGroupHelioseleneFieldArrayU832.random
+  {T0 : Type} (rand_coreRngCoreInst : rand_core.RngCore T0) :
+  T0 → Result point.helios.HeliosPoint

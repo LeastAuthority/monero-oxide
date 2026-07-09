@@ -382,6 +382,14 @@ structure point.selene.SelenePoint where
   y : field.HelioseleneField
   z : field.HelioseleneField
 
+/-- [helioselene::point::helios::HeliosPoint]
+    Source: 'src/point.rs', lines 48:4-52:5
+    Visibility: public -/
+structure point.helios.HeliosPoint where
+  x : dalek_ff_group.field.FieldElement
+  y : dalek_ff_group.field.FieldElement
+  z : dalek_ff_group.field.FieldElement
+
 /-- [helioselene::point::selene::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::selene::SelenePoint}::from_bytes::closure::closure#1]
     Source: 'src/point.rs', lines 372:38-372:73 -/
 @[reducible]
@@ -400,6 +408,26 @@ def point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure.closure
     Source: 'src/point.rs', lines 358:42-381:9 -/
 @[reducible]
 def point.selene.GroupEncodingSelenePointArrayU832.from_bytes.closure :=
+  subtle.Choice
+
+/-- [helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::helios::HeliosPoint}::from_bytes::closure::closure#1]
+    Source: 'src/point.rs', lines 372:38-372:73 -/
+@[reducible]
+def point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure.closure_1
+  :=
+  dalek_ff_group.field.FieldElement
+
+/-- [helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::helios::HeliosPoint}::from_bytes::closure::closure]
+    Source: 'src/point.rs', lines 361:35-364:11 -/
+@[reducible]
+def point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure.closure
+  :=
+  subtle.Choice
+
+/-- [helioselene::point::helios::{impl group::GroupEncoding<[u8; 32usize]> for helioselene::point::helios::HeliosPoint}::from_bytes::closure]
+    Source: 'src/point.rs', lines 358:42-381:9 -/
+@[reducible]
+def point.helios.GroupEncodingHeliosPointArrayU832.from_bytes.closure :=
   subtle.Choice
 
 end helioselene
