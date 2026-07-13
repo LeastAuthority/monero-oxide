@@ -352,6 +352,16 @@ structure group.prime.PrimeGroup (Self : Type) (Self_Clause0_Scalar : Type)
 structure zeroize.Zeroize (Self : Type) where
   zeroize : Self → Result Self
 
+/-- Trait declaration: [zeroize::DefaultIsZeroes]
+    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/zeroize-1.9.0/src/lib.rs', lines 255:0-255:49
+    Name pattern: [zeroize::DefaultIsZeroes]
+    Visibility: public -/
+@[rust_trait "zeroize::DefaultIsZeroes"
+  (parentClauses := ["coremarkerCopyInst", "coredefaultDefaultInst"])]
+structure zeroize.DefaultIsZeroes (Self : Type) where
+  coremarkerCopyInst : core.marker.Copy Self
+  coredefaultDefaultInst : core.default.Default Self
+
 /-- **Rust:** `helioselene::field::HelioseleneField` — type (newtype flattened)
     crypto/helioselene/src/field/mod.rs:22 in this repository:
     https://github.com/monero-oxide/monero-oxide/blob/6313959f906fe754909754ac642134237dae42a9/crypto/helioselene/src/field/mod.rs#L22

@@ -15,15 +15,12 @@
    `ZMod p` for the (kernel-proved, `Spec.Prime`) prime
    `p = 2^255 - 0x8cab7e2e6960ce8067af49720ee20ad`.
 
-   Sorry status: everything in this file is sorry-free EXCEPT what depends on
-   `invert_ok`, which inherits the single `sorry` of `Invert.step_congruence`
-   (per-step Algorithm-1 invariant of binary-GCD inversion). Concretely tainted:
-   `HField.inv`, the `Inv`/`Div` instances, `φ_inv`, `φ_div`, `instFieldHField`
-   (and the `example : Field HField` smoke check). Sorry-free all the way down:
-   the `Zero/One/Add/Mul/Neg/Sub` structure, all value lemmas for those ops,
-   `φ_zero/φ_one/φ_add/φ_mul/φ_neg/φ_sub`, all `equivZMod`-transported auxiliary
-   hom equations, and the ring isomorphism `φRing`. See the axiom audit at the
-   bottom of this file.
+   Sorry status: this file and its inversion dependency cone are sorry-free.
+   `invert_ok` consumes the proved `Invert.step_congruence` theorem for the
+   repaired four-limb 0/p/2p carry chain. Consequently `HField.inv`, the
+   `Inv`/`Div` instances, `φ_inv`, `φ_div`, `instFieldHField` and the
+   `example : Field HField` smoke check contain no `sorryAx`. See the axiom
+   audit at the bottom of this file.
 
    Provenance of the instance data: only `add`/`sub`/`neg`/`mul`/`inv` wrap
    Aeneas-translated Rust functions — `Div` (Rust exposes no division), `Zero`/`One`
@@ -134,8 +131,8 @@ def HField.square (x : HField) : HField :=
     exact Nat.mod_lt _ p_pos⟩
 
 /-- Total field inversion (with mathlib's `0⁻¹ = 0` convention), extracted from the
-    verified `field.verified.invert.invert`.
-    SORRY-TAINTED: `invert_ok` depends on `Invert.step_congruence`. -/
+    verified `field.verified.invert.invert`; `invert_ok` and its
+    `Invert.step_congruence` dependency are fully proved. -/
 def HField.inv (x : HField) : HField :=
   ⟨(invert_ok x.val x.property).choose,
     (invert_ok x.val x.property).choose_spec.choose_spec.2.1⟩
@@ -152,8 +149,7 @@ instance : Inv HField := ⟨HField.inv⟩
 
 /-- Rust defines no division for `HelioseleneField`; mathlib's `a / b` is defined
     here as `a * b⁻¹`, i.e. multiplication (Rust `mul`) by the Rust-verified
-    inverse — it does not wrap any translated Rust operation of its own.
-    SORRY-TAINTED via `HField.inv`. -/
+    inverse — it does not wrap any translated Rust operation of its own. -/
 instance : Div HField := ⟨fun x y => x * y⁻¹⟩
 
 /-! ## Value lemmas (the notation reduces definitionally to the wrappers) -/
@@ -188,14 +184,12 @@ theorem HField.square_val (x : HField) :
     (HField.square x).val.toNat = (x.val.toNat * x.val.toNat) % p :=
   (square_ok x.val).choose_spec.2
 
-/-- At zero, the verified inversion returns the mathlib convention `0⁻¹ = 0`.
-    SORRY-TAINTED via `invert_ok`. -/
+/-- At zero, the verified inversion returns the mathlib convention `0⁻¹ = 0`. -/
 theorem HField.inv_val_of_zero (x : HField) (h : x.val.toNat = 0) :
     (x⁻¹ : HField).val.toNat = 0 :=
   (invert_ok x.val x.property).choose_spec.choose_spec.2.2.2.1 h
 
-/-- Away from zero, the verified inversion is a genuine modular inverse.
-    SORRY-TAINTED via `invert_ok`. -/
+/-- Away from zero, the verified inversion is a genuine modular inverse. -/
 theorem HField.inv_val_of_ne_zero (x : HField) (h : x.val.toNat ≠ 0) :
     (x.val.toNat * (x⁻¹ : HField).val.toNat) % p = 1 :=
   (invert_ok x.val x.property).choose_spec.choose_spec.2.2.2.2 h
@@ -273,7 +267,6 @@ theorem φ_sub (x y : HField) : φ (x - y) = φ x - φ y := by
   rw [ZMod.natCast_self]
   ring
 
-/-- SORRY-TAINTED via `invert_ok`. -/
 theorem φ_inv (x : HField) : φ x⁻¹ = (φ x)⁻¹ := by
   by_cases h : x.val.toNat = 0
   · show ((x⁻¹ : HField).val.toNat : ZMod p) = ((x.val.toNat : ℕ) : ZMod p)⁻¹
@@ -284,7 +277,6 @@ theorem φ_inv (x : HField) : φ x⁻¹ = (φ x)⁻¹ := by
       rw [← Nat.cast_mul, ← ZMod.natCast_mod, HField.inv_val_of_ne_zero x h, Nat.cast_one]
     exact eq_inv_of_mul_eq_one_right key
 
-/-- SORRY-TAINTED via `φ_inv`. -/
 theorem φ_div (x y : HField) : φ (x / y) = φ x / φ y := by
   show φ (x * y⁻¹) = φ x / φ y
   rw [φ_mul, φ_inv, div_eq_mul_inv]
@@ -335,8 +327,7 @@ theorem φ_ratCast (q : ℚ) : φ (q : HField) = q := by
 
 /-- **The Aeneas-translated helioselene field is a mathlib `Field`.**
     Pulled back from `Field (ZMod p)` along the injection `φ`, whose hom equations
-    are exactly the verified `_ok` contracts of the generated code.
-    SORRY-TAINTED (only) via `φ_inv`/`φ_div` ← `invert_ok` ← `Invert.step_congruence`. -/
+    are exactly the verified `_ok` contracts of the generated code. -/
 instance instFieldHField : Field HField :=
   Function.Injective.field φ φ_injective φ_zero φ_one φ_add φ_mul φ_neg φ_sub
     φ_inv φ_div φ_nsmul φ_zsmul φ_nnqsmul φ_qsmul φ_npow φ_zpow
@@ -345,10 +336,7 @@ instance instFieldHField : Field HField :=
 /-- Smoke check: the instance is found by type-class resolution. -/
 example : Field HField := inferInstance
 
-/-! ## The strongest clean statement: `HField ≃+* ZMod p`
-
-Note this only needs the (sorry-free) additive/multiplicative structure — the
-ring isomorphism is NOT tainted by the inversion sorry. -/
+/-! ## Ring equivalence: `HField ≃+* ZMod p` -/
 
 /-- The transpiled helioselene field is, as a ring, exactly `ZMod p`. -/
 def φRing : HField ≃+* ZMod p where
@@ -371,10 +359,10 @@ example : Fintype.card HField =
 
 /-! ## Axiom audit
 
-`#print axioms` output observed on this build (2026-07-07):
+`#print axioms` output observed on this build (2026-07-10):
 
 ```
-instFieldHField : [propext, sorryAx, Classical.choice, Quot.sound,
+instFieldHField : [propext, Classical.choice, Quot.sound,
     field.MODULUS._native.decide.ax_1,
     field.verified.MODULUS_255_DISTANCE._native.decide.ax_1,
     field.verified.red.TWO_MODULUS_255_DISTANCE._native.decide.ax_1,
@@ -386,7 +374,7 @@ instFieldHField : [propext, sorryAx, Classical.choice, Quot.sound,
 φ_add           : [propext, Classical.choice, Quot.sound, field.MODULUS._native.decide.ax_1]
 φ_mul           : like φRing (adds the two reduction-distance constants)   -- NO sorryAx
 φ_neg, φ_sub    : like φ_add                                              -- NO sorryAx
-φ_inv           : [propext, sorryAx, Classical.choice, Quot.sound,
+φ_inv           : [propext, Classical.choice, Quot.sound,
     field.MODULUS._native.decide.ax_1,
     field.verified.invert.invert.step.MODULUS_XOR_TWO_MODULUS._native.decide.ax_1]
 HField.mul_val  : like φ_mul                                               -- NO sorryAx
@@ -404,10 +392,10 @@ Notes:
   Every statement mentioning those constants inherits them; no proof in the Spec
   tree itself uses `native_decide` (the Spec constants lemmas re-prove the parses
   with kernel `decide`).
-* `sorryAx` appears EXACTLY on the `invert_ok` cone:
-  `HField.inv` / `Inv`/`Div` instances / `φ_inv` / `φ_div` / `instFieldHField`.
-* `φRing`, `φ_add`, `φ_mul`, `φ_neg`, `φ_sub`, `φ_zero`, `φ_one`, `card_hfield`
-  and every non-`Inv` value lemma are `sorryAx`-free. -/
+* No declaration listed above contains `sorryAx`; in particular the former
+  inversion taint on `HField.inv`, `φ_inv`, `φ_div` and `instFieldHField` is gone.
+* The remaining dependencies are the three standard mathlib axioms plus the
+  generated constant-parser axioms listed above. -/
 
 #print axioms instFieldHField
 #print axioms φRing
@@ -420,29 +408,13 @@ Notes:
 #print axioms card_hfield
 #print axioms p_prime
 
-/-! ## Transitively-sorried obligation inventory (whole Spec tree)
+/-! ## Whole-tree proof status
 
-Result of `grep -rn sorry HelioseleneCore/Spec/` on this build: the TWO
-remaining `sorry`s are
-
-  `HelioseleneSpec.Invert.step_congruence`  (Spec/Invert.lean)
-     — one branch-free binary-GCD `step` preserves the Algorithm-1 invariant
-       `InvA` (congruences `a ≡ ±u·y`, `b ≡ ±v·y (mod p)`, `b` odd, `u,v ≤ p`,
-       `gcd` preservation, potential halving `2·a'·b' ≤ a·b`).
-     Downstream taint (all via `invert_ok`): `HField.inv`,
-     `instInvHField`/`instDivHField`, `HField.inv_val_of_zero`,
-     `HField.inv_val_of_ne_zero`, `φ_inv`, `φ_div`, `instFieldHField`.
-
-  `HelioseleneSpec.Selene.sqrt_complete`  (Spec/Selene/Ops.lean)
-     — completeness of the windowed square-root ladder: on a square input the
-       returned validity flag is true. A LEAF: nothing in the tree depends on
-       it (its taint cone is empty; in particular the Selene group law of
-       `Spec/Selene/GroupLaw.lean` and the proved `sqrt_ok` soundness contract
-       are unaffected — only "flag = false ⇒ non-square" waits on it).
-
-Everything else in `Spec/{Externals,Phi,Linear,Repr,Reduction,Prime}.lean`,
-`Spec/Selene/{Curve,Ops,GroupLaw}.lean` and the rest of `Spec/Invert.lean` is
-proved. -/
+The project-local `HelioseleneCore/Spec` tree contains no proof holes.
+`Invert.step_congruence` and `Selene.sqrt_complete`, the final two historical
+obligations, are both proved. The `sorry` declarations reported while building
+the upstream Aeneas support library are outside this project's theorem cone;
+the `#print axioms` results above contain no `sorryAx`. -/
 
 end HelioseleneSpec
 

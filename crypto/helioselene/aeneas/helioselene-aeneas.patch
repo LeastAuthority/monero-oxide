@@ -1,6 +1,6 @@
-diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/crypto/helioselene/Cargo.toml /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/Cargo.toml
+diff -ru -x target -x Cargo.lock -x benches -x aeneas -x '*.llbc' /home/user/monero-oxide/crypto/helioselene/Cargo.toml /tmp/helioselene-aeneas-fixed/Cargo.toml
 --- /home/user/monero-oxide/crypto/helioselene/Cargo.toml	2026-07-06 09:17:37.989700023 +0000
-+++ /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/Cargo.toml	2026-07-06 12:24:31.902705445 +0000
++++ /tmp/helioselene-aeneas-fixed/Cargo.toml	2026-07-10 12:31:57.176651408 +0000
 @@ -13,8 +13,7 @@
  all-features = true
  rustdoc-args = ["--cfg", "docsrs"]
@@ -20,9 +20,9 @@ diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/cr
  ciphersuite = { version = "0.4.2", default-features = false }
  
  [dev-dependencies]
-diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/crypto/helioselene/src/field/verified/invert.rs /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/invert.rs
---- /home/user/monero-oxide/crypto/helioselene/src/field/verified/invert.rs	2026-07-06 09:17:37.990700055 +0000
-+++ /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/invert.rs	2026-07-06 12:24:12.030065629 +0000
+diff -ru -x target -x Cargo.lock -x benches -x aeneas -x '*.llbc' /home/user/monero-oxide/crypto/helioselene/src/field/verified/invert.rs /tmp/helioselene-aeneas-fixed/src/field/verified/invert.rs
+--- /home/user/monero-oxide/crypto/helioselene/src/field/verified/invert.rs	2026-07-10 12:56:12.326060054 +0000
++++ /tmp/helioselene-aeneas-fixed/src/field/verified/invert.rs	2026-07-10 14:42:00.313129113 +0000
 @@ -12,7 +12,8 @@
  fn sub_with_bounded_overflow(a: Limb, b: Limb, c: Limb) -> (Limb, Limb) {
    let (limb, borrow1) = a.0.overflowing_sub(b.0);
@@ -33,9 +33,9 @@ diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/cr
  }
  
  /// Binary GCD Algorithm 1, https://eprint.iacr.org/2020/972.
-diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/crypto/helioselene/src/field/verified/mod.rs /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/mod.rs
+diff -ru -x target -x Cargo.lock -x benches -x aeneas -x '*.llbc' /home/user/monero-oxide/crypto/helioselene/src/field/verified/mod.rs /tmp/helioselene-aeneas-fixed/src/field/verified/mod.rs
 --- /home/user/monero-oxide/crypto/helioselene/src/field/verified/mod.rs	2026-07-06 09:17:37.990700055 +0000
-+++ /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/mod.rs	2026-07-06 12:24:12.029065597 +0000
++++ /tmp/helioselene-aeneas-fixed/src/field/verified/mod.rs	2026-07-10 12:31:57.177651439 +0000
 @@ -35,7 +35,8 @@
  fn add_with_bounded_overflow(a: Limb, b: Limb, c: Limb) -> (Limb, Limb) {
    let (limb, carry1) = a.0.overflowing_add(b.0);
@@ -65,9 +65,9 @@ diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/cr
      }
      ((last & (Limb::ONE << (Limb::BITS - 1))) | carry).ct_eq(&Limb::ZERO)
    }
-diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/crypto/helioselene/src/field/verified/sqrt.rs /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/sqrt.rs
+diff -ru -x target -x Cargo.lock -x benches -x aeneas -x '*.llbc' /home/user/monero-oxide/crypto/helioselene/src/field/verified/sqrt.rs /tmp/helioselene-aeneas-fixed/src/field/verified/sqrt.rs
 --- /home/user/monero-oxide/crypto/helioselene/src/field/verified/sqrt.rs	2026-07-06 09:17:37.990700055 +0000
-+++ /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/field/verified/sqrt.rs	2026-07-07 12:07:28.121366014 +0000
++++ /tmp/helioselene-aeneas-fixed/src/field/verified/sqrt.rs	2026-07-10 12:31:57.177651439 +0000
 @@ -57,14 +57,28 @@
    res *= old_res;
  
@@ -101,10 +101,158 @@ diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/cr
        res *= table[usize::from(bits)];
        bits = 0;
      }
-diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/crypto/helioselene/src/point.rs /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/point.rs
+diff -ru -x target -x Cargo.lock -x benches -x aeneas -x '*.llbc' /home/user/monero-oxide/crypto/helioselene/src/point.rs /tmp/helioselene-aeneas-fixed/src/point.rs
 --- /home/user/monero-oxide/crypto/helioselene/src/point.rs	2026-07-06 11:16:30.470510565 +0000
-+++ /tmp/claude-1000/-home-user-monero-oxide/2d30c0df-f4e5-4a23-b0f8-bdcdc9628721/scratchpad/helioselene-patched/src/point.rs	2026-07-07 12:09:15.530475319 +0000
-@@ -348,10 +348,11 @@
++++ /tmp/helioselene-aeneas-fixed/src/point.rs	2026-07-10 14:30:22.248153220 +0000
+@@ -1,5 +1,5 @@
+ use core::{
+-  ops::{DerefMut as _, Add, AddAssign, Neg, Sub, SubAssign, Mul, MulAssign},
++  ops::{Add, AddAssign, Neg, Sub, SubAssign, Mul, MulAssign},
+   iter::Sum,
+ };
+ 
+@@ -10,13 +10,21 @@
+ use subtle::{Choice, CtOption, ConstantTimeEq, ConditionallySelectable, ConditionallyNegatable as _};
+ 
+ use group::{
+-  ff::{Field as _, PrimeField, PrimeFieldBits as _},
++  ff::{Field as _, PrimeField},
+   Group, GroupEncoding,
+   prime::PrimeGroup,
+ };
+ 
+ use dalek_ff_group::FieldElement as Field25519;
+-use crate::{u8_from_bool, field::HelioseleneField};
++use crate::field::HelioseleneField;
++
++// AENEAS: keep the scalar loop state borrow-free by performing its indexed byte update in a
++// loop-free helper. This is the same update as the original mutable bit iterator performs.
++#[inline(always)]
++fn clear_scalar_bit(mut bytes: [u8; 32], byte_index: usize, bit_offset: u32) -> [u8; 32] {
++  bytes[byte_index] &= !(1u8 << bit_offset);
++  bytes
++}
+ 
+ macro_rules! curve {
+   (
+@@ -278,47 +286,86 @@
+       type Output = $Point;
+       fn mul(self, mut other: $Scalar) -> $Point {
+         // Precompute the optimal amount that's a multiple of 2
+-        let mut table = [$Point::identity(); 16];
+-        table[1] = self;
+-        table[2] = self.double();
+-        table[3] = table[2] + self;
+-        table[4] = table[2].double();
+-        table[5] = table[4] + self;
+-        table[6] = table[3].double();
+-        table[7] = table[6] + self;
+-        table[8] = table[4].double();
+-        table[9] = table[8] + self;
+-        table[10] = table[5].double();
+-        table[11] = table[10] + self;
+-        table[12] = table[6].double();
+-        table[13] = table[12] + self;
+-        table[14] = table[7].double();
+-        table[15] = table[14] + self;
++        // AENEAS: the block makes the indexed construction loans end before the scalar loop.
++        let table = {
++          let mut table = [$Point::identity(); 16];
++          table[1] = self;
++          table[2] = self.double();
++          table[3] = table[2] + self;
++          table[4] = table[2].double();
++          table[5] = table[4] + self;
++          table[6] = table[3].double();
++          table[7] = table[6] + self;
++          table[8] = table[4].double();
++          table[9] = table[8] + self;
++          table[10] = table[5].double();
++          table[11] = table[10] + self;
++          table[12] = table[6].double();
++          table[13] = table[12] + self;
++          table[14] = table[7].double();
++          table[15] = table[14] + self;
++          table
++        };
+ 
+         let mut res = Self::identity();
+-        let mut bits = 0;
+-        for (i, mut bit) in other.to_le_bits().iter_mut().rev().enumerate() {
+-          bits <<= 1;
+-          let mut bit = u8_from_bool(bit.deref_mut());
++        let mut bits = 0u8;
++        let mut other_bytes = other.to_repr();
++        for i in 0 .. 256usize {
++          let bit_index = 255usize - i;
++          let byte_index = bit_index / 8usize;
++          #[allow(clippy::as_conversions, clippy::cast_possible_truncation)]
++          let bit_offset = (bit_index % 8usize) as u32;
++
++          bits <<= 1u32;
++          let mut bit = (other_bytes[byte_index] >> bit_offset) & 1u8;
+           bits |= bit;
++          other_bytes = clear_scalar_bit(other_bytes, byte_index, bit_offset);
+           bit.zeroize();
+ 
+-          if ((i + 1) % 4) == 0 {
+-            if i != 3 {
+-              for _ in 0 .. 4 {
+-                res = res.double();
+-              }
++          if ((i + 1usize) % 4usize) == 0usize {
++            if i != 3usize {
++              res = res.double();
++              res = res.double();
++              res = res.double();
++              res = res.double();
+             }
+ 
+             let mut term = table[0];
+-            for (j, candidate) in table[1 ..].iter().enumerate() {
+-              let j = j + 1;
+-              term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&j));
+-            }
+-            res += term;
++            let candidate = table[1];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&1));
++            let candidate = table[2];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&2));
++            let candidate = table[3];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&3));
++            let candidate = table[4];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&4));
++            let candidate = table[5];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&5));
++            let candidate = table[6];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&6));
++            let candidate = table[7];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&7));
++            let candidate = table[8];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&8));
++            let candidate = table[9];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&9));
++            let candidate = table[10];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&10));
++            let candidate = table[11];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&11));
++            let candidate = table[12];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&12));
++            let candidate = table[13];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&13));
++            let candidate = table[14];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&14));
++            let candidate = table[15];
++            term = Self::conditional_select(&term, &candidate, usize::from(bits).ct_eq(&15));
++            res = res + term;
+             bits = 0;
+           }
+         }
++        other_bytes.zeroize();
+         other.zeroize();
+         res
+       }
+@@ -348,10 +395,11 @@
  
        fn from_bytes(bytes: &Self::Repr) -> CtOption<Self> {
          // Extract and clear the sign bit
@@ -118,7 +266,7 @@ diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/cr
  
          // Parse x, recover y
          $Field::from_repr(bytes).and_then(|x| {
-@@ -366,13 +367,15 @@
+@@ -366,13 +414,15 @@
            let y =
              CtOption::conditional_select(&y, &CtOption::new($Field::ONE, 1.into()), is_identity);
            // Create the point if we have a y solution
@@ -136,7 +284,7 @@ diff -ru -x target -x Cargo.lock -x benches -x aeneas /home/user/monero-oxide/cr
              not_negative_zero,
            )
          })
-@@ -392,7 +395,7 @@
+@@ -392,7 +442,7 @@
  
          // Normalize the sign to 0 when x is 0
          let y_sign = u8::conditional_select(&y.is_odd().unwrap_u8(), &0, x.ct_eq(&$Field::ZERO));

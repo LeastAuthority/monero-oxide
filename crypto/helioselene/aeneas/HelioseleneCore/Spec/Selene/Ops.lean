@@ -21,10 +21,11 @@
      the generated code, WITHOUT relying on correctness of the windowed exponentiation
      ladder; and `recover_y_ok` on top of it.
 
-   Sorry status: everything is PROVED except the single, clearly marked completeness
-   obligation `sqrt_complete` (`IsSquare (ψ a) → flag = true`), which requires functional
-   correctness of the 125-iteration windowed ladder (allowed fallback; the group-law
-   development does not depend on it).
+   Sorry status: everything is PROVED, including the completeness obligation
+   `sqrt_complete` (`IsSquare (ψ a) → flag = true`), via functional correctness of the
+   windowed exponentiation ladder: the 16-entry table holds `a^i`, the fixed prefix
+   computes `a^(2^128-1)`, the 125-iteration window loop consumes bits `124..0` of
+   `(p+1)/4`, and Euler's criterion (`p ≡ 3 (mod 4)`) closes the square case.
 
    No new axioms, no `native_decide`; lemmas that mention the generated hex-string
    constants inherit the `<const>._native.decide.ax_1` string-length axioms of Funs.lean
@@ -1044,11 +1045,12 @@ true iff `r` is a square root of the input (`flag ↔ ψ r ^ 2 = ψ a`, from the
 `ct_eq` self-check — no windowed-ladder correctness needed). Together with
 `sqrt_complete` (the ladder obligation) this pins the flag to `IsSquare (ψ a)`.
 
-**WARNING (false-flag direction).** The biconditional pins the flag only to the
-RETURNED candidate `r`. Until `sqrt_complete` (currently `sorry`) is proved,
-`flag = false` does NOT imply `ψ a` is a non-square: a consumer treating the flag as a
-quadratic-residuosity oracle in the false direction would be relying on the `sorry`.
-`flag = true → IsSquare (ψ a)` IS covered (take the witness `r`). -/
+**False-flag direction.** The biconditional pins the flag only to the RETURNED
+candidate `r`; on its own it does not decide quadratic residuosity in the false
+direction. Combined with `sqrt_complete` (proved at the end of this file: square
+input → flag true), `flag = false` DOES imply `ψ a` is a non-square, so the flag is
+a sound quadratic-residuosity oracle in both directions.
+`flag = true → IsSquare (ψ a)` is covered directly (take the witness `r`). -/
 theorem sqrt_ok (a : Uint4) (ha : a.toNat < p) :
     ∃ r flag, field.HelioseleneField.Insts.FfField.sqrt a = .ok (r, flag)
       ∧ r.toNat < p ∧ r.toNat % 2 = 0 ∧ (flag = true ↔ ψ r ^ 2 = ψ a) := by
@@ -1075,22 +1077,616 @@ theorem recover_y_ok (x : Uint4) (hx : x.toNat < p) :
     exact hseq
   · rw [hflag, hcv]
 
--- PROOF OBLIGATION: functional correctness of the windowed exponentiation ladder in
--- `field.verified.sqrt.sqrt`: the 16-entry table satisfies `table[i] = value^i`, the
--- fixed squaring/multiplication prefix and the 125-iteration 4-bit-window loop
--- (invariant: `res = value ^ (bits-consumed-so-far prefix of (p+1)/4)`, window flushes
--- multiplying by `table[bits]`) compute `res13 = value ^ ((p+1)/4)`. Since
--- `p ≡ 3 (mod 4)`, for a square input `(value^((p+1)/4))^2 = value` (Euler), the
--- conditional negation preserves the square, and the final `ct_eq` check succeeds.
--- ONLY this completeness direction depends on ladder correctness; the group-law
--- development uses none of it (`sqrt_ok` covers soundness of the flag).
-/-- **`sqrt` completeness (SORRIED — windowed-ladder correctness):** on a square input
-the returned validity flag is true. Together with the (proved) `sqrt_ok` this gives
+/-! ## `sqrt` completeness: functional correctness of the windowed ladder
+
+The remainder of this file proves `sqrt_complete`: on a square input the returned
+validity flag is true. The proof re-drives `field.verified.sqrt.sqrt` with
+value-carrying (`ψ`-level) specs and establishes
+* the 16-entry table satisfies `table[i] = a^i` (literal-list tracking of the 15
+  straight-line updates);
+* the fixed prefix computes `a^(2^128 - 1)` (four value-level squaring loops,
+  `sqrt_loop0_valψ`);
+* the 125-iteration 4-bit-window loop consumes exactly bits `124..0` of
+  `mp4 = (p+1)/4` (invariant `ψ res * ψ a ^ bits = ψ a ^ (mp4 >>> (125 - k))`,
+  `sqrt_loop4_valψ`), so after the final window flush `res13 = a^((p+1)/4)`;
+* Euler: since `p ≡ 3 (mod 4)`, for square `a` we get `(a^((p+1)/4))^2 = a`
+  (`pow_two_mul_mp4`; the `a = 0` case is `0^k = 0`), the conditional negation
+  preserves the square, and the final `ct_eq` self-check therefore succeeds. -/
+
+/-- The top 128 bits of the exponent constant are all ones (matches the
+`a^(2^128-1)` prefix computed before the windowed loop). -/
+private theorem mp4_shiftRight_125 : mp4 >>> 125 = 2^128 - 1 := by
+  rw [Nat.shiftRight_eq_div_pow]
+  norm_num [mp4]
+
+/-- `2·mp4 = (p+1)/2 = p/2 + 1` (`p ≡ 3 (mod 4)`). -/
+private theorem two_mul_mp4 : 2 * mp4 = p / 2 + 1 := by
+  rw [p_div_two_eq]; norm_num [mp4]
+
+private theorem mp4_pos : 0 < mp4 := by norm_num [mp4]
+
+/-- Extending a bit-prefix of `mp4` by one bit: shift-prefix recurrence. -/
+private theorem mp4_prefix_step (k : ℕ) (hk : k < 125) :
+    mp4 >>> (125 - (k+1)) = 2 * (mp4 >>> (125 - k)) + (mp4 >>> (124 - k)) % 2 := by
+  have h1 : 125 - k = (124 - k) + 1 := by omega
+  have h2 : 125 - (k+1) = 124 - k := by omega
+  rw [h1, h2, Nat.shiftRight_add, Nat.shiftRight_one]
+  omega
+
+/-- Reading bit `i` of `n` through the little-endian 64-bit limb decomposition. -/
+private theorem bit_of_limb64 (n i : ℕ) :
+    ((n >>> (64 * (i / 64))) % 2^64) >>> (i % 64) % 2 = (n >>> i) % 2 := by
+  have hr : i % 64 < 64 := Nat.mod_lt _ (by norm_num)
+  rw [Nat.shiftRight_eq_div_pow, Nat.shiftRight_eq_div_pow, Nat.shiftRight_eq_div_pow]
+  have hsplit : (2:ℕ)^64 = 2^(i % 64) * 2^(64 - i % 64) := by
+    rw [← pow_add]; congr 1; omega
+  rw [hsplit, Nat.mod_mul_right_div_self]
+  have hdvd : (2:ℕ) ∣ 2^(64 - i % 64) := dvd_pow_self 2 (by omega)
+  rw [Nat.mod_mod_of_dvd _ hdvd]
+  have hi : 64 * (i / 64) + i % 64 = i := Nat.div_add_mod i 64
+  rw [Nat.div_div_eq_div_mul, ← pow_add, hi]
+
+private theorem u64_wrapping_shr_val (x : Std.U64) (s : Std.U32) (hs : s.val < 64) :
+    (Std.U64.wrapping_shr x s).val = x.val >>> s.val := by
+  show ((Std.U64.wrapping_shr x s).bv).toNat = x.bv.toNat >>> s.val
+  rw [Std.U64.wrapping_shr_bv_eq, Nat.mod_eq_of_lt hs]
+  exact BitVec.toNat_ushiftRight x.bv s.val
+
+/-- Shifted-accumulator OR of a fresh bit is addition. -/
+private theorem or_two_mul_add (a b : ℕ) (hb : b < 2) : 2 * a ||| b = 2 * a + b := by
+  have h := Nat.two_pow_add_eq_or_of_lt (a := a) (i := 1) (b := b) (by simpa using hb)
+  simpa using h.symm
+
+/-- **Euler.** For a square `x` in `ZMod p` (`p ≡ 3 (mod 4)`): `x^(2·mp4) = x`
+(`x ≠ 0`: `x^(p/2) = 1` by Euler's criterion; `x = 0`: `0^(2·mp4) = 0`). -/
+private theorem pow_two_mul_mp4 (x : ZMod p) (hsq : IsSquare x) : x ^ (2 * mp4) = x := by
+  by_cases hx : x = 0
+  · rw [hx, zero_pow (by have := mp4_pos; omega)]
+  · have h1 := (ZMod.euler_criterion p hx).mp hsq
+    rw [two_mul_mp4, pow_succ, h1, one_mul]
+
+-- `ψ`-level forms of the remaining multiply variants used by `sqrt`.
+private theorem mul_shared_specψ (a b : Uint4) :
+    field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+      a b ⦃ r => r.toNat < p ∧ ψ r = ψ a * ψ b ⦄ := by
+  unfold field.HelioseleneField.Insts.CoreOpsArithMulShared0HelioseleneFieldHelioseleneField.mul
+  exact mul_specψ a b
+
+private theorem mul_assign_specψ (a b : Uint4) :
+    field.HelioseleneField.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign a b
+      ⦃ r => r.toNat < p ∧ ψ r = ψ a * ψ b ⦄ := by
+  unfold field.HelioseleneField.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign
+  exact mul_specψ a b
+
+private theorem mul_assign_shared_specψ (a b : Uint4) :
+    field.HelioseleneField.Insts.CoreOpsArithMulAssignShared0HelioseleneField.mul_assign a b
+      ⦃ r => r.toNat < p ∧ ψ r = ψ a * ψ b ⦄ := by
+  unfold field.HelioseleneField.Insts.CoreOpsArithMulAssignShared0HelioseleneField.mul_assign
+  exact mul_shared_specψ a b
+
+/-- Value-level repeated squaring: `sqrt_loop0` raises to the `2^n`-th power. -/
+private theorem sqrt_loop0_valψ (n : ℕ) (hn : n ≤ 64)
+    (iter : core.ops.range.Range Std.I32) (res : Uint4)
+    (hs : iter.start.val = 0) (he : iter.«end».val = (n : ℤ)) (hres : res.toNat < p) :
+    field.verified.sqrt.sqrt_loop0 iter res
+      ⦃ r => r.toNat < p ∧ ψ r = ψ res ^ (2^n) ⦄ := by
+  unfold field.verified.sqrt.sqrt_loop0
+  apply Aeneas.Std.loop.spec_decr_nat
+    (measure := fun (st : core.ops.range.Range Std.I32 × field.HelioseleneField) =>
+      (st.1.«end».val - st.1.start.val).toNat)
+    (inv := fun st => st.1.«end».val = (n:ℤ) ∧ 0 ≤ st.1.start.val ∧
+      st.1.start.val ≤ (n:ℤ) ∧ st.2.toNat < p ∧
+      ψ st.2 = ψ res ^ (2 ^ st.1.start.val.toNat))
+  · rintro ⟨it1, res1⟩ ⟨he1, hs0, hsn, hr1, hψ1⟩
+    dsimp only at he1 hs0 hsn hr1 hψ1 ⊢
+    unfold field.verified.sqrt.sqrt_loop0.body
+    step with next_I32_spec it1 (by omega) as ⟨o, it2, ho, hoend⟩
+    split at ho
+    · rename_i hlt
+      obtain ⟨ho1, hstart⟩ := ho
+      simp only [ho1]
+      step with square_specψ res1 as ⟨res2, hres2, hψ2⟩
+      have hexp : 2 ^ it2.start.val.toNat
+          = 2 ^ it1.start.val.toNat + 2 ^ it1.start.val.toNat := by
+        rw [hstart]
+        have h1 : (it1.start.val + 1).toNat = it1.start.val.toNat + 1 := by omega
+        rw [h1, pow_succ]
+        omega
+      refine ⟨by rw [hoend]; exact he1, by omega, by omega, hres2, ?_, ?_⟩
+      · rw [hψ2, hψ1, ← pow_add, hexp]
+      · rw [hoend, hstart]
+        omega
+    · rename_i hnlt
+      obtain ⟨ho1, hstart⟩ := ho
+      simp only [ho1, WP.spec_ok]
+      have hs_eq : it1.start.val = (n:ℤ) := by omega
+      refine ⟨hr1, ?_⟩
+      rw [hψ1, hs_eq]
+      norm_num
+  · dsimp only
+    refine ⟨he, by omega, by omega, hres, ?_⟩
+    rw [hs]
+    norm_num
+
+/-- Value-level windowed ladder: starting from the all-ones 128-bit prefix, the loop
+consumes bits `124..0` of `mp4`; on exit `res * a^bits = a^mp4` at the `ψ` level. -/
+private theorem sqrt_loop4_valψ (a : Uint4) (iter : core.ops.range.Range Std.Usize)
+    (table : Aeneas.Std.Array field.HelioseleneField 16#usize)
+    (res : field.HelioseleneField) (bits : Std.U8) (mp : Uint4)
+    (hs : iter.start.val = 0) (hend : iter.«end».val = 125) (hbits : bits.val = 0)
+    (hlimb : ∀ (j : ℕ) (hj : j < mp.val.length),
+        (mp.val[j]'hj).val = (mp4 >>> (64 * j)) % 2^64)
+    (htab : ∀ (j : ℕ), j < 16 → ∀ (hjl : j < table.val.length),
+        ψ (table.val[j]'hjl) = ψ a ^ j)
+    (hres : ψ res = ψ a ^ (mp4 >>> 125)) :
+    field.verified.sqrt.sqrt_loop4 iter table res bits mp
+      ⦃ (r : field.HelioseleneField) (bs : Std.U8) =>
+          bs.val < 8 ∧ ψ r * ψ a ^ bs.val = ψ a ^ mp4 ⦄ := by
+  unfold field.verified.sqrt.sqrt_loop4
+  apply Aeneas.Std.loop.spec_decr_nat
+    (measure := fun (st : core.ops.range.Range Std.Usize × field.HelioseleneField × Std.U8) =>
+      125 - st.1.start.val)
+    (inv := fun st => st.1.«end».val = 125 ∧ st.1.start.val ≤ 125 ∧ st.2.2.val < 8 ∧
+      ψ st.2.1 * ψ a ^ st.2.2.val = ψ a ^ (mp4 >>> (125 - st.1.start.val)))
+  · rintro ⟨it1, res_c, bits_c⟩ ⟨he1, hle1, hb1, hinv⟩
+    dsimp only at he1 hle1 hb1 hinv ⊢
+    unfold field.verified.sqrt.sqrt_loop4.body
+    step as ⟨o, it2, ho, hoend⟩
+    split at ho
+    · rename_i hlt
+      obtain ⟨ho1, hstart⟩ := ho
+      simp only [ho1]
+      have hk : it1.start.val ≤ 124 := by omega
+      step with lift_spec (Std.Usize.wrapping_sub 124#usize it1.start) as ⟨i, hi⟩
+      have hiv : i.val = 124 - it1.start.val := by
+        rw [hi]
+        simp only [Usize.wrapping_sub_val_eq]
+        have h124 : (124#usize).val = 124 := by simp
+        rw [h124]
+        have hsz : 2^32 ≤ UScalar.size .Usize := by
+          rw [UScalar.size]
+          rcases System.Platform.numBits_eq with h | h <;> simp [UScalarTy.numBits, h]
+        have hstart_lt : it1.start.val < UScalar.size .Usize := by
+          rw [UScalar.size]
+          exact it1.start.hBounds
+        have heq2 : 124 + (UScalar.size .Usize - it1.start.val)
+            = (124 - it1.start.val) + UScalar.size .Usize := by omega
+        rw [heq2, Nat.add_mod_right, Nat.mod_eq_of_lt (by omega)]
+      step with lift_spec (Std.U8.wrapping_shl bits_c 1#u32) as ⟨sh, hsh⟩
+      have hshv : sh.val = 2 * bits_c.val := by
+        rw [hsh]; exact u8_shl1_val bits_c (by omega)
+      step as ⟨i1, hi1⟩
+      step as ⟨l, hl⟩
+      step as ⟨i2, hi2⟩
+      step with lift_spec (UScalar.cast .U32 i2) as ⟨i3, hi3⟩
+      have hi2v : i2.val = i.val % 64 := by
+        rw [hi2]
+      have hi2lt : i2.val < 64 := by rw [hi2v]; exact Nat.mod_lt _ (by norm_num)
+      have hi3v : i3.val = i2.val := by
+        rw [hi3, UScalar.cast_val_eq]
+        exact Nat.mod_eq_of_lt (lt_of_lt_of_le hi2lt (by norm_num))
+      step with lift_spec (Std.U64.wrapping_shr l i3) as ⟨i4, hi4⟩
+      have hi4v : i4.val = l.val >>> i2.val := by
+        rw [hi4, u64_wrapping_shr_val l i3 (by omega), hi3v]
+      step as ⟨i5, hi5v, hi5bv⟩
+      have hi5val : i5.val = i4.val % 2 := by
+        rw [hi5v]
+        simp only [UScalar.val_and]
+        rw [show (1#u64).val = 1 from by simp, Nat.and_one_is_mod]
+      step with lift_spec (UScalar.cast .U8 i5) as ⟨bit, hbit⟩
+      have hbitle : i5.val ≤ 1 := by
+        rw [hi5val]; omega
+      have hbitv : bit.val = i5.val := by
+        rw [hbit, UScalar.cast_val_eq]
+        exact Nat.mod_eq_of_lt (lt_of_le_of_lt hbitle (by norm_num))
+      -- the extracted bit is bit (124 - k) of mp4
+      have hi1v : i1.val = i.val / 64 := by
+        rw [hi1]
+      have hlv : l.val = (mp4 >>> (64 * i1.val)) % 2^64 := by
+        rw [hl]
+        exact hlimb i1.val (by scalar_tac)
+      have hbit_mp4 : bit.val = (mp4 >>> i.val) % 2 := by
+        rw [hbitv, hi5val, hi4v, hlv, hi1v, hi2v]
+        exact bit_of_limb64 mp4 i.val
+      step as ⟨bits2, hbits2v, hbits2bv⟩
+      simp only [UScalar.val_or] at hbits2v
+      have hb16 : bits2.val < 16 := by
+        have hor := Nat.or_lt_two_pow (x := sh.val) (y := bit.val) (n := 4)
+          (by omega) (by omega)
+        rw [hbits2v]
+        omega
+      have hbits2val : bits2.val = 2 * bits_c.val + bit.val := by
+        rw [hbits2v, hshv]
+        exact or_two_mul_add bits_c.val bit.val (by omega)
+      step with square_specψ res_c as ⟨res2, hres2red, hres2ψ⟩
+      step with lift_spec (Std.U8.wrapping_shl 1#u8 3#u32) as ⟨i6, hi6⟩
+      have hi6v : i6.val = 8 := by rw [hi6]; exact u8_shl3_1_val
+      step as ⟨i7, hi7v, hi7bv⟩
+      simp only [UScalar.val_and] at hi7v
+      -- invariant-step equation, shared by both branches
+      have hk125 : it1.start.val < 125 := by omega
+      have hEstep := mp4_prefix_step it1.start.val hk125
+      have hbitval_eq : bit.val = (mp4 >>> (124 - it1.start.val)) % 2 := by
+        rw [hbit_mp4, hiv]
+      have hstep : ψ res2 * ψ a ^ bits2.val
+          = ψ a ^ (mp4 >>> (125 - (it1.start.val + 1))) := by
+        rw [hres2ψ, hbits2val, hEstep, ← hbitval_eq]
+        have h1 : ψ res_c * ψ res_c * ψ a ^ (2 * bits_c.val + bit.val)
+            = (ψ res_c * ψ a ^ bits_c.val) * (ψ res_c * ψ a ^ bits_c.val)
+              * ψ a ^ bit.val := by
+          ring
+        rw [h1, hinv, ← pow_add, ← pow_add, Nat.two_mul]
+      split
+      · -- window full: multiply by table[bits2], reset bits to 0
+        rename_i hne
+        step with lift_spec (core.convert.num.FromUsizeU8.from bits2) as ⟨i8, hi8⟩
+        have hi8v : i8.val = bits2.val := by
+          rw [hi8]; exact core.convert.num.FromUsizeU8.from_val_eq bits2
+        step with Aeneas.Std.Array.index_usize_spec table i8
+          (by rw [hi8v]; scalar_tac) as ⟨hf, hhf⟩
+        have hψhf : ψ hf = ψ a ^ bits2.val := by
+          rw [hhf, htab i8.val (by omega) (by scalar_tac), hi8v]
+        step with mul_assign_specψ res2 hf as ⟨res3, hres3red, hres3ψ⟩
+        refine ⟨by rw [hoend]; exact he1, by omega, by simp, ?_, ?_⟩
+        · rw [hstart]
+          rw [show ((0#u8) : Std.U8).val = 0 from by simp, pow_zero, mul_one,
+            hres3ψ, hψhf]
+          exact hstep
+        · rw [hstart]
+          omega
+      · -- window not yet full: keep accumulating
+        rename_i hzero
+        simp only [Bool.not_eq_true, bne_eq_false_iff_eq] at hzero
+        have hi7z : i7.val = 0 := by rw [hzero]; simp
+        refine ⟨by rw [hoend]; exact he1, by dsimp only; omega, ?_, ?_, ?_⟩
+        · apply and8_lt bits2.val hb16
+          rw [← hi6v, ← hi7v]
+          exact hi7z
+        · rw [hstart]
+          exact hstep
+        · rw [hstart]
+          omega
+    · rename_i hnlt
+      obtain ⟨ho1, hstart⟩ := ho
+      simp only [ho1, WP.spec_ok]
+      refine ⟨hb1, ?_⟩
+      have hs_eq : it1.start.val = 125 := by omega
+      rw [hs_eq] at hinv
+      simpa using hinv
+  · dsimp only
+    refine ⟨hend, by omega, by omega, ?_⟩
+    rw [hs, Nat.sub_zero, hbits, pow_zero, mul_one, hres]
+
+/-- The completeness drive: `sqrt` re-driven with value-carrying specs; on a reduced
+square input the returned flag is true. -/
+private theorem sqrt_completeψ (a : Uint4) (ha : a.toNat < p) (hsq : IsSquare (ψ a)) :
+    field.verified.sqrt.sqrt a
+      ⦃ (_r : field.HelioseleneField) (flag : Bool) => flag = true ⦄ := by
+  unfold field.verified.sqrt.sqrt
+  step with FfONE_spec as ⟨one, hone⟩
+  step as ⟨table1, htable1⟩
+  step with square_specψ a as ⟨hf1, hhf1red, hhf1ψ⟩
+  step as ⟨table2, htable2⟩
+  step as ⟨hf2, hhf2⟩
+  step with mul_shared_specψ hf2 a as ⟨hf3, hhf3red, hhf3ψ⟩
+  step as ⟨table3, htable3⟩
+  step as ⟨hf4, hhf4⟩
+  step with square_specψ hf4 as ⟨hf5, hhf5red, hhf5ψ⟩
+  step as ⟨table4, htable4⟩
+  step as ⟨hf6, hhf6⟩
+  step with mul_shared_specψ hf6 a as ⟨hf7, hhf7red, hhf7ψ⟩
+  step as ⟨table5, htable5⟩
+  step as ⟨hf8, hhf8⟩
+  step with square_specψ hf8 as ⟨hf9, hhf9red, hhf9ψ⟩
+  step as ⟨table6, htable6⟩
+  step as ⟨hf10, hhf10⟩
+  step with mul_shared_specψ hf10 a as ⟨hf11, hhf11red, hhf11ψ⟩
+  step as ⟨table7, htable7⟩
+  step as ⟨hf12, hhf12⟩
+  step with square_specψ hf12 as ⟨hf13, hhf13red, hhf13ψ⟩
+  step as ⟨table8, htable8⟩
+  step as ⟨hf14, hhf14⟩
+  step with mul_shared_specψ hf14 a as ⟨hf15, hhf15red, hhf15ψ⟩
+  step as ⟨table9, htable9⟩
+  step as ⟨hf16, hhf16⟩
+  step with square_specψ hf16 as ⟨hf17, hhf17red, hhf17ψ⟩
+  step as ⟨table10, htable10⟩
+  step as ⟨hf18, hhf18⟩
+  step with mul_shared_specψ hf18 a as ⟨hf19, hhf19red, hhf19ψ⟩
+  step as ⟨table11, htable11⟩
+  step as ⟨hf20, hhf20⟩
+  step with square_specψ hf20 as ⟨hf21, hhf21red, hhf21ψ⟩
+  step as ⟨table12, htable12⟩
+  step as ⟨hf22, hhf22⟩
+  step with mul_shared_specψ hf22 a as ⟨hf23, hhf23red, hhf23ψ⟩
+  step as ⟨table13, htable13⟩
+  step as ⟨hf24, hhf24⟩
+  step with square_specψ hf24 as ⟨hf25, hhf25red, hhf25ψ⟩
+  step as ⟨table14, htable14⟩
+  step as ⟨hf26, hhf26⟩
+  step with mul_shared_specψ hf26 a as ⟨hf27, hhf27red, hhf27ψ⟩
+  step as ⟨table15, htable15⟩
+  step as ⟨res, hres⟩
+  -- table content, as literal lists
+  have htv1 : table1.val = [one, a, one, one, one, one, one, one,
+      one, one, one, one, one, one, one, one] := by
+    rw [htable1, Array.set_val_eq, Array.repeat_val,
+      show (16#usize).val = 16 from by simp, show (1#usize).val = 1 from by simp]
+    rfl
+  have htv2 : table2.val = [one, a, hf1, one, one, one, one, one,
+      one, one, one, one, one, one, one, one] := by
+    rw [htable2, Array.set_val_eq, htv1, show (2#usize).val = 2 from by simp]
+    rfl
+  have htv3 : table3.val = [one, a, hf1, hf3, one, one, one, one,
+      one, one, one, one, one, one, one, one] := by
+    rw [htable3, Array.set_val_eq, htv2, show (3#usize).val = 3 from by simp]
+    rfl
+  have htv4 : table4.val = [one, a, hf1, hf3, hf5, one, one, one,
+      one, one, one, one, one, one, one, one] := by
+    rw [htable4, Array.set_val_eq, htv3, show (4#usize).val = 4 from by simp]
+    rfl
+  have htv5 : table5.val = [one, a, hf1, hf3, hf5, hf7, one, one,
+      one, one, one, one, one, one, one, one] := by
+    rw [htable5, Array.set_val_eq, htv4, show (5#usize).val = 5 from by simp]
+    rfl
+  have htv6 : table6.val = [one, a, hf1, hf3, hf5, hf7, hf9, one,
+      one, one, one, one, one, one, one, one] := by
+    rw [htable6, Array.set_val_eq, htv5, show (6#usize).val = 6 from by simp]
+    rfl
+  have htv7 : table7.val = [one, a, hf1, hf3, hf5, hf7, hf9, hf11,
+      one, one, one, one, one, one, one, one] := by
+    rw [htable7, Array.set_val_eq, htv6, show (7#usize).val = 7 from by simp]
+    rfl
+  have htv8 : table8.val = [one, a, hf1, hf3, hf5, hf7, hf9, hf11,
+      hf13, one, one, one, one, one, one, one] := by
+    rw [htable8, Array.set_val_eq, htv7, show (8#usize).val = 8 from by simp]
+    rfl
+  have htv9 : table9.val = [one, a, hf1, hf3, hf5, hf7, hf9, hf11,
+      hf13, hf15, one, one, one, one, one, one] := by
+    rw [htable9, Array.set_val_eq, htv8, show (9#usize).val = 9 from by simp]
+    rfl
+  have htv10 : table10.val = [one, a, hf1, hf3, hf5, hf7, hf9, hf11,
+      hf13, hf15, hf17, one, one, one, one, one] := by
+    rw [htable10, Array.set_val_eq, htv9, show (10#usize).val = 10 from by simp]
+    rfl
+  have htv11 : table11.val = [one, a, hf1, hf3, hf5, hf7, hf9, hf11,
+      hf13, hf15, hf17, hf19, one, one, one, one] := by
+    rw [htable11, Array.set_val_eq, htv10, show (11#usize).val = 11 from by simp]
+    rfl
+  have htv12 : table12.val = [one, a, hf1, hf3, hf5, hf7, hf9, hf11,
+      hf13, hf15, hf17, hf19, hf21, one, one, one] := by
+    rw [htable12, Array.set_val_eq, htv11, show (12#usize).val = 12 from by simp]
+    rfl
+  have htv13 : table13.val = [one, a, hf1, hf3, hf5, hf7, hf9, hf11,
+      hf13, hf15, hf17, hf19, hf21, hf23, one, one] := by
+    rw [htable13, Array.set_val_eq, htv12, show (13#usize).val = 13 from by simp]
+    rfl
+  have htv14 : table14.val = [one, a, hf1, hf3, hf5, hf7, hf9, hf11,
+      hf13, hf15, hf17, hf19, hf21, hf23, hf25, one] := by
+    rw [htable14, Array.set_val_eq, htv13, show (14#usize).val = 14 from by simp]
+    rfl
+  have htv15 : table15.val = [one, a, hf1, hf3, hf5, hf7, hf9, hf11,
+      hf13, hf15, hf17, hf19, hf21, hf23, hf25, hf27] := by
+    rw [htable15, Array.set_val_eq, htv14, show (15#usize).val = 15 from by simp]
+    rfl
+  -- resolve the table lookups
+  have hf2eq : hf2 = hf1 := by
+    rw [hhf2]
+    simp only [htv2]
+    rfl
+  have hf4eq : hf4 = hf1 := by
+    rw [hhf4]
+    simp only [htv3]
+    rfl
+  have hf6eq : hf6 = hf5 := by
+    rw [hhf6]
+    simp only [htv4]
+    rfl
+  have hf8eq : hf8 = hf3 := by
+    rw [hhf8]
+    simp only [htv5]
+    rfl
+  have hf10eq : hf10 = hf9 := by
+    rw [hhf10]
+    simp only [htv6]
+    rfl
+  have hf12eq : hf12 = hf5 := by
+    rw [hhf12]
+    simp only [htv7]
+    rfl
+  have hf14eq : hf14 = hf13 := by
+    rw [hhf14]
+    simp only [htv8]
+    rfl
+  have hf16eq : hf16 = hf7 := by
+    rw [hhf16]
+    simp only [htv9]
+    rfl
+  have hf18eq : hf18 = hf17 := by
+    rw [hhf18]
+    simp only [htv10]
+    rfl
+  have hf20eq : hf20 = hf9 := by
+    rw [hhf20]
+    simp only [htv11]
+    rfl
+  have hf22eq : hf22 = hf21 := by
+    rw [hhf22]
+    simp only [htv12]
+    rfl
+  have hf24eq : hf24 = hf11 := by
+    rw [hhf24]
+    simp only [htv13]
+    rfl
+  have hf26eq : hf26 = hf25 := by
+    rw [hhf26]
+    simp only [htv14]
+    rfl
+  have hreseq : res = hf27 := by
+    rw [hres]
+    simp only [htv15]
+    rfl
+  -- ψ-powers of the table entries
+  have hψ0 : ψ one = ψ a ^ 0 := by
+    rw [pow_zero]
+    unfold ψ
+    rw [hone]
+    exact Nat.cast_one
+  have hψ1 : ψ a = ψ a ^ 1 := (pow_one (ψ a)).symm
+  have hψT2 : ψ hf1 = ψ a ^ 2 := by rw [hhf1ψ]; ring
+  have hψT3 : ψ hf3 = ψ a ^ 3 := by rw [hhf3ψ, hf2eq, hψT2]; ring
+  have hψT4 : ψ hf5 = ψ a ^ 4 := by rw [hhf5ψ, hf4eq, hψT2]; ring
+  have hψT5 : ψ hf7 = ψ a ^ 5 := by rw [hhf7ψ, hf6eq, hψT4]; ring
+  have hψT6 : ψ hf9 = ψ a ^ 6 := by rw [hhf9ψ, hf8eq, hψT3]; ring
+  have hψT7 : ψ hf11 = ψ a ^ 7 := by rw [hhf11ψ, hf10eq, hψT6]; ring
+  have hψT8 : ψ hf13 = ψ a ^ 8 := by rw [hhf13ψ, hf12eq, hψT4]; ring
+  have hψT9 : ψ hf15 = ψ a ^ 9 := by rw [hhf15ψ, hf14eq, hψT8]; ring
+  have hψT10 : ψ hf17 = ψ a ^ 10 := by rw [hhf17ψ, hf16eq, hψT5]; ring
+  have hψT11 : ψ hf19 = ψ a ^ 11 := by rw [hhf19ψ, hf18eq, hψT10]; ring
+  have hψT12 : ψ hf21 = ψ a ^ 12 := by rw [hhf21ψ, hf20eq, hψT6]; ring
+  have hψT13 : ψ hf23 = ψ a ^ 13 := by rw [hhf23ψ, hf22eq, hψT12]; ring
+  have hψT14 : ψ hf25 = ψ a ^ 14 := by rw [hhf25ψ, hf24eq, hψT7]; ring
+  have hψT15 : ψ hf27 = ψ a ^ 15 := by rw [hhf27ψ, hf26eq, hψT14]; ring
+  -- the table lemma
+  have htab : ∀ (j : ℕ), j < 16 → ∀ (hjl : j < table15.val.length),
+      ψ (table15.val[j]'hjl) = ψ a ^ j := by
+    intro j hj hjl
+    simp only [htv15]
+    interval_cases j
+    · exact hψ0
+    · exact hψ1
+    · exact hψT2
+    · exact hψT3
+    · exact hψT4
+    · exact hψT5
+    · exact hψT6
+    · exact hψT7
+    · exact hψT8
+    · exact hψT9
+    · exact hψT10
+    · exact hψT11
+    · exact hψT12
+    · exact hψT13
+    · exact hψT14
+    · exact hψT15
+  -- the fixed prefix chain: a^15 → a^255 → a^(2^16-1) → a^(2^32-1) → a^(2^64-1) → a^(2^128-1)
+  have hψres : ψ res = ψ a ^ 15 := by rw [hreseq]; exact hψT15
+  step with square_specψ res as ⟨fz, hfzred, hfzψ⟩
+  step with square_specψ fz as ⟨fzz, hfzzred, hfzzψ⟩
+  step with square_specψ fzz as ⟨res1, hres1red, hres1ψ⟩
+  step with square_specψ res1 as ⟨res2, hres2red, hres2ψ⟩
+  step with mul_assign_shared_specψ res2 res as ⟨res3, hres3red, hres3ψ⟩
+  have hψr3 : ψ res3 = ψ a ^ 255 := by
+    rw [hres3ψ, hres2ψ, hres1ψ, hfzzψ, hfzψ, hψres]
+    ring
+  step with sqrt_loop0_valψ 8 (by norm_num) { start := 0#i32, «end» := 8#i32 } res3
+    (by simp) (by simp) hres3red as ⟨res4, hres4red, hres4ψ⟩
+  step with mul_assign_shared_specψ res4 res3 as ⟨res5, hres5red, hres5ψ⟩
+  have hψr5 : ψ res5 = ψ a ^ 65535 := by
+    rw [hres5ψ, hres4ψ, hψr3]
+    ring
+  rw [sqrt_loop1_eq]
+  step with sqrt_loop0_valψ 16 (by norm_num) { start := 0#i32, «end» := 16#i32 } res5
+    (by simp) (by simp) hres5red as ⟨res6, hres6red, hres6ψ⟩
+  step with mul_assign_specψ res6 res5 as ⟨res7, hres7red, hres7ψ⟩
+  have hψr7 : ψ res7 = ψ a ^ 4294967295 := by
+    rw [hres7ψ, hres6ψ, hψr5]
+    ring
+  rw [sqrt_loop2_eq]
+  step with sqrt_loop0_valψ 32 (by norm_num) { start := 0#i32, «end» := 32#i32 } res7
+    (by simp) (by simp) hres7red as ⟨res8, hres8red, hres8ψ⟩
+  step with mul_assign_specψ res8 res7 as ⟨res9, hres9red, hres9ψ⟩
+  have hψr9 : ψ res9 = ψ a ^ 18446744073709551615 := by
+    rw [hres9ψ, hres8ψ, hψr7]
+    ring
+  rw [sqrt_loop3_eq]
+  step with sqrt_loop0_valψ 64 (by norm_num) { start := 0#i32, «end» := 64#i32 } res9
+    (by simp) (by simp) hres9red as ⟨res10, hres10red, hres10ψ⟩
+  step with mul_assign_specψ res10 res9 as ⟨res11, hres11red, hres11ψ⟩
+  have hψr11 : ψ res11 = ψ a ^ (mp4 >>> 125) := by
+    rw [mp4_shiftRight_125, hres11ψ, hres10ψ, hψr9]
+    norm_num
+    ring
+  -- the exponent constant and its limbs
+  obtain ⟨mp, hmpeq, hmpv⟩ := MPODF_ok
+  rw [hmpeq]
+  simp only [bind_tc_ok]
+  rw [Uint.as_limbs_ok]
+  simp only [bind_tc_ok]
+  have hmp_eq2 : mp = Uint.ofNat 4#usize mp4 := by rw [← hmpv, Uint.ofNat_toNat]
+  have hmap : mp.val.map UScalar.val
+      = List.ofFn (fun i : Fin (4#usize).val => (mp4 >>> (64 * i.val)) % 2^64) := by
+    rw [hmp_eq2]
+    exact Uint.ofNat_val_map 4#usize mp4
+  have hlimb : ∀ (j : ℕ) (hj : j < mp.val.length),
+      (mp.val[j]'hj).val = (mp4 >>> (64 * j)) % 2^64 := by
+    intro j hj
+    have hj' : j < (mp.val.map UScalar.val).length := by
+      rw [List.length_map]
+      exact hj
+    have h1 : (mp.val.map UScalar.val)[j]'hj' = (mp4 >>> (64 * j)) % 2^64 := by
+      simp only [hmap, List.getElem_ofFn]
+    rw [List.getElem_map] at h1
+    exact h1
+  -- the windowed ladder
+  step with sqrt_loop4_valψ a { start := 0#usize, «end» := 125#usize } table15 res11 0#u8 mp
+    (by simp) (by simp) (by simp) hlimb htab hψr11
+    as ⟨res12, bits, hbits8, hbitsψ⟩
+  -- final window flush
+  step with lift_spec (core.convert.num.FromUsizeU8.from bits) as ⟨idx, hidx⟩
+  have hidxv : idx.val = bits.val := by
+    rw [hidx]
+    exact core.convert.num.FromUsizeU8.from_val_eq bits
+  have hlen15 : table15.val.length = 16 := by rw [htv15]; rfl
+  step with Aeneas.Std.Array.index_usize_spec table15 idx
+    (by show idx.val < table15.val.length; rw [hlen15, hidxv]; omega) as ⟨hf29, hhf29⟩
+  have hψhf29 : ψ hf29 = ψ a ^ bits.val := by
+    rw [hhf29, htab idx.val (by omega) (by rw [hlen15, hidxv]; omega), hidxv]
+  step with mul_assign_specψ res12 hf29 as ⟨res13, hres13red, hres13ψ⟩
+  have hψres13 : ψ res13 = ψ a ^ mp4 := by
+    rw [hres13ψ, hψhf29]
+    exact hbitsψ
+  -- even-normalization preserves the square
+  step with ff_is_odd_spec res13 as ⟨codd, hcodd⟩
+  step with cond_negate_spec res13 hres13red codd as ⟨res14, hres14⟩
+  have hres14sq : ψ res14 ^ 2 = ψ res13 ^ 2 := by
+    by_cases hcb : codd = true
+    · have h1 : ψ res14 = -ψ res13 := by
+        unfold ψ
+        rw [hres14, if_pos hcb, ZMod.natCast_mod]
+        push_cast [Nat.cast_sub (le_of_lt hres13red)]
+        rw [ZMod.natCast_self]
+        ring
+      rw [h1, neg_sq]
+    · have h2 : ψ res14 = ψ res13 := by
+        unfold ψ
+        rw [hres14, if_neg hcb]
+      rw [h2]
+  -- the final self-check must pass: (a^((p+1)/4))^2 = a for square a (Euler, p ≡ 3 mod 4)
+  step with square_valψ res14 as ⟨hf30, hhf30l, hhf30v⟩
+  step with fct_eq_spec hf30 a as ⟨c1, hc1⟩
+  rw [CtOption.new_ok]
+  simp only [WP.spec_ok, WP.uncurry'_pair]
+  rw [hc1, beq_iff_eq, ← ψ_inj_iff hf30 a hhf30l ha]
+  have hψ30 : ψ hf30 = ψ res14 ^ 2 := by
+    unfold ψ
+    rw [hhf30v, ZMod.natCast_mod]
+    push_cast
+    rw [pow_two]
+  rw [hψ30, hres14sq, hψres13, ← pow_mul, Nat.mul_comm mp4 2]
+  exact pow_two_mul_mp4 (ψ a) hsq
+
+/-- **`sqrt` completeness (windowed-ladder correctness, PROVED):** on a square input
+the returned validity flag is true. Together with `sqrt_ok` this gives
 `flag = true ↔ IsSquare (ψ a)`; the reverse direction `flag = true → IsSquare (ψ a)`
 already follows from `sqrt_ok` (`ψ r ^ 2 = ψ a`). -/
 theorem sqrt_complete (a : Uint4) (ha : a.toNat < p) (r : Uint4) (flag : Bool)
     (heq : field.HelioseleneField.Insts.FfField.sqrt a = .ok (r, flag))
-    (hsq : IsSquare (ψ a)) : flag = true := sorry
+    (hsq : IsSquare (ψ a)) : flag = true := by
+  have hspec := sqrt_completeψ a ha hsq
+  unfold field.HelioseleneField.Insts.FfField.sqrt at heq
+  rw [heq] at hspec
+  simpa using hspec
 
 end Selene
 

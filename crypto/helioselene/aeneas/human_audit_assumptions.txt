@@ -2,99 +2,115 @@
 HUMAN AUDIT ASSUMPTIONS — helioselene finite-field formalization
 ================================================================================
 
-Status snapshot this list belongs to: 2026-07-07, monero-oxide commit
+Status snapshot: 2026-07-10 (package-wide Stage-5 update), monero-oxide commit
 6313959f906fe754909754ac642134237dae42a9, artifact crypto/helioselene/aeneas/.
 
-[2026-07-09 NOTE — FROZEN AT THE 2026-07-07 SELENE STAGE. The 2026-07-08 third
-charon run (Helios group-law core, point::helios) changed two counts quoted
-below: the `_native.decide` string-length axiom class of V.5 is now NINE (adds
-point.helios.B and point.helios.G_Y), and the FunsExternal.lean existence-only
-axiom inventory of VIII.2 is now 48 (21 dalek items became concrete behavioural
-ZMod models — load-bearing for the HELIOS stage only — and 15 new third-run
-axioms were added). Bracketed updates appear in place at V.5 and VIII.2.
-Everything else in this file is unaffected: the field-layer and Selene proof
-cones did not change. The Helios stage has its own ledger,
-human_audit_assumptions_helios.txt; see also human_audit_assumptions_selene.txt
-II.4/III.4 and README sections 3, 5c and 7.]
+[2026-07-10 RESOLUTION — The production source now includes the selected
+`add_two_modulus` contribution in the high-half carry chain and deletes the
+conditional top-bit OR. `Invert.step_congruence`, all 510 inversion steps and
+`invert_ok` are proved without `UVWindow`; the Spec tree contains zero proof
+holes. Section I.1 below is retained as the historical audit finding that led
+to the source correction, not as a current assumption.]
+
+[2026-07-10 STAGES 3/5 UPDATE — The Helios group-law run made the idealized
+dalek coordinate model load-bearing and the scalar run translated both
+fixed-window ladders. The current `_native.decide` string-length class has nine
+members and FunsExternal.lean has 39 existence-only axioms, all outside the
+headline proof cones. `Spec/ScalarMulLaws.lean` proves both exact generated
+ladders equal natural repeated addition and installs unconditional
+`DistribSMul`; full `Module` laws remain conditional on explicit curve-
+exponent certificates. Section IX records the shared package-level scalar
+assumptions. The complete per-curve checklists are
+human_audit_assumptions_selene.txt §V and
+human_audit_assumptions_helios.txt §V.]
 
 The Lean development proves:
   * Fintype HField, Fintype.card HField = p          (no assumptions beyond IV/V)
   * phiRing : HField ≃+* ZMod p  (ring isomorphism)  (sorry-free)
   * p_prime : Nat.Prime p                            (kernel-only Pratt certificate)
-  * instFieldHField : Field HField                   (modulo assumption I.1)
+  * instFieldHField : Field HField                   (sorry-free)
   * ThetaAddEquiv : SClass ≃+ W.toAffine.Point       (sorry-free; the Selene group
     law — see VIII.6)
-  * sqrt_ok (square-root soundness contract)         (sorry-free; completeness
-    half sqrt_complete open — see I.2)
+  * sqrt_ok + sqrt_complete                          (sorry-free)
+  * Helios.ThetaAddEquiv : HClass ≃+ W.toAffine.Point (sorry-free; idealized
+    dalek coordinate boundary — companion Helios ledger)
+  * SeleneLadder.mul_spec / HeliosLadder.mul_spec    (sorry-free; exact
+    generated scalar ladders equal natural repeated addition)
 
-This file lists EVERY assumption that remains between those theorems and the
-statement "the Rust field implementation in crypto/helioselene/src/field is a
-correct finite field of order p". Each item states what is assumed, what could
-still be broken in the Rust code if the assumption is false, and where a human
-should look. Items are ordered by how much a targeted human review buys.
+This file is the package/field-level ledger. Together with the Selene and
+Helios companion ledgers it lists every assumption between the headline
+theorems and the corresponding claims about compiled Rust. Each item states
+what is assumed, what could still be broken if it is false, and where a human
+should look. Items are ordered by how much a targeted review buys.
 
 --------------------------------------------------------------------------------
-I. OPEN PROOF OBLIGATIONS (the two `sorry`s in the tree)
+I. HISTORICAL PROOF OBLIGATIONS (BOTH DISCHARGED 2026-07-10)
 --------------------------------------------------------------------------------
 
-I.1  HelioseleneSpec.Invert.step_congruence
-     (HelioseleneCore/Spec/Invert.lean; one of exactly two `sorry`s in the
-     tree, the other being I.2)
+I.1  HelioseleneSpec.Invert.step_congruence — DISCHARGED 2026-07-10 by the
+     production high-half carry-chain correction described above and in the
+     README. The detailed entry below is retained as the historical finding
+     against the former top-bit-OR implementation.
 
-  ASSUMED: one iteration of the branch-free binary-GCD `step` preserves the
-  Algorithm-1 invariant (b odd; u,v <= p; a = u*y and b = v*y mod p;
-  gcd(a,b) = gcd(y,p)) and halves the potential (2*a'*b' <= a*b).
-  Everything else about `invert` IS proved: totality (no panic, all 510
-  iterations, all indexing in range), the induction assembling the 510 steps,
-  the zero-input case (invert(0) yields value 0, flag false), and flag = (a != 0).
+  HISTORICAL PRE-CORRECTION STATE: everything else about one GCD `step` was
+  PROVED from
+  the machine-level carry-chain ledger: the a-side (|a-b| computation, halving,
+  gcd preservation, a',b' <= p), the u-side congruence a' = u'*y and bound
+  u' <= p UNDER the window hypothesis, b'-oddness, and the potential halving
+  2a'b' <= ab. The then-remaining sorry was exactly: the output state stays inside
+  the chain's correctness window (UVWindow: in the two mask orientations that
+  reach the add_two_modulus path, |u - v| <= C := 2p - 2^255 = p - gamma).
 
-  IF FALSE: HelioseleneField::invert returns a wrong inverse for some inputs.
-  Every division/normalization built on it (e.g. point decompression flows,
-  batch inversion by callers) silently computes garbage. This is the classic
-  failure mode of optimized constant-time GCD inverses (cf. historical bugs in
-  other libraries' Bernstein-Yang implementations).
+  WHY THIS WAS THE HARD CORE (audit-relevant historical record):
+  a) The fused negate-and-add-modulus chain (invert.rs L139-165) uses the
+     top-bit OR `u[3] |= add_two << 63` as a stand-in for `+ 2^255`. That is
+     only an addition while bit 255 of the pre-OR value is clear — i.e. while
+     |u - v_masked| <= C. The threshold is SHARP (verified bit-exactly against
+     the extracted code: correct at C, wrong at C+2).
+  b) TWO counterexample families against state-local invariants were verified
+     by execution: (y,a,b,u,v) = (2, p+2, p, 1, p) kills the original
+     statement (u,v <= p only), and (w, w, p-2w, 1, p-2) for odd
+     w in [p/3, p/2) kills the a,b <= p repair as well. The violating region
+     has measure ~ 2^-132 among random invariant states — invisible to
+     fuzzing; found by targeted analysis.
+  c) NO state-local invariant can be inductive: window-safety is a
+     trace-global property of the states reachable from (y, p, 1, 0).
+  d) On scaled-down models (all primes 2^(m-2) < q < 2^(m-1), m = 8..11,
+     exhaustive over ALL inputs) the chain FAILS for most primes. The real
+     p is safe empirically because gamma = 2^255 - p ~ 2^123 sits 132 bits
+     below p; the reachable danger set has heuristic measure ~ (gamma/p)^2
+     per step-input pair, i.e. ~ 1 EXPECTED bad (y, step) pair over all
+     2^255 inputs. "Correct for every input" is plausibly — but NOT
+     certainly — true, and is not provable by local methods.
+  e) Veridise's Dafny artifact DOES NOT COVER THIS: Invert.dfy replaces the
+     fused chain with branching exact-mod-p arithmetic and asserts, without
+     proof, that the Rust "produces the same value modulo p". The gap in
+     the existing formal-verification story is exactly here.
 
-  HUMAN FOCUS: crypto/helioselene/src/field/verified/invert.rs lines ~29-182,
-  specifically the mask arithmetic that (a) negates u_sub_v via XOR+carry when
-  should_negate is set (lines ~111-163), (b) adds one or two copies of the
-  modulus selected through MODULUS_XOR_TWO_MODULUS (lines ~127-165), and
-  (c) restores bit 255 via the `add_two_modulus << 63` OR (line ~164-165).
-  Cross-check: the Veridise Dafny proofs cover exactly this step
-  (https://github.com/VeridiseAuditing/helioselene-dafny-proofs,
-  helioselene/field/Base.dfy); eprint 2020/972 Algorithm 1 is the reference.
-  Mitigating evidence: 15 end-to-end invert test vectors (random + edge cases)
-  pass against independent ground truth, exercising all 510 iterations.
+  EVIDENCE COLLECTED FOR THE FORMER OR SPELLING: 2016 full 510-step traces (incl.
+  adversarial edge values) + 500 random inverts all in-window with >= 115
+  bits of margin; the first-order danger family (u = 2^-k mod p, v = 0)
+  checked for k <= 1200; all crate tests and our 15 invert vectors pass.
 
-I.2  HelioseleneSpec.Selene.sqrt_complete
-     (HelioseleneCore/Spec/Selene/Ops.lean; the second of the two `sorry`s)
+  HISTORICAL PATHS TO CLOSURE (option (ii) was selected and implemented):
+  (i)  Accept as the one documented residual (this ledger records it);
+  (ii) RECOMMEND UPSTREAM a micro-change that removes the window entirely
+       (e.g. replace the top-bit OR with a genuine carry-propagating add, or
+       add one more masked correction limb) — after which the preservation
+       conjunct becomes provable by the existing local machinery;
+  (iii) the research program: formalize the coupling J := (a*v - b*u)/p with
+       |J| <= a + b - 1 and bound the gamma-sized danger windows against the
+       reachable (u,v) structure — no existing blueprint.
+  HISTORICAL HUMAN FOCUS: the pre-correction invert.rs chain and top-bit OR;
+  the two counterexample families and simulators are archived in
+  aeneas/tools/ + the scratchpad sorry-final/ scripts.
 
-  ASSUMED: completeness of the 125-iteration 4-bit-window exponentiation ladder
-  in verified::sqrt — statement: for reduced a, if sqrt(a) returns (r, flag)
-  and psi(a) is a square in ZMod p, then flag = true. (Functional correctness
-  of the ladder: table[i] = value^i, the window loop computes
-  value^((p+1)/4); since p = 3 mod 4, squaring that yields the input back on
-  square inputs, so the final res^2 ct_eq value self-check succeeds.)
-
-  NOT ASSUMED (proved, sorry-free, as sqrt_ok): the returned r is reduced and
-  even, and flag = true <-> psi(r)^2 = psi(a) — the flag's SOUNDNESS comes from
-  the generated code's final ct_eq self-check, independent of the ladder.
-
-  TAINT CONE: a LEAF — nothing in the tree depends on sqrt_complete (verified
-  by grep + #print axioms: only its own declaration carries sorryAx). The
-  Selene group law (VIII.6) is unaffected; it never consumes sqrt. What is
-  affected is DECOMPRESSION COMPLETENESS ONLY: without I.2, `flag = false`
-  does not yet imply "non-square", so e.g. "from_bytes/recover_y rejects a
-  well-formed compressed point only if x^3-3x+B is a non-residue" is not yet a
-  theorem; accepted points are still correct (soundness is proved).
-
-  IF FALSE (i.e. if the Rust ladder were wrong): sqrt could return flag=false
-  on some square inputs — decompression would spuriously reject valid points
-  (availability, not soundness). Mitigating evidence: 25 sqrt vectors
-  (squares + non-squares, random + edge cases; ValidationSelene.lean) pass,
-  and the Veridise Dafny scope covers sqrt (treat the Dafny proofs as the
-  ladder's current story).
-  HUMAN FOCUS: src/field/verified/sqrt.rs windowed loop + final window
-  handling (same item as IV.1, which remains the reference for pow).
+I.2  HelioseleneSpec.Selene.sqrt_complete — DISCHARGED (2026-07-10). The
+     windowed-ladder completeness is now PROVED kernel-only (table spec +
+     addition-chain spec + 125-iteration loop invariant + Euler criterion);
+     Spec/Selene/Ops.lean is sorry-free. sqrt_ok + sqrt_complete together
+     give flag = true <-> IsSquare: decompression completeness is no longer
+     an assumption. (Kept as a numbered item for ledger continuity.)
 
 --------------------------------------------------------------------------------
 II. FIDELITY OF THE 37 EXTERNAL MODELS (crypto-bigint 0.5.5 / subtle 2.6.1)
@@ -186,10 +202,10 @@ III.2  The PrimeField associated constants, src/field/mod.rs:234-245:
        still recommended.]
 
 III.3  HelioseleneField::from_u256 (src/field/mod.rs:166-168) reduces via
-       crypto-bigint's const_rem — a NOT-translated, NOT-modeled reduction
-       path used by the curve! macro (G_X) and available crate-wide.
-       HUMAN FOCUS: confirm const_rem correctness assumptions or confine its
-       use to compile-time constants that are then checked per III.1.
+       crypto-bigint's const_rem. Since Stage 2, const_rem has a concrete
+       natural-remainder model and is load-bearing for the curve constants.
+       HUMAN FOCUS: confirm that model against crypto-bigint 0.5.5; the
+       resulting concrete G_X values are independently kernel-checked.
 
 III.4  From<u8/u16/u32/u64> (src/field/mod.rs:28-47): trivially < p, but
        unverified; one-glance check.
@@ -200,8 +216,8 @@ IV. WHAT WAS NEVER TRANSLATED — THE FIELD THEOREM SAYS NOTHING ABOUT IT
 
 IV.1  pow (src/field/verified/pow.rs) and sqrt (src/field/verified/sqrt.rs).
       [UPDATE 2026-07-07: sqrt IS now translated and specified — soundness
-      proved (sqrt_ok), completeness open as I.2; see VIII. The rest of this
-      item still applies verbatim to pow.]
+      proved by sqrt_ok and completeness now proved by sqrt_complete; see
+      I.2/VIII. The rest of this item still applies verbatim to pow.]
       pow remains excluded from translation (u8_from_bool/black_box, bitvec
       iterator adapters). The Lean Field instance's `^` is ZMod-transported,
       NOT the Rust pow — a Lean theorem about x ^ n covers no Rust code. pow
@@ -212,12 +228,12 @@ IV.1  pow (src/field/verified/pow.rs) and sqrt (src/field/verified/sqrt.rs).
       (bits -> table[usize::from(bits)]); for the sqrt ladder see I.2.
 
 IV.2  point.rs and ciphersuite.rs (group law, decompression, hash-to-point).
-      [UPDATE 2026-07-07: the Selene group-law core of point.rs IS now
-      translated and its group law proved — see VIII/VIII.6. Still out of
-      scope: the Helios instantiation of the curve! macro, scalar
-      multiplication, and ciphersuite.rs/hash-to-point.] "The field is
-      correct" still does not imply "the curves are correct" beyond what
-      VIII.6 states for Selene.
+      [UPDATED THROUGH 2026-07-10: both Selene and Helios group-law cores and
+      both scalar ladders are translated and proved; see the companion ledgers
+      and IX. Still out of scope: point Sum/random/zeroize, Helios encoding
+      contracts across opaque dalek sqrt/invert/from_repr/is_odd, and
+      ciphersuite.rs/hash-to-point.] "The field is correct" still does not by
+      itself imply the curve results; those have their own stated boundaries.
 
 IV.3  Field::random (rejection-free wide reduction of RNG output),
       Field::sqrt_ratio (generic ff helper), PrimeFieldBits decompositions,
@@ -248,17 +264,21 @@ V.2  The translation snapshot: rustc nightly-2026-06-01 MIR, --release,
 
 V.3  The semantics-preserving source patches (helioselene-aeneas.patch): the
      translation input is the PATCHED copy, not the shipped code. The patch
-     now touches FIVE files — Cargo.toml (build-only) plus six source
-     rewrites: invert.rs and mod.rs (bool|bool lift, x2), mod.rs (from_repr
+     touches five files — Cargo.toml (build-only) plus the source-rewrite
+     groups: invert.rs and mod.rs (bool|bool lift, x2), mod.rs (from_repr
      limb-index loop), sqrt.rs (bit-index loop + limb-array local copy +
      u32-typed shift amounts), point.rs (u32-typed shift amounts,
-     from_bytes local rename point -> candidate_point).
-     Equivalence arguments are in README section 4 (hunks 1-7) and inline in
+     from_bytes local rename point -> candidate_point), and point.rs scalar
+     multiplication (canonical-byte indexing, borrow-free consumed-bit
+     clearing, shortened table loans, fixed-loop unrolling, and AddAssign
+     expansion).
+     Equivalence arguments are in README section 4 (hunks 1-8) and inline in
      the patch comments, and the patched copy passes the crate's full 11-test
      suite, but the equivalence itself is a human argument, not
      machine-checked.
-     HUMAN FOCUS: ~40 changed source lines across 5 files; verify once
-     (README section 4 walks each hunk; VIII.5 summarizes the new ones).
+     HUMAN FOCUS: verify the recorded patch once, with particular attention to
+     the larger scalar hunk; README section 4 walks every change and IX gives
+     its proof-specific trust boundary.
 
 V.4  Lean 4 kernel (v4.30.0-rc2) + mathlib pin + the three standard axioms
      (propext, Classical.choice, Quot.sound). Standard trust.
@@ -302,8 +322,11 @@ VI.1  Constant-time execution. The model is functional. black_box, subtle's
       constant-time claims — those remain a purely human/tooling audit item
       (e.g. dudect/ctgrind-style analysis on compiled artifacts).
 
-VI.2  Zeroization (zeroize-on-drop of secrets): not representable in a pure
-      model; unverified here.
+VI.2  Zeroization. Stage 5 gives the ladder's explicit zeroize calls pure
+      value models (replace bytes/scalars with zero), and proves those calls
+      terminate without changing the point result. Physical writes, volatile
+      semantics, optimizer preservation, secret copies, and zeroize-on-drop
+      are not representable and remain unverified.
 
 VI.3  Anything the compiler does after MIR (LLVM optimization correctness,
       target codegen).
@@ -319,8 +342,9 @@ Machine-checked, sorry-free, kernel-only (modulo II + V trust):
     reduced, no panics, loops terminate.
   - from_repr accepts exactly the canonical encodings (< p) and to_repr
     round-trips; is_zero/is_odd correct.
-  - invert: total (no panic), flag correct, zero-case correct; ONLY the
-    per-step congruence (I.1) is open.
+  - invert: total, no panic, flag/zero case correct, and all per-step
+    congruence/bound/potential invariants proved after the production
+    carry-chain correction (I.1 is historical).
   - p is prime; |HField| = p; HField ≃+* ZMod p as rings.
   - The Field-instance core ops (+, -, *, ⁻¹) are literally the translated
     Rust functions (traced by rfl during the Phase-D audit), not transported
@@ -328,9 +352,10 @@ Machine-checked, sorry-free, kernel-only (modulo II + V trust):
 
 ================================================================================
 Suggested review order for maximal risk reduction per hour:
-  III.1/III.2 (constants; minutes) -> I.1 via Dafny cross-read (invert step)
-  -> II.1-II.3 (model conventions vs crate sources) -> V.3 (patch hunks)
-  -> IV.1 (pow/sqrt, with Dafny) -> VI.1 (constant-time, separate tooling).
+  IX.1 (scalar patch equivalence) -> IX.2 (scalar representation/select/
+  zeroize models) -> II.1-II.3 (original model conventions vs crate sources)
+  -> V.3 (remaining patch hunks) -> VI.1/VI.2 (constant-time and physical
+  zeroization, separate tooling). I.1/I.2 are now closed historical records.
 ================================================================================
 
 --------------------------------------------------------------------------------
@@ -361,20 +386,22 @@ VIII.1  19 additional concrete external models (FunsExternal.lean, appended
       - The two derived-Eq `assert_fields_are_eq` markers: modeled `ok ()`
         (their Rust bodies are empty).
 
-VIII.2  [2026-07-08 update: this inventory is now stale — FunsExternal.lean
-      holds 48 existence-only axioms: 21 of the 45 dalek items below were
+VIII.2  [2026-07-10 Stage-5 update: FunsExternal.lean now holds 39
+      existence-only axioms. The 2026-07-08 inventory was 48: 21 of the 45
+      dalek items below were
       converted to concrete BEHAVIOURAL ZMod models for the Helios stage
       (which computes through them — the "none makes a behavioural claim /
       no goal-scope function depends on any" statements below remain true
       only of the REMAINING axioms and of the SELENE/field goal scope), and
-      15 third-run axioms were added (8 HeliosPoint, 4 HelioseleneField
-      Sum/Product, 1 HelioseleneField sqrt_ratio, 2 Uint). Current split:
-      24 dalek + 8 SelenePoint + 8 HeliosPoint + 4 Sum/Product + 1
-      sqrt_ratio + 2 Uint + 1 Uint Debug::fmt = 48, all still outside every
-      headline proof cone (Spec/Helios/GroupLaw.lean section 9). The 26
+      15 third-run axioms were added. Stage 5 then removed eight point-scalar
+      axioms and converted dalek to_repr to a concrete model. Current split:
+      23 dalek + 4 SelenePoint + 4 HeliosPoint + 4 Sum/Product + 1
+      sqrt_ratio + 2 Uint + 1 Uint Debug::fmt = 39, all still outside every
+      headline proof cone (Spec/Helios/GroupLaw.lean section 9). The 28
       concrete dalek defs are per-item fidelity assumptions in
       human_audit_assumptions_helios.txt.]
-      54 NEW AXIOMS (FunsExternal.lean, appended section) — existence-only
+      HISTORICAL 2026-07-07 INVENTORY: 54 new axioms (FunsExternal.lean,
+      appended section) — existence-only
       postulates for externals that appear ONLY as trait-instance evidence
       (records needed to state `Group`/`PrimeField` bounds). Every axiom's
       type is inhabited (`fun _ => fail .panic`), so each is a conservative
@@ -408,8 +435,10 @@ VIII.3  New members of the benign `_native.decide` string-length axiom class
 
 VIII.4  New external TYPE models (TypesExternal.lean, appended section):
       crypto_bigint CtChoice := Bool; dalek FieldElement := ZMod (2^255-19)
-      (cardinality-faithful; representation NOT modeled; nothing in scope
-      constructs or consumes one); rand_core::Error := nonzero U32 code.
+      (its canonical representation was not modeled at the Stage-2 snapshot,
+      but Stage 5 now provides concrete `to_repr` and zeroize models; the type
+      is load-bearing for Helios coordinates and Selene scalar
+      multiplication); rand_core::Error := nonzero U32 code.
 
 VIII.5  Source rewrites added to helioselene-aeneas.patch for the new scope
       (each argued semantics-preserving in the patch hunks/comments; the
@@ -422,6 +451,12 @@ VIII.5  Source rewrites added to helioselene-aeneas.patch for the new scope
         shift amounts in from_bytes/to_bytes; from_bytes' local `point`
         renamed `candidate_point` (a local named `point` shadows the
         generated `point.selene.*` namespace in Lean).
+      - [Stage 5] point.rs scalar ladder: bitvec traversal replaced with
+        direct indexing of the same canonical little-endian representation;
+        consumed bits cleared by a borrow-free value-returning helper; fixed
+        four-doubling and 15-selection loops unrolled; Copy candidates made
+        local; AddAssign spelled as its exact `res = res + term` body. Full
+        equivalence ledger: README §4 hunk 8.
 
 VIII.6  The Selene GROUP LAW IS NOW PROVED (2026-07-07, Spec/Selene/):
       - ThetaAddEquiv : SClass ≃+ W.toAffine.Point (GroupLaw.lean) — the
@@ -440,12 +475,81 @@ VIII.6  The Selene GROUP LAW IS NOW PROVED (2026-07-07, Spec/Selene/):
         no 2-torsion (cubic_no_root), and the discriminant is nonzero
         (Curve.lean).
       - Coordinate contracts for every translated Selene operation
-        (Ops.lean), incl. sqrt_ok/recover_y_ok soundness; the only open
-        obligation on this scope is sqrt_complete (I.2) — a leaf that taints
-        NOTHING (decompression completeness only).
+        (Ops.lean), incl. sqrt_ok/recover_y_ok soundness; the former
+        sqrt_complete obligation is now discharged (I.2).
       - Validation: 100 independent Selene vectors (sqrt 25, add 35,
         double 15, neg 5, ct_eq 12, from_xy 8) pass through the translated
         code via native_decide, plus per-class corrupted-vector negative
         controls (ValidationSelene.lean, imported by nothing).
-      Scalar multiplication, Sum, random, zeroize and hash-to-curve remain
-      unmodeled (their absence is recorded by the axioms of VIII.2).
+      Scalar multiplication is mechanically translated and Stage 5 now proves
+      both exact generated ladders equal nsmul on their verified quotient
+      groups; see IX and `Spec/ScalarMulLaws.lean`. Sum, random, point zeroize
+      and hash-to-curve remain unmodeled (their absence is recorded by
+      VIII.2).
+
+--------------------------------------------------------------------------------
+IX. STAGE-5 SCALAR MULTIPLICATION: PACKAGE-LEVEL AUDIT BOUNDARY (2026-07-10)
+--------------------------------------------------------------------------------
+
+This section lists the assumptions shared by both scalar headline theorems.
+The curve-specific ledgers §V are authoritative for details and must be read
+with this package ledger:
+
+  * human_audit_assumptions_selene.txt §V
+  * human_audit_assumptions_helios.txt §V
+
+IX.1  RUST SOURCE RELATION. Production `src/point.rs` remains the source of
+      truth. `Spec/ScalarMulLaws.lean` proves code generated from a patched
+      scratch copy. Human review must establish the four hunk-8 equivalences:
+      (a) reversed `to_le_bits()` is the same bit sequence as direct
+      little-endian canonical-byte indices 255..0; (b) by-value
+      `clear_scalar_bit` plus final array zeroization has the same functional
+      consumed-bit cleanup as the mutable iterator/`u8_from_bool`; (c) the
+      block-scoped table, copied candidates, four unrolled doubles and 15
+      unrolled selections preserve values and order; and (d)
+      `res = res + term` is the exact body of point `AddAssign`. Removing
+      `u8_from_bool` also removes `black_box` barriers, so optimization-
+      resistance equivalence is NOT a functional consequence. The patched
+      copy's 11 passing tests are evidence, not a proof.
+
+IX.2  GENERATED/EXTERNAL MODEL RELATION. The ladder theorems unfold the exact
+      generated `mul`, `mul_loop`, and `mul_loop.body`; their proof-only folds
+      unfold to verbatim generated blocks. Correct Rust-to-Lean correspondence
+      still relies on rustc/Charon/Aeneas. The call graph additionally assumes:
+      canonical 32-byte little-endian scalar `to_repr`; `usize::ct_eq` true iff
+      equal; point `conditional_select` selecting its second argument iff the
+      `Choice` is true; value-level blanket/array/scalar zeroization; and
+      faithful array/index/update/shift/cast/division/remainder models. Selene
+      consumes the dalek scalar's canonical ZMod representation. Helios
+      consumes translated helioselene scalar serialization and the idealized
+      dalek coordinate field for every point operation.
+
+IX.3  FUNCTIONAL CLAIM. The generic loop proof covers every `n < 2^256`, every
+      one of 256 iterations, all 64 completed windows, all 16 table entries,
+      every bound, modeled panic/divergence, and cleanup call. Public theorems
+      start from `SPt`/`HPt`, so no claim is made for arbitrary off-curve raw
+      points even though Rust's raw `Mul` type does not encode that invariant.
+
+IX.4  ACTION EXTRACTION. `Classical.choice` names the successful on-curve
+      output already proved to exist; `mulP_generated` pins it to the exact
+      generated `.ok` result. There is no default point and no branch that
+      erases failure. The descended `SMul` actions are proved equal to natural
+      repeated addition and therefore satisfy `zero_smul`, `one_smul`,
+      `smul_zero`, `smul_add`, and `DistribSMul` unconditionally.
+
+IX.5  CURVE-ORDER PREMISE. Scalar addition and multiplication reduce modulo
+      the scalar-field modulus. The remaining `add_smul`/`mul_smul` laws need
+      exactly `q • P = 0` for all Selene classes and `p • P = 0` for all Helios
+      classes. `ScalarMulLaws.lean` proves full `Module` structures from these
+      explicit propositions but supplies no certificate instance or axiom.
+      Curve cardinality/exponent remains a mathematical scope item, not an
+      implementation-correctness hole hidden in `SMul`.
+
+IX.6  NON-CLAIMS AND AXIOMS. The model proves values, termination, and modeled
+      safety, not constant-time execution, side-channel resistance, compiler
+      preservation of the scan, or physical memory erasure. Kernel axiom
+      checks show no `sorryAx`, no existence-only external axiom, and no curve-
+      exponent certificate in the ladder/action cones. Concrete external
+      models do not appear as axioms, so their Rust fidelity remains a real
+      human obligation even when `#print axioms` is clean.
+================================================================================

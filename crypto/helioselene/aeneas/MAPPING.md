@@ -549,3 +549,44 @@ Generated mechanically from the Aeneas metadata of the third translation run (`p
 | `point.helios.HeliosPoint.Insts.CoreIterTraitsAccumSumSharedAHeliosPoint.sum` | `helioselene::point::helios::{impl core::iter::traits::accum::Sum<&'a helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sum` | src/point.rs:272:6 |
 | `point.helios.HeliosPoint.Insts.CoreIterTraitsAccumSumHeliosPoint.sum` | `helioselene::point::helios::{impl core::iter::traits::accum::Sum<helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sum` | src/point.rs:262:6 |
 | `point.helios.HeliosPoint.Insts.GroupGroupHelioseleneFieldArrayU832.random` | `helioselene::point::helios::{impl group::Group<helioselene::field::HelioseleneField, [u8; 32usize` | src/point.rs:213:6 |
+
+## Fifth-run scalar-ladder appendix (2026-07-10)
+
+This appendix supersedes the eight third-run `FunsExternal.lean` rows for
+Selene/Helios `Mul` and `MulAssign`: those declarations are no longer axioms.
+The fifth run translated their bodies into `Funs.lean` after README §4 hunk 8.
+The four trait records per curve already indexed above now point to these
+concrete methods.
+
+### `HelioseleneCore/Funs.lean` (13 newly concrete declarations)
+
+| Lean declaration | Rust item | Patched-copy source span |
+|---|---|---|
+| `point.clear_scalar_bit` | translation-only helper preserving the mutable-bit cleanup | src/point.rs:24:0 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulFieldElementSelenePoint.mul_loop.body` | Selene scalar `Mul::mul`, outer loop body | src/point.rs:313:8 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulFieldElementSelenePoint.mul_loop` | Selene scalar `Mul::mul`, outer loop | src/point.rs:313:8 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulFieldElementSelenePoint.mul` | `Mul<FieldElement> for SelenePoint::mul` | src/point.rs:287:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulAssignFieldElement.mul_assign` | `MulAssign<FieldElement> for SelenePoint::mul_assign` | src/point.rs:375:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulAssignShared0FieldElement.mul_assign` | `MulAssign<&FieldElement> for SelenePoint::mul_assign` | src/point.rs:388:6 |
+| `point.selene.SelenePoint.Insts.CoreOpsArithMulShared0FieldElementSelenePoint.mul` | `Mul<&FieldElement> for SelenePoint::mul` | src/point.rs:382:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulHelioseleneFieldHeliosPoint.mul_loop.body` | Helios scalar `Mul::mul`, outer loop body | src/point.rs:313:8 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulHelioseleneFieldHeliosPoint.mul_loop` | Helios scalar `Mul::mul`, outer loop | src/point.rs:313:8 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulHelioseleneFieldHeliosPoint.mul` | `Mul<HelioseleneField> for HeliosPoint::mul` | src/point.rs:287:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign` | `MulAssign<HelioseleneField> for HeliosPoint::mul_assign` | src/point.rs:375:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulAssignShared0HelioseleneField.mul_assign` | `MulAssign<&HelioseleneField> for HeliosPoint::mul_assign` | src/point.rs:388:6 |
+| `point.helios.HeliosPoint.Insts.CoreOpsArithMulShared0HelioseleneFieldHeliosPoint.mul` | `Mul<&HelioseleneField> for HeliosPoint::mul` | src/point.rs:382:6 |
+
+### Type and external-interface delta
+
+| Lean declaration | Status after fifth run | Rust source |
+|---|---|---|
+| `zeroize.DefaultIsZeroes` | generated trait declaration, new in `Types.lean` | zeroize 1.9.0 src/lib.rs:255 |
+| `Usize.Insts.SubtleConstantTimeEq.ct_eq` | concrete external model | subtle 2.6.1 src/lib.rs:348 |
+| `zeroize.Zeroize.Blanket.zeroize` | concrete external model | zeroize 1.9.0 src/lib.rs:274 |
+| `Array.Insts.ZeroizeZeroize.zeroize` | concrete external model | zeroize 1.9.0 src/lib.rs:346 |
+| `dalek_ff_group.field.FieldElement.Insts.ZeroizeZeroize.zeroize` | concrete external model | dalek-ff-group 0.5.0 src/field.rs:38 |
+| `dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.to_repr` | converted from an axiom to the concrete canonical 32-byte little-endian encoding | dalek-ff-group 0.5.0 src/field.rs:194 |
+
+Current external totals after this delta: 92 top-level definitions and 39
+existence-only axioms. Neither point scalar-multiplication definition depends
+on an existence-only external axiom (`HelioseleneCore/AxCheck.lean`).

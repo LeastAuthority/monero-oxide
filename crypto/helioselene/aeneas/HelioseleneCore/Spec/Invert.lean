@@ -4,19 +4,21 @@
 
    Exported contract lemma (namespace `HelioseleneSpec`): `invert_ok`.
 
-   Proof status:
-   * PROVED (no `sorry` in their dependency cone): `sub_with_bounded_overflow_spec`,
+   Proof status: PROVED with no `sorry` in the inversion dependency cone.
+   This includes `sub_with_bounded_overflow_spec`,
      `add_with_bounded_overflow_spec`, `select_word_spec`/`select_loop_spec`/`select_spec`
      (the masked 4-limb select), totality of every inner loop of `step`
-     (`step_loop0_total` … `step_loop4_total`), totality + zero-propagation of `step`
-     itself (`step_basic_spec`, `step_total`), and the local `sub_value_spec`,
-     `red1_loop_spec`, `red1_spec`, `is_zero_loop_spec`, `is_zero_spec` specs.
-   * SORRIED (exactly one `sorry` in this file): `step_congruence` — the per-step
-     preservation of the Algorithm-1 invariant (congruences `a ≡ u·value`,
-     `b ≡ v·value (mod p)`, oddness of `b`, ranges of `u`,`v`, gcd preservation and the
-     potential halving `2·a'·b' ≤ a·b`).  `step_spec`, the three loop-induction lemmas
-     and `invert_ok` are fully assembled around it, so discharging that single lemma
-     completes the verification of inversion.
+     (`step_loop0_total` … `step_loop4_total`), exact value-level specs of all five
+     inner loops (`step_loop0_value_spec` … `step_loop4_value_spec`), totality +
+     zero-propagation of `step` itself (`step_basic_spec`, `step_total`), and the
+     local `sub_value_spec`, `red1_loop_spec`, `red1_spec`, `is_zero_loop_spec`,
+     `is_zero_spec` specs.  `step_congruence` proves every Algorithm-1 invariant
+     conjunct from the machine-level ledger: both congruences, oddness of `b`, all four
+     range bounds, gcd preservation and the potential halving `2·a'·b' ≤ a·b`.
+
+   The Rust source now includes `add_two_modulus` in the high-half carry chain. This
+   replaces the former top-bit OR and removes its conditional `UVWindow` obligation;
+   the selected 0/p/2p addend is exact for every state.
 
    Note on `#print axioms`: everything here additionally reports
    `helioselene.field.MODULUS._native.decide.ax_1` (and the analogous axiom for
@@ -406,10 +408,10 @@ negations of those flags legitimate 0/all-ones masks. -/
 
 /-- Totality of the high-half negate-and-add-modulus loop (`for l in 2..4`). -/
 @[step] theorem step_loop4_total (iter : core.ops.range.Range Std.Usize)
-    (u u_sub_v : Uint4) (should_negate add_one_modulus carry : Limb)
+    (u u_sub_v : Uint4) (should_negate add_two_modulus add_one_modulus carry : Limb)
     (hend : iter.«end».val ≤ 4) (hc : carry.val ≤ 1) :
     field.verified.invert.invert.step_loop4 iter u u_sub_v should_negate
-      add_one_modulus carry
+      add_two_modulus add_one_modulus carry
       ⦃ _u => True ⦄ := by
   unfold field.verified.invert.invert.step_loop4
   apply Aeneas.Std.loop.spec_decr_nat
@@ -432,15 +434,21 @@ negations of those flags legitimate 0/all-ones masks. -/
         step as ⟨a1, ha1⟩
         subst ha1
         step as ⟨l1, hl1⟩
-        step as ⟨mi, hmi⟩
+        step as ⟨l2, hl2⟩
+        step as ⟨mx, hmx⟩
         step as ⟨a2, ha2⟩
         subst ha2
-        step as ⟨l2, hl2⟩
         step as ⟨l3, hl3⟩
-        step as ⟨l4, carry1, hadd, hc1⟩
-        step as ⟨a3, back, ha3, hback⟩
+        step as ⟨l4, hl4⟩
+        step as ⟨mi, hmi⟩
+        step as ⟨a3, ha3⟩
         subst ha3
-        step as ⟨a4, ha4⟩
+        step as ⟨l5, hl5⟩
+        step as ⟨l6, hl6⟩
+        step as ⟨l7, carry1, hadd, hc1⟩
+        step as ⟨a4, back, ha4, hback⟩
+        subst ha4
+        step as ⟨a5, ha5⟩
         scalar_tac
       · simp at ho
   · exact ⟨hend, hc⟩
@@ -464,6 +472,14 @@ theorem Uint4.limb0_of_toNat_zero {u : Uint4} (h : u.toNat = 0) :
   rw [Uint4.toNat_of_limbs hu] at h
   simp only [hu]
   simp only [show (0#usize).val = 0 from by simp, List.getElem_cons_zero]
+  omega
+
+/-- Parity of a `Uint4` value is the parity of its low limb (higher limbs weigh `2^64`). -/
+theorem Uint4.toNat_mod_two_eq_limb0 (u : Uint4) :
+    u.toNat % 2 = u.val[(0#usize).val].val % 2 := by
+  obtain ⟨x0, x1, x2, x3, hu⟩ := Uint4.exists_four_limbs u
+  rw [Uint4.toNat_of_limbs hu]
+  simp only [hu, show (0#usize).val = 0 from by simp, List.getElem_cons_zero]
   omega
 
 /-! ## Totality of `step` + zero-propagation (task item 3, totality half: proved)
@@ -521,28 +537,8 @@ theorem step_basic_spec (a b u v : Uint4) :
   have hi1v : i1.val = 2 := by rw [hi1]; simp
   step as ⟨u1, carry2, hc2le⟩
   step as ⟨u2⟩
-  step as ⟨a4, ha4⟩
-  step as ⟨i2, hi2⟩
-  have hi2v : i2.val = 3 := by
-    rw [hi2, usize_wrapping_sub_val (by rw [hi]; simp), hi4]
-    simp
-  step as ⟨l5, hl5⟩
-  step as ⟨i3, hi3⟩
-  step as ⟨i4, hi4'⟩
-  have hi4v : i4.val = 63 := by
-    rw [hi4', usize_wrapping_sub_val (by rw [hi3]; simp), hi3]
-    simp
-  step as ⟨l6, hl6⟩
-  step as ⟨l7, hl7⟩
-  step as ⟨a5, back, ha5, hback⟩
-  step as ⟨i5, hi5⟩
-  have hi5v : i5.val = 3 := by
-    rw [hi5, usize_wrapping_sub_val (by rw [hi]; simp), hi4]
-    simp
-  step as ⟨a6, ha6⟩
   step with select_spec as ⟨v1, hv1sel⟩
   step as ⟨a7, ha7⟩
-  simp only [hback]
   step as ⟨u4, hu4⟩
   -- final goal: the zero-propagation implication
   intro ha0
@@ -790,7 +786,1023 @@ theorem ffield_is_zero_spec (value : Uint4) :
   unfold field.HelioseleneField.Insts.FfField.is_zero
   exact is_zero_spec value
 
-/-! ## The Algorithm-1 step invariant (task item 3: statement + one `sorry`)
+/-! ## Value-level specs of the five inner loops of `step`
+
+The `@[step]`-tagged totality lemmas above remain in place for `step_basic_spec`;
+`step_congruence` instead drives the loop calls with the exact-value lemmas below
+(brute 4- resp. 2-iteration unrolls in the style of `Reduction.lean`). -/
+
+private theorem loop_step {α : Type u} {β : Type v} {body : α → Result (ControlFlow α β)}
+    {x : α} {post : β → Prop}
+    (h : Aeneas.Std.WP.spec (body x) (fun r => match r with
+       | ControlFlow.cont x' => Aeneas.Std.WP.spec (Aeneas.Std.loop body x') post
+       | ControlFlow.done y => post y)) :
+    Aeneas.Std.WP.spec (Aeneas.Std.loop body x) post := by
+  rw [Aeneas.Std.loop]
+  cases hb : body x with
+  | ok r =>
+    rw [hb, Aeneas.Std.WP.spec_ok] at h
+    cases r with
+    | cont x' => exact h
+    | done y => rw [Aeneas.Std.WP.spec_ok]; exact h
+  | fail e => rw [hb, Aeneas.Std.WP.spec_fail] at h; exact h.elim
+  | div => rw [hb, Aeneas.Std.WP.spec_div] at h; exact h.elim
+
+private theorem spec_ok_of {α : Type u} {x : α} {post : α → Prop} (h : post x) :
+    Aeneas.Std.WP.spec (ok x) post := (Aeneas.Std.WP.spec_ok x).mpr h
+
+/-- Value-level spec of the `a - b` borrow chain (`step_loop0`):
+    exact 256-bit identity plus 0/1 borrow. -/
+theorem step_loop0_value_spec (iter : core.ops.range.Range Std.Usize)
+    (a b : Uint4) (borrow : Limb) (d : Uint4)
+    (hs : iter.start.val = 0) (he : iter.«end».val = 4)
+    (hbor : borrow.val = 0) :
+    field.verified.invert.invert.step_loop0 iter a b borrow d
+      ⦃ bo o => bo.val ≤ 1 ∧ o.toNat + b.toNat = a.toNat + 2^256 * bo.val ⦄ := by
+  obtain ⟨a0, a1, a2, a3, haval⟩ := Uint4.exists_four_limbs a
+  obtain ⟨b0, b1, b2, b3, hbval⟩ := Uint4.exists_four_limbs b
+  obtain ⟨z0, z1, z2, z3, hzval⟩ := Uint4.exists_four_limbs d
+  unfold field.verified.invert.invert.step_loop0
+  -- iteration 1 : l = 0
+  apply loop_step
+  unfold field.verified.invert.invert.step_loop0.body
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter (by omega))
+  intro ⟨o, iter1⟩ ⟨ho, hs1, he1⟩
+  simp only [ho]
+  step as ⟨ra, hra⟩
+  step as ⟨l1, hl1⟩
+  step as ⟨rb, hrb⟩
+  step as ⟨l2, hl2⟩
+  step as ⟨w0, c1, hsub0, hc1⟩
+  step as ⟨od, back, hod, hback⟩
+  step as ⟨o1, ho1⟩
+  simp only [hra, haval, hs] at hl1
+  simp at hl1
+  simp only [hrb, hbval, hs] at hl2
+  simp at hl2
+  have hoval1 : o1.val = [w0, z1, z2, z3] := by
+    rw [ho1, Array.set_val_eq, hod, hzval, hs]
+    rfl
+  simp only [Aeneas.Std.WP.spec_ok, hback]
+  -- iteration 2 : l = 1
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter1 (by
+      simp only [he1]; omega))
+  intro ⟨o2, iter2⟩ ⟨ho2, hs2, he2⟩
+  simp only [ho2]
+  step as ⟨ra2, hra2⟩
+  step as ⟨l3, hl3⟩
+  step as ⟨rb2, hrb2⟩
+  step as ⟨l4, hl4⟩
+  step as ⟨w1, c2, hsub1, hc2⟩
+  step as ⟨od2, back2, hod2, hback2⟩
+  step as ⟨o2', ho2'⟩
+  simp only [hra2, haval, hs1, hs] at hl3
+  simp at hl3
+  simp only [hrb2, hbval, hs1, hs] at hl4
+  simp at hl4
+  have hoval2 : o2'.val = [w0, w1, z2, z3] := by
+    rw [ho2', Array.set_val_eq, hod2, hoval1, hs1, hs]
+    rfl
+  simp only [Aeneas.Std.WP.spec_ok, hback2]
+  -- iteration 3 : l = 2
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter2 (by
+      simp only [he2, he1]; omega))
+  intro ⟨o3, iter3⟩ ⟨ho3, hs3, he3⟩
+  simp only [ho3]
+  step as ⟨ra3, hra3⟩
+  step as ⟨l5, hl5⟩
+  step as ⟨rb3, hrb3⟩
+  step as ⟨l6, hl6⟩
+  step as ⟨w2, c3, hsub2, hc3⟩
+  step as ⟨od3, back3, hod3, hback3⟩
+  step as ⟨o3', ho3'⟩
+  simp only [hra3, haval, hs2, hs1, hs] at hl5
+  simp at hl5
+  simp only [hrb3, hbval, hs2, hs1, hs] at hl6
+  simp at hl6
+  have hoval3 : o3'.val = [w0, w1, w2, z3] := by
+    rw [ho3', Array.set_val_eq, hod3, hoval2, hs2, hs1, hs]
+    rfl
+  simp only [Aeneas.Std.WP.spec_ok, hback3]
+  -- iteration 4 : l = 3
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter3 (by
+      simp only [he3, he2, he1]; omega))
+  intro ⟨o4, iter4⟩ ⟨ho4, hs4, he4⟩
+  simp only [ho4]
+  step as ⟨ra4, hra4⟩
+  step as ⟨l7, hl7⟩
+  step as ⟨rb4, hrb4⟩
+  step as ⟨l8, hl8⟩
+  step as ⟨w3, c4, hsub3, hc4⟩
+  step as ⟨od4, back4, hod4, hback4⟩
+  step as ⟨o4', ho4'⟩
+  simp only [hra4, haval, hs3, hs2, hs1, hs] at hl7
+  simp at hl7
+  simp only [hrb4, hbval, hs3, hs2, hs1, hs] at hl8
+  simp at hl8
+  have hoval4 : o4'.val = [w0, w1, w2, w3] := by
+    rw [ho4', Array.set_val_eq, hod4, hoval3, hs3, hs2, hs1, hs]
+    rfl
+  simp only [Aeneas.Std.WP.spec_ok, hback4]
+  -- iteration 5 : exhausted
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_none_spec iter4 (by
+      simp only [he4, he3, he2, he1]; omega))
+  intro ⟨o5, iter5⟩ ⟨ho5, hi5⟩
+  simp only [ho5]
+  apply spec_ok_of
+  simp only [WP.uncurry'_pair]
+  constructor
+  · exact hc4
+  · have hosum := Uint4.toNat_of_limbs hoval4
+    have hasum := Uint4.toNat_of_limbs haval
+    have hbsum := Uint4.toNat_of_limbs hbval
+    rw [hl1, hl2] at hsub0
+    rw [hl3, hl4] at hsub1
+    rw [hl5, hl6] at hsub2
+    rw [hl7, hl8] at hsub3
+    have hw0 : (w0).val < 2^64 := w0.hBounds
+    have hw1 : (w1).val < 2^64 := w1.hBounds
+    have hw2 : (w2).val < 2^64 := w2.hBounds
+    have hw3 : (w3).val < 2^64 := w3.hBounds
+    rw [hosum, hasum, hbsum]
+    omega
+
+/-- Value-level spec of the `u - (v & a_is_odd)` borrow chain (`step_loop2`). -/
+theorem step_loop2_value_spec (iter : core.ops.range.Range Std.Usize)
+    (u v : Uint4) (m borrow : Limb) (d : Uint4)
+    (hs : iter.start.val = 0) (he : iter.«end».val = 4)
+    (hm : IsMask m) (hbor : borrow.val = 0) :
+    field.verified.invert.invert.step_loop2 iter u v m borrow d
+      ⦃ bo o => bo.val ≤ 1 ∧
+          o.toNat + (if m.val = 0 then 0 else v.toNat)
+            = u.toNat + 2^256 * bo.val ⦄ := by
+  obtain ⟨a0, a1, a2, a3, haval⟩ := Uint4.exists_four_limbs u
+  obtain ⟨b0, b1, b2, b3, hbval⟩ := Uint4.exists_four_limbs v
+  obtain ⟨z0, z1, z2, z3, hzval⟩ := Uint4.exists_four_limbs d
+  unfold field.verified.invert.invert.step_loop2
+  -- iteration 1 : l = 0
+  apply loop_step
+  unfold field.verified.invert.invert.step_loop2.body
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter (by omega))
+  intro ⟨o, iter1⟩ ⟨ho, hs1, he1⟩
+  simp only [ho]
+  step as ⟨ra, hra⟩
+  step as ⟨l1, hl1⟩
+  step as ⟨rb, hrb⟩
+  step as ⟨l2, hl2⟩
+  step as ⟨l2m, hl2m⟩
+  step as ⟨w0, c1, hsub0, hc1⟩
+  step as ⟨od, back, hod, hback⟩
+  step as ⟨o1, ho1⟩
+  simp only [hra, haval, hs] at hl1
+  simp at hl1
+  simp only [hrb, hbval, hs] at hl2
+  simp at hl2
+  have hoval1 : o1.val = [w0, z1, z2, z3] := by
+    rw [ho1, Array.set_val_eq, hod, hzval, hs]
+    rfl
+  simp only [Aeneas.Std.WP.spec_ok, hback]
+  -- iteration 2 : l = 1
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter1 (by
+      simp only [he1]; omega))
+  intro ⟨o2, iter2⟩ ⟨ho2, hs2, he2⟩
+  simp only [ho2]
+  step as ⟨ra2, hra2⟩
+  step as ⟨l3, hl3⟩
+  step as ⟨rb2, hrb2⟩
+  step as ⟨l4, hl4⟩
+  step as ⟨l4m, hl4m⟩
+  step as ⟨w1, c2, hsub1, hc2⟩
+  step as ⟨od2, back2, hod2, hback2⟩
+  step as ⟨o2', ho2'⟩
+  simp only [hra2, haval, hs1, hs] at hl3
+  simp at hl3
+  simp only [hrb2, hbval, hs1, hs] at hl4
+  simp at hl4
+  have hoval2 : o2'.val = [w0, w1, z2, z3] := by
+    rw [ho2', Array.set_val_eq, hod2, hoval1, hs1, hs]
+    rfl
+  simp only [Aeneas.Std.WP.spec_ok, hback2]
+  -- iteration 3 : l = 2
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter2 (by
+      simp only [he2, he1]; omega))
+  intro ⟨o3, iter3⟩ ⟨ho3, hs3, he3⟩
+  simp only [ho3]
+  step as ⟨ra3, hra3⟩
+  step as ⟨l5, hl5⟩
+  step as ⟨rb3, hrb3⟩
+  step as ⟨l6, hl6⟩
+  step as ⟨l6m, hl6m⟩
+  step as ⟨w2, c3, hsub2, hc3⟩
+  step as ⟨od3, back3, hod3, hback3⟩
+  step as ⟨o3', ho3'⟩
+  simp only [hra3, haval, hs2, hs1, hs] at hl5
+  simp at hl5
+  simp only [hrb3, hbval, hs2, hs1, hs] at hl6
+  simp at hl6
+  have hoval3 : o3'.val = [w0, w1, w2, z3] := by
+    rw [ho3', Array.set_val_eq, hod3, hoval2, hs2, hs1, hs]
+    rfl
+  simp only [Aeneas.Std.WP.spec_ok, hback3]
+  -- iteration 4 : l = 3
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter3 (by
+      simp only [he3, he2, he1]; omega))
+  intro ⟨o4, iter4⟩ ⟨ho4, hs4, he4⟩
+  simp only [ho4]
+  step as ⟨ra4, hra4⟩
+  step as ⟨l7, hl7⟩
+  step as ⟨rb4, hrb4⟩
+  step as ⟨l8, hl8⟩
+  step as ⟨l8m, hl8m⟩
+  step as ⟨w3, c4, hsub3, hc4⟩
+  step as ⟨od4, back4, hod4, hback4⟩
+  step as ⟨o4', ho4'⟩
+  simp only [hra4, haval, hs3, hs2, hs1, hs] at hl7
+  simp at hl7
+  simp only [hrb4, hbval, hs3, hs2, hs1, hs] at hl8
+  simp at hl8
+  have hoval4 : o4'.val = [w0, w1, w2, w3] := by
+    rw [ho4', Array.set_val_eq, hod4, hoval3, hs3, hs2, hs1, hs]
+    rfl
+  simp only [Aeneas.Std.WP.spec_ok, hback4]
+  -- iteration 5 : exhausted
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_none_spec iter4 (by
+      simp only [he4, he3, he2, he1]; omega))
+  intro ⟨o5, iter5⟩ ⟨ho5, hi5⟩
+  simp only [ho5]
+  apply spec_ok_of
+  simp only [WP.uncurry'_pair]
+  constructor
+  · exact hc4
+  · have hosum := Uint4.toNat_of_limbs hoval4
+    have hasum := Uint4.toNat_of_limbs haval
+    have hbsum := Uint4.toNat_of_limbs hbval
+    rw [hl1] at hsub0
+    rw [hl3] at hsub1
+    rw [hl5] at hsub2
+    rw [hl7] at hsub3
+    rw [hl2m, hl2] at hsub0
+    rw [hl4m, hl4] at hsub1
+    rw [hl6m, hl6] at hsub2
+    rw [hl8m, hl8] at hsub3
+    have hw0 : (w0).val < 2^64 := w0.hBounds
+    have hw1 : (w1).val < 2^64 := w1.hBounds
+    have hw2 : (w2).val < 2^64 := w2.hBounds
+    have hw3 : (w3).val < 2^64 := w3.hBounds
+    rcases hm with hm0 | hmo
+    · rw [hm0, Nat.and_zero] at hsub0 hsub1 hsub2 hsub3
+      rw [if_pos hm0]
+      rw [hosum, hasum]
+      omega
+    · have handm : ∀ x : Limb, x.val &&& (2^64 - 1) = x.val := fun x =>
+        Nat.and_two_pow_sub_one_of_lt_two_pow (show x.val < 2^64 from x.hBounds)
+      rw [hmo] at hsub0 hsub1 hsub2 hsub3
+      rw [handm b0] at hsub0
+      rw [handm b1] at hsub1
+      rw [handm b2] at hsub2
+      rw [handm b3] at hsub3
+      rw [if_neg (by rw [hmo]; norm_num)]
+      rw [hosum, hasum, hbsum]
+      omega
+
+/-- Normalize the `overflowing_add` step-pure hypothesis plus the `FromU64Bool`
+    conversion into one exact full-adder identity with a 0/1 carry. -/
+private theorem norm_oadd {l2 car limb : Std.U64} {carry_bool : Bool} {i : Std.U64}
+    (hadd : if l2.val + car.val > UScalar.max UScalarTy.U64
+            then limb.val + U64.size = l2.val + car.val ∧ carry_bool = true
+            else limb.val = l2.val + car.val ∧ carry_bool = false)
+    (hi : i.val = if carry_bool then 1 else 0) :
+    limb.val + 2^64 * i.val = l2.val + car.val ∧ i.val ≤ 1 := by
+  have hsz : U64.size = 2^64 := by rw [U64.size_def, U64.numBits_def]; rfl
+  split at hadd
+  · obtain ⟨he, hcb⟩ := hadd
+    subst hcb
+    rw [if_pos rfl] at hi
+    rw [hsz] at he
+    omega
+  · obtain ⟨he, hcb⟩ := hadd
+    subst hcb
+    rw [if_neg Bool.false_ne_true] at hi
+    omega
+
+/-- XOR with the all-ones mask is complement, at the `.val` level. -/
+private theorem xor_allOnes_val (x m : Std.U64) (hm : m.val = 2^64 - 1) :
+    x.val ^^^ m.val = 2^64 - 1 - x.val := by
+  have hmbv : m.bv = BitVec.allOnes 64 := by
+    apply BitVec.eq_of_toNat_eq
+    simpa using hm
+  have h1 : x.val ^^^ m.val = (x.bv ^^^ m.bv).toNat := (BitVec.toNat_xor ..).symm
+  rw [h1, hmbv, BitVec.xor_allOnes, BitVec.toNat_not]
+  rfl
+
+/-- Value-level spec of the conditional-negation chain (`step_loop1`):
+    identity under the zero mask, exact two's complement under the all-ones mask. -/
+theorem step_loop1_value_spec (iter : core.ops.range.Range Std.Usize)
+    (x : Uint4) (mask carry : Limb) (d : Uint4)
+    (hs : iter.start.val = 0) (he : iter.«end».val = 4)
+    (hm : IsMask mask) (hc : carry.val = if mask.val = 0 then 0 else 1) :
+    field.verified.invert.invert.step_loop1 iter x mask carry d
+      ⦃ o => (mask.val = 0 → o.toNat = x.toNat) ∧
+             (mask.val ≠ 0 → (x.toNat = 0 ∧ o.toNat = 0) ∨
+                             o.toNat + x.toNat = 2^256) ⦄ := by
+  obtain ⟨a0, a1, a2, a3, haval⟩ := Uint4.exists_four_limbs x
+  obtain ⟨z0, z1, z2, z3, hzval⟩ := Uint4.exists_four_limbs d
+  unfold field.verified.invert.invert.step_loop1
+  -- iteration 1 : l = 0
+  apply loop_step
+  unfold field.verified.invert.invert.step_loop1.body
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter (by omega))
+  intro ⟨o, iter1⟩ ⟨ho, hs1, he1⟩
+  simp only [ho]
+  step as ⟨ra, hra⟩
+  step as ⟨l1, hl1⟩
+  step as ⟨l2, hl2⟩
+  step as ⟨w0, cb0, hadd0⟩
+  step as ⟨i0, hi0⟩
+  step as ⟨od, back, hod, hback⟩
+  step as ⟨o1, ho1⟩
+  obtain ⟨hstep0, hi0le⟩ := norm_oadd hadd0 hi0
+  simp only [hra, haval, hs] at hl1
+  simp at hl1
+  have hoval1 : o1.val = [w0, z1, z2, z3] := by
+    rw [ho1, Array.set_val_eq, hod, hzval, hs]
+    rfl
+  simp only [hback]
+  -- iteration 2 : l = 1
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter1 (by
+      simp only [he1]; omega))
+  intro ⟨o2, iter2⟩ ⟨ho2, hs2, he2⟩
+  simp only [ho2]
+  step as ⟨ra2, hra2⟩
+  step as ⟨l3, hl3⟩
+  step as ⟨l4, hl4⟩
+  step as ⟨w1, cb1, hadd1⟩
+  step as ⟨i1, hi1⟩
+  step as ⟨od2, back2, hod2, hback2⟩
+  step as ⟨o2', ho2'⟩
+  obtain ⟨hstep1, hi1le⟩ := norm_oadd hadd1 hi1
+  simp only [hra2, haval, hs1, hs] at hl3
+  simp at hl3
+  have hoval2 : o2'.val = [w0, w1, z2, z3] := by
+    rw [ho2', Array.set_val_eq, hod2, hoval1, hs1, hs]
+    rfl
+  simp only [hback2]
+  -- iteration 3 : l = 2
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter2 (by
+      simp only [he2, he1]; omega))
+  intro ⟨o3, iter3⟩ ⟨ho3, hs3, he3⟩
+  simp only [ho3]
+  step as ⟨ra3, hra3⟩
+  step as ⟨l5, hl5⟩
+  step as ⟨l6, hl6⟩
+  step as ⟨w2, cb2, hadd2⟩
+  step as ⟨i2, hi2⟩
+  step as ⟨od3, back3, hod3, hback3⟩
+  step as ⟨o3', ho3'⟩
+  obtain ⟨hstep2, hi2le⟩ := norm_oadd hadd2 hi2
+  simp only [hra3, haval, hs2, hs1, hs] at hl5
+  simp at hl5
+  have hoval3 : o3'.val = [w0, w1, w2, z3] := by
+    rw [ho3', Array.set_val_eq, hod3, hoval2, hs2, hs1, hs]
+    rfl
+  simp only [hback3]
+  -- iteration 4 : l = 3
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter3 (by
+      simp only [he3, he2, he1]; omega))
+  intro ⟨o4, iter4⟩ ⟨ho4, hs4, he4⟩
+  simp only [ho4]
+  step as ⟨ra4, hra4⟩
+  step as ⟨l7, hl7⟩
+  step as ⟨l8, hl8⟩
+  step as ⟨w3, cb3, hadd3⟩
+  step as ⟨i3, hi3⟩
+  step as ⟨od4, back4, hod4, hback4⟩
+  step as ⟨o4', ho4'⟩
+  obtain ⟨hstep3, hi3le⟩ := norm_oadd hadd3 hi3
+  simp only [hra4, haval, hs3, hs2, hs1, hs] at hl7
+  simp at hl7
+  have hoval4 : o4'.val = [w0, w1, w2, w3] := by
+    rw [ho4', Array.set_val_eq, hod4, hoval3, hs3, hs2, hs1, hs]
+    rfl
+  simp only [hback4]
+  -- iteration 5 : exhausted
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_none_spec iter4 (by
+      simp only [he4, he3, he2, he1]; omega))
+  intro ⟨o5, iter5⟩ ⟨ho5, hi5⟩
+  simp only [ho5]
+  apply spec_ok_of
+  have hosum := Uint4.toNat_of_limbs hoval4
+  have hasum := Uint4.toNat_of_limbs haval
+  rw [hl2, hl1] at hstep0
+  rw [hl4, hl3] at hstep1
+  rw [hl6, hl5] at hstep2
+  rw [hl8, hl7] at hstep3
+  have hw0 : (w0).val < 2^64 := w0.hBounds
+  have hw1 : (w1).val < 2^64 := w1.hBounds
+  have hw2 : (w2).val < 2^64 := w2.hBounds
+  have hw3 : (w3).val < 2^64 := w3.hBounds
+  have ha0b : (a0).val < 2^64 := a0.hBounds
+  have ha1b : (a1).val < 2^64 := a1.hBounds
+  have ha2b : (a2).val < 2^64 := a2.hBounds
+  have ha3b : (a3).val < 2^64 := a3.hBounds
+  constructor
+  · intro hm0
+    rw [hm0, Nat.xor_zero] at hstep0 hstep1 hstep2 hstep3
+    rw [hm0, if_pos rfl] at hc
+    rw [hosum, hasum]
+    omega
+  · intro hmne
+    have hmo : mask.val = 2^64 - 1 := by
+      rcases hm with h | h
+      · exact absurd h hmne
+      · exact h
+    rw [xor_allOnes_val a0 mask hmo] at hstep0
+    rw [xor_allOnes_val a1 mask hmo] at hstep1
+    rw [xor_allOnes_val a2 mask hmo] at hstep2
+    rw [xor_allOnes_val a3 mask hmo] at hstep3
+    rw [hmo] at hc
+    rw [if_neg (by norm_num)] at hc
+    rw [hosum, hasum]
+    omega
+
+/-- Value-level spec of the low half of the fused negate-and-add-modulus chain
+    (`step_loop3`, limbs 0 and 1): writes the two low limbs of `u` and produces
+    exactly `T_lo + M_lo + carry` where `T_lo` is the (conditionally complemented)
+    low half of `u_sub_v` and `M_lo` is the masked low half of `p`, `2p` or `0`. -/
+theorem step_loop3_value_spec (iter : core.ops.range.Range Std.Usize)
+    (u u_sub_v : Uint4) (N A2 A1 carry : Limb)
+    (hs : iter.start.val = 0) (he : iter.«end».val = 2)
+    (hN : IsMask N) (hA2 : IsMask A2) (hA1 : IsMask A1)
+    (hsub : A2.val ≠ 0 → A1.val ≠ 0)
+    (hc : carry.val = if N.val = 0 then 0 else 1) :
+    field.verified.invert.invert.step_loop3 iter u u_sub_v N A2 A1 carry
+      ⦃ o co => co.val ≤ 1 ∧ ∃ w0 w1 : Limb,
+          o.val = [w0, w1, u.val[2]!, u.val[3]!] ∧
+          w0.val + 2^64 * w1.val + 2^128 * co.val
+            = (if N.val = 0
+               then u_sub_v.val[0]!.val + 2^64 * u_sub_v.val[1]!.val
+               else 2^128 - 1 - (u_sub_v.val[0]!.val + 2^64 * u_sub_v.val[1]!.val))
+              + (if A1.val = 0 then 0
+                 else if A2.val = 0 then p % 2^128 else (2 * p) % 2^128)
+              + carry.val ⦄ := by
+  obtain ⟨s0, s1, s2, s3, hsval⟩ := Uint4.exists_four_limbs u_sub_v
+  obtain ⟨z0, z1, z2, z3, hzval⟩ := Uint4.exists_four_limbs u
+  have hp : p = 0x7ffffffffffffffffffffffffffffffff735481d1969f317f9850b68df11df53 := by
+    norm_num [p]
+  have hpx : p ^^^ 2 * p
+      = 0x80000000000000000000000000000000195fd8272bba15380a8f1db9613261f5 := by decide
+  unfold field.verified.invert.invert.step_loop3
+  -- iteration 1 : l = 0
+  apply loop_step
+  unfold field.verified.invert.invert.step_loop3.body
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter (by omega))
+  intro ⟨o, iter1⟩ ⟨ho, hs1, he1⟩
+  simp only [ho]
+  step as ⟨mo, hmo⟩
+  step as ⟨ma, hma⟩
+  step as ⟨l1, hl1⟩
+  step as ⟨l2, hl2⟩
+  step as ⟨mx, hmx⟩
+  step as ⟨xa, hxa⟩
+  step as ⟨l3, hl3⟩
+  step as ⟨l4, hl4⟩
+  step as ⟨mi0, hmi0⟩
+  step as ⟨sa, hsa⟩
+  step as ⟨l5, hl5⟩
+  step as ⟨l6, hl6⟩
+  step as ⟨l7, hl7⟩
+  step as ⟨w0, cb0, hadd0⟩
+  step as ⟨i0, hi0⟩
+  step as ⟨ua, back, hua, hback⟩
+  step as ⟨o1, ho1⟩
+  obtain ⟨hstep0, hi0le⟩ := norm_oadd hadd0 hi0
+  -- resolve the two constants' limb 0
+  obtain ⟨q0, q1, q2, q3, hqv⟩ := Uint4.exists_four_limbs mo
+  have hq0 : q0.val = 0xf9850b68df11df53 := by
+    have hsum := Uint4.toNat_of_limbs hqv
+    rw [hmo, hp] at hsum
+    have h0 : (q0).val < 2^64 := q0.hBounds
+    have h1 : (q1).val < 2^64 := q1.hBounds
+    have h2 : (q2).val < 2^64 := q2.hBounds
+    have h3 : (q3).val < 2^64 := q3.hBounds
+    omega
+  obtain ⟨x0, x1, x2, x3, hxv⟩ := Uint4.exists_four_limbs mx
+  have hx0 : x0.val = 0x0a8f1db9613261f5 := by
+    have hsum := Uint4.toNat_of_limbs hxv
+    rw [hmx, hpx] at hsum
+    have h0 : (x0).val < 2^64 := x0.hBounds
+    have h1 : (x1).val < 2^64 := x1.hBounds
+    have h2 : (x2).val < 2^64 := x2.hBounds
+    have h3 : (x3).val < 2^64 := x3.hBounds
+    omega
+  simp only [hma, hqv, hs] at hl1
+  simp at hl1
+  simp only [hxa, hxv, hs] at hl3
+  simp at hl3
+  simp only [hsa, hsval, hs] at hl5
+  simp at hl5
+  have hoval1 : o1.val = [w0, z1, z2, z3] := by
+    rw [ho1, Array.set_val_eq, hua, hzval, hs]
+    rfl
+  simp only [hback]
+  -- iteration 2 : l = 1
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter1 (by
+      simp only [he1]; omega))
+  intro ⟨o2, iter2⟩ ⟨ho2, hs2, he2⟩
+  simp only [ho2]
+  step as ⟨mo', hmo'⟩
+  step as ⟨ma', hma'⟩
+  step as ⟨l1', hl1'⟩
+  step as ⟨l2', hl2'⟩
+  step as ⟨mx', hmx'⟩
+  step as ⟨xa', hxa'⟩
+  step as ⟨l3', hl3'⟩
+  step as ⟨l4', hl4'⟩
+  step as ⟨mi1, hmi1⟩
+  step as ⟨sa', hsa'⟩
+  step as ⟨l5', hl5'⟩
+  step as ⟨l6', hl6'⟩
+  step as ⟨l7', hl7'⟩
+  step as ⟨w1, cb1, hadd1⟩
+  step as ⟨i1, hi1⟩
+  step as ⟨ua', back', hua', hback'⟩
+  step as ⟨o2', ho2'⟩
+  obtain ⟨hstep1, hi1le⟩ := norm_oadd hadd1 hi1
+  obtain ⟨q0', q1', q2', q3', hqv'⟩ := Uint4.exists_four_limbs mo'
+  have hq1 : q1'.val = 0xf735481d1969f317 := by
+    have hsum := Uint4.toNat_of_limbs hqv'
+    rw [hmo', hp] at hsum
+    have h0 : (q0').val < 2^64 := q0'.hBounds
+    have h1 : (q1').val < 2^64 := q1'.hBounds
+    have h2 : (q2').val < 2^64 := q2'.hBounds
+    have h3 : (q3').val < 2^64 := q3'.hBounds
+    omega
+  obtain ⟨x0', x1', x2', x3', hxv'⟩ := Uint4.exists_four_limbs mx'
+  have hx1 : x1'.val = 0x195fd8272bba1538 := by
+    have hsum := Uint4.toNat_of_limbs hxv'
+    rw [hmx', hpx] at hsum
+    have h0 : (x0').val < 2^64 := x0'.hBounds
+    have h1 : (x1').val < 2^64 := x1'.hBounds
+    have h2 : (x2').val < 2^64 := x2'.hBounds
+    have h3 : (x3').val < 2^64 := x3'.hBounds
+    omega
+  simp only [hma', hqv', hs1, hs] at hl1'
+  simp at hl1'
+  simp only [hxa', hxv', hs1, hs] at hl3'
+  simp at hl3'
+  simp only [hsa', hsval, hs1, hs] at hl5'
+  simp at hl5'
+  have hoval2 : o2'.val = [w0, w1, z2, z3] := by
+    rw [ho2', Array.set_val_eq, hua', hoval1, hs1, hs]
+    rfl
+  simp only [hback']
+  -- iteration 3 : exhausted
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_none_spec iter2 (by
+      simp only [he2, he1]; omega))
+  intro ⟨o3, iter3⟩ ⟨ho3, hi3⟩
+  simp only [ho3]
+  apply spec_ok_of
+  simp only [WP.uncurry'_pair]
+  -- assemble
+  rw [hl1, hq0] at hl2
+  rw [hl3, hx0] at hl4
+  rw [hl1', hq1] at hl2'
+  rw [hl3', hx1] at hl4'
+  rw [hl2, hl4] at hmi0
+  rw [hl2', hl4'] at hmi1
+  rw [hmi0] at hl7
+  rw [hmi1] at hl7'
+  rw [hl5] at hl6
+  rw [hl5'] at hl6'
+  rw [hl6, hl7] at hstep0
+  rw [hl6', hl7'] at hstep1
+  have hs0b : (s0).val < 2^64 := s0.hBounds
+  have hs1b : (s1).val < 2^64 := s1.hBounds
+  have hw0b : (w0).val < 2^64 := w0.hBounds
+  have hw1b : (w1).val < 2^64 := w1.hBounds
+  have hcle : carry.val ≤ 1 := by rw [hc]; split <;> omega
+  refine ⟨hi1le, w0, w1, ?_, ?_⟩
+  · rw [hoval2, hzval]
+    simp [List.getElem!_cons_zero, List.getElem!_cons_succ]
+  · rw [hsval]
+    simp only [List.getElem!_cons_zero, List.getElem!_cons_succ]
+    -- resolve the negation mask N in the goal and the chain equations,
+    -- then the addend masks (A1, A2)
+    rcases hN with hn | hn
+    · -- N = 0 : no negation, seed carry 0
+      rw [hn] at hstep0 hstep1
+      rw [Nat.xor_zero] at hstep0
+      rw [Nat.xor_zero] at hstep1
+      rw [if_pos hn]
+      have hc' : carry.val = 0 := by rw [hc, if_pos hn]
+      rcases hA1 with h1 | h1
+      · have h2 : A2.val = 0 := by
+          rcases hA2 with h2 | h2
+          · exact h2
+          · exact absurd h1 (hsub (by rw [h2]; norm_num))
+        rw [h1, h2, Nat.and_zero, Nat.and_zero] at hstep0 hstep1
+        rw [Nat.xor_zero] at hstep0
+        rw [Nat.xor_zero] at hstep1
+        rw [if_pos h1]
+        omega
+      · have hone0 : (0xf9850b68df11df53 : ℕ) &&& A1.val = 0xf9850b68df11df53 := by
+          rw [h1]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+        have hone1 : (0xf735481d1969f317 : ℕ) &&& A1.val = 0xf735481d1969f317 := by
+          rw [h1]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+        rw [hone0] at hstep0
+        rw [hone1] at hstep1
+        rw [if_neg (show ¬ A1.val = 0 by rw [h1]; norm_num)]
+        rcases hA2 with h2 | h2
+        · rw [h2, Nat.and_zero] at hstep0 hstep1
+          rw [Nat.xor_zero] at hstep0
+          rw [Nat.xor_zero] at hstep1
+          rw [if_pos h2]
+          have hml : p % 2^128 = 0xf735481d1969f317f9850b68df11df53 := by norm_num [p]
+          rw [hml]
+          omega
+        · have htwo0 : (0x0a8f1db9613261f5 : ℕ) &&& A2.val = 0x0a8f1db9613261f5 := by
+            rw [h2]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+          have htwo1 : (0x195fd8272bba1538 : ℕ) &&& A2.val = 0x195fd8272bba1538 := by
+            rw [h2]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+          rw [htwo0] at hstep0
+          rw [htwo1] at hstep1
+          rw [show (0xf9850b68df11df53 : ℕ) ^^^ 0x0a8f1db9613261f5
+              = 0xf30a16d1be23bea6 from by decide] at hstep0
+          rw [show (0xf735481d1969f317 : ℕ) ^^^ 0x195fd8272bba1538
+              = 0xee6a903a32d3e62f from by decide] at hstep1
+          rw [if_neg (show ¬ A2.val = 0 by rw [h2]; norm_num)]
+          have hml : (2 * p) % 2^128 = 0xee6a903a32d3e62ff30a16d1be23bea6 := by norm_num [p]
+          rw [hml]
+          omega
+    · -- N = all-ones : complement, seed carry 1
+      rw [xor_allOnes_val s0 N hn] at hstep0
+      rw [xor_allOnes_val s1 N hn] at hstep1
+      rw [if_neg (show ¬ N.val = 0 by rw [hn]; norm_num)]
+      have hc' : carry.val = 1 := by
+        rw [hc, if_neg (show ¬ N.val = 0 by rw [hn]; norm_num)]
+      rcases hA1 with h1 | h1
+      · have h2 : A2.val = 0 := by
+          rcases hA2 with h2 | h2
+          · exact h2
+          · exact absurd h1 (hsub (by rw [h2]; norm_num))
+        rw [h1, h2, Nat.and_zero, Nat.and_zero] at hstep0 hstep1
+        rw [Nat.xor_zero] at hstep0
+        rw [Nat.xor_zero] at hstep1
+        rw [if_pos h1]
+        omega
+      · have hone0 : (0xf9850b68df11df53 : ℕ) &&& A1.val = 0xf9850b68df11df53 := by
+          rw [h1]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+        have hone1 : (0xf735481d1969f317 : ℕ) &&& A1.val = 0xf735481d1969f317 := by
+          rw [h1]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+        rw [hone0] at hstep0
+        rw [hone1] at hstep1
+        rw [if_neg (show ¬ A1.val = 0 by rw [h1]; norm_num)]
+        rcases hA2 with h2 | h2
+        · rw [h2, Nat.and_zero] at hstep0 hstep1
+          rw [Nat.xor_zero] at hstep0
+          rw [Nat.xor_zero] at hstep1
+          rw [if_pos h2]
+          have hml : p % 2^128 = 0xf735481d1969f317f9850b68df11df53 := by norm_num [p]
+          rw [hml]
+          omega
+        · have htwo0 : (0x0a8f1db9613261f5 : ℕ) &&& A2.val = 0x0a8f1db9613261f5 := by
+            rw [h2]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+          have htwo1 : (0x195fd8272bba1538 : ℕ) &&& A2.val = 0x195fd8272bba1538 := by
+            rw [h2]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+          rw [htwo0] at hstep0
+          rw [htwo1] at hstep1
+          rw [show (0xf9850b68df11df53 : ℕ) ^^^ 0x0a8f1db9613261f5
+              = 0xf30a16d1be23bea6 from by decide] at hstep0
+          rw [show (0xf735481d1969f317 : ℕ) ^^^ 0x195fd8272bba1538
+              = 0xee6a903a32d3e62f from by decide] at hstep1
+          rw [if_neg (show ¬ A2.val = 0 by rw [h2]; norm_num)]
+          have hml : (2 * p) % 2^128 = 0xee6a903a32d3e62ff30a16d1be23bea6 := by norm_num [p]
+          rw [hml]
+          omega
+
+
+/-- Value-level spec of the high half of the chain (`step_loop4`, limbs 2 and 3):
+    writes the two high limbs of `u`; the discarded final carry is existentially
+    exposed so the caller can reason about the 256-bit wrap. -/
+theorem step_loop4_value_spec (iter : core.ops.range.Range Std.Usize)
+    (u u_sub_v : Uint4) (N A2 A1 carry : Limb)
+    (hs : iter.start.val = 2) (he : iter.«end».val = 4)
+    (hN : IsMask N) (hA2 : IsMask A2) (hA1 : IsMask A1)
+    (hsub : A2.val ≠ 0 → A1.val ≠ 0) (hcle : carry.val ≤ 1) :
+    field.verified.invert.invert.step_loop4 iter u u_sub_v N A2 A1 carry
+      ⦃ o => ∃ (w2 w3 : Limb) (c4 : ℕ), c4 ≤ 1 ∧
+          o.val = [u.val[0]!, u.val[1]!, w2, w3] ∧
+          w2.val + 2^64 * w3.val + 2^128 * c4
+            = (if N.val = 0
+               then u_sub_v.val[2]!.val + 2^64 * u_sub_v.val[3]!.val
+               else 2^128 - 1 - (u_sub_v.val[2]!.val + 2^64 * u_sub_v.val[3]!.val))
+              + (if A1.val = 0 then 0
+                 else if A2.val = 0 then p / 2^128 else (2 * p) / 2^128)
+              + carry.val ⦄ := by
+  obtain ⟨s0, s1, s2, s3, hsval⟩ := Uint4.exists_four_limbs u_sub_v
+  obtain ⟨z0, z1, z2, z3, hzval⟩ := Uint4.exists_four_limbs u
+  have hp : p = 0x7ffffffffffffffffffffffffffffffff735481d1969f317f9850b68df11df53 := by
+    norm_num [p]
+  have hpx : p ^^^ 2 * p
+      = 0x80000000000000000000000000000000195fd8272bba15380a8f1db9613261f5 := by decide
+  unfold field.verified.invert.invert.step_loop4
+  -- iteration 1 : l = 2
+  apply loop_step
+  unfold field.verified.invert.invert.step_loop4.body
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter (by omega))
+  intro ⟨o, iter1⟩ ⟨ho, hs1, he1⟩
+  simp only [ho]
+  step as ⟨mo, hmo⟩
+  step as ⟨ma, hma⟩
+  step as ⟨l1, hl1⟩
+  step as ⟨l2, hl2⟩
+  step as ⟨mx, hmx⟩
+  step as ⟨xa, hxa⟩
+  step as ⟨l3, hl3⟩
+  step as ⟨l4, hl4⟩
+  step as ⟨mi2, hmi2⟩
+  step as ⟨sa, hsa⟩
+  step as ⟨l5, hl5⟩
+  step as ⟨l6, hl6⟩
+  step as ⟨w2, c2, hadd2, hc2le⟩
+  step as ⟨ua, back, hua, hback⟩
+  step as ⟨o1, ho1⟩
+  obtain ⟨q0, q1, q2, q3, hqv⟩ := Uint4.exists_four_limbs mo
+  have hq2 : q2.val = 0xffffffffffffffff := by
+    have hsum := Uint4.toNat_of_limbs hqv
+    rw [hmo, hp] at hsum
+    have h0 : (q0).val < 2^64 := q0.hBounds
+    have h1 : (q1).val < 2^64 := q1.hBounds
+    have h2 : (q2).val < 2^64 := q2.hBounds
+    have h3 : (q3).val < 2^64 := q3.hBounds
+    omega
+  obtain ⟨x0, x1, x2, x3, hxv⟩ := Uint4.exists_four_limbs mx
+  have hx2 : x2.val = 0 := by
+    have hsum := Uint4.toNat_of_limbs hxv
+    rw [hmx, hpx] at hsum
+    have h0 : (x0).val < 2^64 := x0.hBounds
+    have h1 : (x1).val < 2^64 := x1.hBounds
+    have h2 : (x2).val < 2^64 := x2.hBounds
+    have h3 : (x3).val < 2^64 := x3.hBounds
+    omega
+  simp only [hma, hqv, hs] at hl1
+  simp at hl1
+  simp only [hxa, hxv, hs] at hl3
+  simp at hl3
+  simp only [hsa, hsval, hs] at hl5
+  simp at hl5
+  have hoval1 : o1.val = [z0, z1, w2, z3] := by
+    rw [ho1, Array.set_val_eq, hua, hzval, hs]
+    rfl
+  simp only [hback]
+  -- iteration 2 : l = 3
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_some_spec iter1 (by
+      simp only [he1]; omega))
+  intro ⟨o2, iter2⟩ ⟨ho2, hs2, he2⟩
+  simp only [ho2]
+  step as ⟨mo', hmo'⟩
+  step as ⟨ma', hma'⟩
+  step as ⟨l1', hl1'⟩
+  step as ⟨l2', hl2'⟩
+  step as ⟨mx', hmx'⟩
+  step as ⟨xa', hxa'⟩
+  step as ⟨l3', hl3'⟩
+  step as ⟨l4', hl4'⟩
+  step as ⟨mi3, hmi3⟩
+  step as ⟨sa', hsa'⟩
+  step as ⟨l5', hl5'⟩
+  step as ⟨l6', hl6'⟩
+  step as ⟨w3, c3, hadd3, hc3le⟩
+  step as ⟨ua', back', hua', hback'⟩
+  step as ⟨o2', ho2'⟩
+  obtain ⟨q0', q1', q2', q3', hqv'⟩ := Uint4.exists_four_limbs mo'
+  have hq3 : q3'.val = 0x7fffffffffffffff := by
+    have hsum := Uint4.toNat_of_limbs hqv'
+    rw [hmo', hp] at hsum
+    have h0 : (q0').val < 2^64 := q0'.hBounds
+    have h1 : (q1').val < 2^64 := q1'.hBounds
+    have h2 : (q2').val < 2^64 := q2'.hBounds
+    have h3 : (q3').val < 2^64 := q3'.hBounds
+    omega
+  obtain ⟨x0', x1', x2', x3', hxv'⟩ := Uint4.exists_four_limbs mx'
+  have hx3 : x3'.val = 0x8000000000000000 := by
+    have hsum := Uint4.toNat_of_limbs hxv'
+    rw [hmx', hpx] at hsum
+    have h0 : (x0').val < 2^64 := x0'.hBounds
+    have h1 : (x1').val < 2^64 := x1'.hBounds
+    have h2 : (x2').val < 2^64 := x2'.hBounds
+    have h3 : (x3').val < 2^64 := x3'.hBounds
+    omega
+  simp only [hma', hqv', hs1, hs] at hl1'
+  simp at hl1'
+  simp only [hxa', hxv', hs1, hs] at hl3'
+  simp at hl3'
+  simp only [hsa', hsval, hs1, hs] at hl5'
+  simp at hl5'
+  have hoval2 : o2'.val = [z0, z1, w2, w3] := by
+    rw [ho2', Array.set_val_eq, hua', hoval1, hs1, hs]
+    rfl
+  simp only [hback']
+  -- iteration 3 : exhausted
+  apply loop_step
+  try simp only []
+  apply Aeneas.Std.WP.spec_bind
+    (core.iter.range.IteratorRange.next_Usize_none_spec iter2 (by
+      simp only [he2, he1]; omega))
+  intro ⟨o3, iter3⟩ ⟨ho3, hi3⟩
+  simp only [ho3]
+  apply spec_ok_of
+  -- assemble
+  rw [hl1, hq2] at hl2
+  rw [hl3, hx2] at hl4
+  rw [hl2, hl4] at hmi2
+  rw [hl1', hq3] at hl2'
+  rw [hl3', hx3] at hl4'
+  rw [hl2', hl4'] at hmi3
+  rw [hl5] at hl6
+  rw [hl5'] at hl6'
+  rw [hl6, hmi2] at hadd2
+  rw [hl6', hmi3] at hadd3
+  have hs2b : (s2).val < 2^64 := s2.hBounds
+  have hs3b : (s3).val < 2^64 := s3.hBounds
+  have hw2b : (w2).val < 2^64 := w2.hBounds
+  have hw3b : (w3).val < 2^64 := w3.hBounds
+  refine ⟨w2, w3, c3.val, hc3le, ?_, ?_⟩
+  · rw [hoval2, hzval]
+    simp [List.getElem!_cons_zero, List.getElem!_cons_succ]
+  · rw [hsval]
+    simp only [List.getElem!_cons_zero, List.getElem!_cons_succ]
+    have hph : p / 2^128 = 0x7fffffffffffffffffffffffffffffff := by norm_num [p]
+    have h2ph : (2 * p) / 2^128 = 0xffffffffffffffffffffffffffffffff := by norm_num [p]
+    rcases hN with hn | hn
+    · -- N = 0
+      rw [hn, Nat.xor_zero] at hadd2 hadd3
+      rw [if_pos hn]
+      rcases hA1 with h1 | h1
+      · have h2 : A2.val = 0 := by
+          rcases hA2 with h2 | h2
+          · exact h2
+          · exact absurd h1 (hsub (by rw [h2]; norm_num))
+        rw [h1, h2, Nat.and_zero, Nat.and_zero, Nat.xor_zero] at hadd2 hadd3
+        rw [if_pos h1]
+        omega
+      · have hone2 : (0xffffffffffffffff : ℕ) &&& A1.val = 0xffffffffffffffff := by
+          rw [h1]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+        have hone3 : (0x7fffffffffffffff : ℕ) &&& A1.val = 0x7fffffffffffffff := by
+          rw [h1]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+        rw [hone2] at hadd2
+        rw [hone3] at hadd3
+        rw [if_neg (show ¬ A1.val = 0 by rw [h1]; norm_num)]
+        rcases hA2 with h2 | h2
+        · rw [h2, Nat.and_zero, Nat.xor_zero] at hadd2 hadd3
+          rw [if_pos h2, hph]
+          omega
+        · have htop : (0x8000000000000000 : ℕ) &&& A2.val = 0x8000000000000000 := by
+            rw [h2]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+          rw [Nat.zero_and, Nat.xor_zero] at hadd2
+          rw [htop, show (0x7fffffffffffffff : ℕ) ^^^ 0x8000000000000000
+              = 0xffffffffffffffff from by decide] at hadd3
+          rw [if_neg (show ¬ A2.val = 0 by rw [h2]; norm_num), h2ph]
+          omega
+    · -- N = all-ones
+      rw [xor_allOnes_val s2 N hn] at hadd2
+      rw [xor_allOnes_val s3 N hn] at hadd3
+      rw [if_neg (show ¬ N.val = 0 by rw [hn]; norm_num)]
+      rcases hA1 with h1 | h1
+      · have h2 : A2.val = 0 := by
+          rcases hA2 with h2 | h2
+          · exact h2
+          · exact absurd h1 (hsub (by rw [h2]; norm_num))
+        rw [h1, h2, Nat.and_zero, Nat.and_zero, Nat.xor_zero] at hadd2 hadd3
+        rw [if_pos h1]
+        omega
+      · have hone2 : (0xffffffffffffffff : ℕ) &&& A1.val = 0xffffffffffffffff := by
+          rw [h1]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+        have hone3 : (0x7fffffffffffffff : ℕ) &&& A1.val = 0x7fffffffffffffff := by
+          rw [h1]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+        rw [hone2] at hadd2
+        rw [hone3] at hadd3
+        rw [if_neg (show ¬ A1.val = 0 by rw [h1]; norm_num)]
+        rcases hA2 with h2 | h2
+        · rw [h2, Nat.and_zero, Nat.xor_zero] at hadd2 hadd3
+          rw [if_pos h2, hph]
+          omega
+        · have htop : (0x8000000000000000 : ℕ) &&& A2.val = 0x8000000000000000 := by
+            rw [h2]; exact Nat.and_two_pow_sub_one_of_lt_two_pow (by norm_num)
+          rw [Nat.zero_and, Nat.xor_zero] at hadd2
+          rw [htop, show (0x7fffffffffffffff : ℕ) ^^^ 0x8000000000000000
+              = 0xffffffffffffffff from by decide] at hadd3
+          rw [if_neg (show ¬ A2.val = 0 by rw [h2]; norm_num), h2ph]
+          omega
+
+/-! ## Small arithmetic helpers for the step invariant -/
+
+/-- gcd is preserved by halving an even member against an odd second argument. -/
+theorem gcd_half_of_even_odd (x b : ℕ) (hx : x % 2 = 0) (hb : b % 2 = 1) :
+    Nat.gcd (x / 2) b = Nat.gcd x b := by
+  conv_rhs => rw [show x = 2 * (x / 2) by omega]
+  exact (Nat.Coprime.gcd_mul_left_cancel (x / 2)
+    (Nat.coprime_two_left.mpr (Nat.odd_iff.mpr hb))).symm
+
+theorem two_ne_zero_zmod : (2 : ZMod p) ≠ 0 := by
+  haveI : Fact (Nat.Prime p) := fact_p_prime
+  have hplt : 2 < p := by norm_num [p]
+  intro h
+  have h2 : ((2 : ℕ) : ZMod p) = 0 := by push_cast; exact h
+  have hval := congrArg ZMod.val h2
+  rw [ZMod.val_cast_of_lt hplt, ZMod.val_zero] at hval
+  omega
+
+/-- Parametric congruence step (the `Cancel2Mod` argument): from the exact ℕ identities
+    `2A' + B = A` and `2U' + V = U + k·p` and the congruences `A ≡ U·y`, `B ≡ V·y`,
+    conclude `A' ≡ U'·y (mod p)`.  Instantiated with `(A,B,U,V) := (a,b,u,v)` in the
+    subtract case, `(b,a,v,u)` in the swap case and `(a,0,u,0)` in the even case. -/
+theorem cong_of_double (y A B U V A' U' k : ℕ)
+    (hA : (A : ZMod p) = (U : ZMod p) * (y : ZMod p))
+    (hB : (B : ZMod p) = (V : ZMod p) * (y : ZMod p))
+    (h2a : 2 * A' + B = A) (h2u : 2 * U' + V = U + k * p) :
+    (A' : ZMod p) = (U' : ZMod p) * (y : ZMod p) := by
+  haveI : Fact (Nat.Prime p) := fact_p_prime
+  have hc : (2 : ZMod p) * (A' : ZMod p) + (V : ZMod p) * y
+      = (U : ZMod p) * y := by
+    have hc0 := congrArg (Nat.cast : ℕ → ZMod p) h2a
+    push_cast at hc0
+    rw [hB] at hc0
+    rw [← hA]
+    exact hc0
+  have hu : (2 : ZMod p) * (U' : ZMod p) + (V : ZMod p) = (U : ZMod p) := by
+    have hu0 := congrArg (Nat.cast : ℕ → ZMod p) h2u
+    push_cast at hu0
+    rwa [ZMod.natCast_self, mul_zero, add_zero] at hu0
+  apply mul_left_cancel₀ two_ne_zero_zmod
+  have hexp : (2 : ZMod p) * (A' : ZMod p)
+      = ((2 : ZMod p) * (U' : ZMod p) + (V : ZMod p)) * y - (V : ZMod p) * y := by
+    rw [hu, ← hc]; ring
+  rw [hexp]; ring
+
+theorem isMask_xor {x y r : Limb} (hx : IsMask x) (hy : IsMask y)
+    (hr : r.val = x.val ^^^ y.val) : IsMask r := by
+  unfold IsMask at *
+  rcases hx with hx | hx <;> rcases hy with hy | hy <;> rw [hx, hy] at hr <;>
+    simp only [Nat.zero_xor, Nat.xor_zero, Nat.xor_self] at hr <;> omega
+
+theorem isMask_or {x y r : Limb} (hx : IsMask x) (hy : IsMask y)
+    (hr : r.val = x.val ||| y.val) : IsMask r := by
+  unfold IsMask at *
+  rcases hx with hx | hx <;> rcases hy with hy | hy <;> rw [hx, hy] at hr <;>
+    simp only [Nat.zero_or, Nat.or_zero, Nat.or_self] at hr <;> omega
+
+/-! ## The Algorithm-1 step invariant (task item 3)
 
 The Rust `step` is one iteration of Algorithm 1 of "Optimized Binary GCD for Modular
 Inversion" (https://eprint.iacr.org/2020/972): on state `(a, b, u, v)` with `b` odd it
@@ -806,78 +1818,485 @@ preserved, `b` stays odd, `u,v` stay in `[0, p]`, `gcd(a,b)` is unchanged, and t
 bit-size potential halves: `2·a'·b' ≤ a·b`. -/
 
 /-- Arithmetic part of the binary-GCD invariant for the state `(a, b, u, v)` relative to
-    the inverted value `y`. -/
+    the inverted value `y`.
+
+    `a, b ≤ p` keep the a-side subtraction chain in range and are trivially inductive
+    (`b' ∈ {a, b}`, `a' = ⌊·/2⌋`). The fused negate-and-add-modulus carry chain now
+    includes the selected two-modulus contribution on all four limbs, so these local
+    arithmetic and modular facts are sufficient. -/
 def InvA (y : ℕ) (a b u v : Uint4) : Prop :=
   b.toNat % 2 = 1 ∧
   u.toNat ≤ p ∧
   v.toNat ≤ p ∧
   ((a.toNat : ZMod p) = (u.toNat : ZMod p) * (y : ZMod p)) ∧
   ((b.toNat : ZMod p) = (v.toNat : ZMod p) * (y : ZMod p)) ∧
-  Nat.gcd a.toNat b.toNat = Nat.gcd y p
+  Nat.gcd a.toNat b.toNat = Nat.gcd y p ∧
+  a.toNat ≤ p ∧
+  b.toNat ≤ p
 
 /-- Full loop invariant: `InvA` plus zero-propagation (for `y = 0` the working value `a`
     and the output accumulator `v` stay `0`; this clause is discharged by the *proved*
-    `step_basic_spec`, not by the sorried congruence lemma).  A structure (rather than a
+    `step_basic_spec`). A structure (rather than a
     conjunction) so that tactic normalization cannot flatten it. -/
 structure Inv (y : ℕ) (a b u v : Uint4) : Prop where
   invA : InvA y a b u v
   zero : y = 0 → a.toNat = 0 ∧ v.toNat = 0
 
-/-- **THE one `sorry` of this file**: one `step` preserves the arithmetic invariant and
-    halves the potential `a·b`. -/
+set_option maxHeartbeats 8000000 in
+/-- One `step` preserves the arithmetic invariant and halves the potential `a·b`.
+    The former source used a top-bit OR for the high contribution of `2p`; that operation
+    was exact only under a non-inductive window condition. The repaired source selects the
+    high limbs of `2p` inside `step_loop4`, so this proof now follows directly from the
+    four-limb full-adder identities with no reachability hypothesis. -/
 theorem step_congruence (y : ℕ) (a b u v : Uint4) (h : InvA y a b u v) :
     field.verified.invert.invert.step a b u v
       ⦃ s => InvA y s.1 s.2.1 s.2.2.1 s.2.2.2 ∧
              2 * (s.1.toNat * s.2.1.toNat) ≤ a.toNat * b.toNat ⦄ := by
-  /- PROOF OBLIGATION (per-step correctness of eprint 2020/972 Algorithm 1; this is the
-     analogue of the Veridise Dafny per-iteration lemmas for `invert::step` in
-     https://github.com/VeridiseAuditing/helioselene-dafny-proofs — the repository the
-     Rust comments cite for `sub_with_bounded_overflow` (crypto_bigint_0_5_5/Limb.dfy
-     L342-355) and `select` (helioselene/field/Base.dfy L238-264); the remaining
-     obligations correspond to its lemmas about the borrow-chain subtraction, the
-     conditional two's-complement negation, and the fused negate-and-add-modulus carry
-     chain of `step`.)
-
-     Value-level facts to establish about the branch-free code (all loops are 4- resp.
-     2-limb chains of `sub_with_bounded_overflow` / `overflowing_add` /
-     `add_with_bounded_overflow`, already given exact per-limb specs above; what is
-     missing is lifting them to `Uint.toNat` by induction over the limb index, in the
-     style of `select_loop_spec`):
-
-     1. `step_loop0` computes `a_sub_b` with
-        `a_sub_b.toNat + b.toNat = a.toNat + 2^256·borrow` and `borrow = 1 ↔ a < b`
-        (multiprecision subtraction chain; `a_lt_b = -borrow` is then the 0/all-ones
-        comparison mask).
-     2. `step_loop1` (XOR with `a_lt_b` + carry seeded `1 & a_lt_b`) yields
-        `a_diff_b.toNat = |a.toNat - b.toNat|` — conditional two's-complement negation:
-        for `a < b`, `¬x + 1 = 2^256 - x` on the wrapped difference `x`.
-     3. `step_loop2` computes `u_sub_v` with
-        `u_sub_v.toNat ≡ u.toNat - (a odd ? v.toNat : 0) (mod 2^256)` plus its borrow.
-     4. `step_loop3`/`step_loop4` + the final top-bit OR compute (writing
-        `w = ±(u - v_masked)` for the value selected by `should_negate`)
-        `u_new_pre = w + (add_one ? p : 0) + (add_two ? p : 0)` exactly in `[0, 2^256)`:
-        the masked-addend trick `(MODULUS & add_one) ^^^ (MODULUS_XOR_TWO_MODULUS & add_two)`
-        equals `p` resp. `2p` limb-wise because `add_two → add_one`
-        (`add_two = neg ∧ ¬odd`, `add_one = neg ∨ odd`), and in the high limbs `2p`
-        differs from `p` exactly in bit 255 (`MODULUS_XOR_TWO_MODULUS_spec` gives the
-        constant's value `p ^^^ 2p`).  The chosen number of copies of `p` makes
-        `u_new_pre` nonnegative and even, and `u_new_pre ≤ v_masked's p + 2p < 2^256`.
-     5. The closing shifts give `a' = (a odd ? |a-b| : a)/2` (exact: the dividend is
-        even — both operands odd in the subtraction case) and `u' = u_new_pre/2 ≤ p`.
-
-     From these, invariant preservation is the classical Algorithm-1 argument:
-     * swap case (`a` odd, `a < b`): `b' = a`, `v' = u` preserve both congruences;
-       `2a' = b - a ≡ (v - u)·y`, and `2u' ≡ v - u (mod p)` by construction, so
-       `a' ≡ u'·y` after cancelling the unit 2 of `ZMod p` (`p` odd).
-     * subtract case (`a` odd, `a ≥ b`): `2a' = a - b ≡ (u - v)·y` and `2u' ≡ u - v`.
-     * even case: `2a' = a`, `2u' ≡ u`, `b' = b`, `v' = v`.
-     * oddness of `b'`: `b' = b` odd, or `b' = a`, odd in the swap case.
-     * `u', v' ∈ [0, p]`: `v' ∈ {v, u}`; `u' = u_new_pre/2` with `u_new_pre ≤ 2p` even.
-     * gcd: swaps, subtraction of the odd `b` from the odd `a`, and halving the even
-       member against the odd `b'` preserve `Nat.gcd`.
-     * potential: `2·a'·b' ≤ a·b` in all three cases (subtract/swap cases because
-       `(a-b)·b < a·b` resp. `(b-a)·a < b·a`; even case with equality). -/
-  sorry
+  -- Drive the branch-free body once, using the value-level loop specs above;
+  -- the outputs are `(a7, b1, u4, v1) = (a', b', u', v')`.
+  unfold field.verified.invert.invert.step
+  step as ⟨a1, ha1⟩
+  step as ⟨l, hl⟩
+  rw [ha1] at hl
+  step as ⟨a_is_odd, hodd, hoddbv⟩
+  step as ⟨a_is_odd1, hodd1⟩
+  step as ⟨borrow, hborrow⟩
+  step as ⟨a_sub_b, hasb⟩
+  step as ⟨i, hi⟩
+  have hi4 : i.val = 4 := by rw [hi]; simp
+  have hodd_le : a_is_odd.val ≤ 1 := by
+    rw [hodd]
+    have h1 : ((1#u64) : Std.U64).val = 1 := by simp
+    simp only [UScalar.val_and, h1, Nat.and_one_is_mod]
+    omega
+  have hmask_odd : IsMask a_is_odd1 := isMask_of_wrapping_neg hodd_le hodd1
+  -- `a - b` borrow chain, exact value
+  refine WP.spec_bind (step_loop0_value_spec { start := 0#usize, «end» := i }
+    a b borrow a_sub_b (by simp) hi4 hborrow) ?_
+  rintro ⟨borrow1, a_sub_b1⟩ ⟨hb1le, hb1sum⟩
+  step as ⟨a_lt_b, hltb⟩
+  have hmask_ltb : IsMask a_lt_b := isMask_of_wrapping_neg hb1le hltb
+  step as ⟨both, hboth⟩
+  have hmask_both : IsMask both := isMask_and hmask_odd hmask_ltb hboth
+  step with select_spec as ⟨b1, hb1sel⟩
+  step as ⟨l1, hl1⟩
+  step as ⟨carry, hcarry⟩
+  have hcarry' : carry.val = if a_lt_b.val = 0 then 0 else 1 := by
+    rw [hcarry, hl1]
+    rcases hmask_ltb with hh | hh
+    · rw [hh]; simp
+    · rw [hh, Nat.and_two_pow_sub_one_of_lt_two_pow (show (1:ℕ) < 2^64 by norm_num)]
+      norm_num
+  -- conditional negation, exact value
+  refine WP.spec_bind (step_loop1_value_spec { start := 0#usize, «end» := i }
+    a_sub_b1 a_lt_b carry a_sub_b (by simp) hi4 hmask_ltb hcarry') ?_
+  intro a_diff_b hdiff
+  obtain ⟨hdiff_id, hdiff_neg⟩ := hdiff
+  step with select_spec as ⟨a2, ha2sel⟩
+  -- `u - (v & a_is_odd)` borrow chain, exact value
+  refine WP.spec_bind (step_loop2_value_spec { start := 0#usize, «end» := i }
+    u v a_is_odd1 borrow a_sub_b (by simp) hi4 hmask_odd hborrow) ?_
+  rintro ⟨borrow2, u_sub_v⟩ ⟨hb2le, hs2sum⟩
+  obtain ⟨s0, s1, s2, s3, hsval⟩ := Uint4.exists_four_limbs u_sub_v
+  have hssumN := Uint4.toNat_of_limbs hsval
+  step as ⟨u_sub_v_neg, husvn⟩
+  step as ⟨should_negate, hsn⟩
+  have hmask_sn : IsMask should_negate := isMask_and hmask_odd hmask_ltb hsn
+  step as ⟨v_u, hvu⟩
+  step as ⟨a3, ha3⟩
+  step as ⟨l2, hl2⟩
+  step as ⟨l3, hl3⟩
+  step as ⟨result_is_odd, hrio⟩
+  step as ⟨l4, hl4⟩
+  step as ⟨add_two, hat⟩
+  step as ⟨add_one, hao⟩
+  step as ⟨carry1, hcar1⟩
+  -- masks of the modulus-addition ladder
+  have hmask_usvn : IsMask u_sub_v_neg := isMask_of_wrapping_neg hb2le husvn
+  have hmask_vu : IsMask v_u := isMask_xor hmask_usvn hmask_sn hvu
+  rw [ha3] at hl2
+  simp only [hsval] at hl2
+  simp at hl2
+  have hl3v : l3.val = s0.val % 2 := by
+    rw [hl3, hl2, hl1, Nat.and_one_is_mod]
+  have hl3_le : l3.val ≤ 1 := by rw [hl3v]; omega
+  have hmask_rio : IsMask result_is_odd := isMask_of_wrapping_neg hl3_le hrio
+  have hmask_l4 : IsMask l4 := by
+    unfold IsMask
+    rcases hmask_rio with hh | hh <;> rw [hl4, hh] <;> omega
+  have hmask_at : IsMask add_two := isMask_and hmask_vu hmask_l4 hat
+  have hmask_ao : IsMask add_one := isMask_or hmask_vu hmask_rio hao
+  have hsubset : add_two.val ≠ 0 → add_one.val ≠ 0 := by
+    intro hne
+    have h1 : add_two.val ≤ v_u.val := by rw [hat]; exact Nat.and_le_left
+    have h2 : v_u.val ≤ add_one.val := by rw [hao]; exact Nat.left_le_or
+    omega
+  have hcar1' : carry1.val = if should_negate.val = 0 then 0 else 1 := by
+    rw [hcar1, hl1]
+    rcases hmask_sn with hh | hh
+    · rw [hh]; simp
+    · rw [hh, Nat.and_two_pow_sub_one_of_lt_two_pow (show (1:ℕ) < 2^64 by norm_num)]
+      norm_num
+  step as ⟨i1, hi1⟩
+  have hi1v : i1.val = 2 := by rw [hi1]; simp
+  -- low half of the fused chain, exact value
+  refine WP.spec_bind (step_loop3_value_spec { start := 0#usize, «end» := i1 }
+    u u_sub_v should_negate add_two add_one carry1 (by simp) hi1v
+    hmask_sn hmask_at hmask_ao hsubset hcar1') ?_
+  rintro ⟨u1, carry2⟩ ⟨hc2le, w0, w1, hu1val, hu1sum⟩
+  -- high half of the fused chain, exact value
+  refine WP.spec_bind (step_loop4_value_spec { start := i1, «end» := i }
+    u1 u_sub_v should_negate add_two add_one carry2 hi1v hi4
+    hmask_sn hmask_at hmask_ao hsubset hc2le) ?_
+  rintro u2 ⟨w2, w3, c4, hc4le, hu2val, hu2sum⟩
+  step with select_spec as ⟨v1, hv1sel⟩
+  step as ⟨a7, ha7⟩
+  step as ⟨u4, hu4⟩
+  -- Unpack the strengthened input invariant.
+  obtain ⟨hbodd, hule, hvle, hacong, hbcong, hgcd, hale, hble⟩ := h
+  -- `both = a_is_odd1 & a_lt_b`, so `both ≠ 0` forces `a` odd (used for `b' = a` odd).
+  have hboth_le : both.val ≤ a_is_odd1.val := by rw [hboth]; exact Nat.and_le_left
+  have ha_par : both.val ≠ 0 → a.toNat % 2 = 1 := by
+    intro hbne
+    have h1 : a_is_odd1.val ≠ 0 := by omega
+    have h2 : a_is_odd1.val = 2 ^ 64 - 1 := by
+      rcases hmask_odd with hh | hh
+      · exact absurd hh h1
+      · exact hh
+    have h3 : a_is_odd.val = 1 := by rw [h2] at hodd1; omega
+    have hval : a_is_odd.val = l.val &&& 1 := by rw [hodd]; simp [UScalar.val_and]
+    rw [hval, hl] at h3
+    rw [Uint4.toNat_mod_two_eq_limb0]
+    rwa [Nat.and_one_is_mod] at h3
+  -- ==== value-level bookkeeping ====
+  have hpv : p = 0x7ffffffffffffffffffffffffffffffff735481d1969f317f9850b68df11df53 := by
+    norm_num [p]
+  obtain ⟨z0, z1, z2, z3, huval⟩ := Uint4.exists_four_limbs u
+  simp only [huval, List.getElem!_cons_zero, List.getElem!_cons_succ] at hu1val
+  simp only [hu1val, List.getElem!_cons_zero, List.getElem!_cons_succ] at hu2val
+  simp only [hsval, List.getElem!_cons_zero, List.getElem!_cons_succ] at hu1sum hu2sum
+  have hu2nat := Uint4.toNat_of_limbs hu2val
+  have husumN := Uint4.toNat_of_limbs huval
+  have hu4v : u4.toNat = u2.toNat / 2 := by rw [hu4]; simp
+  have ha7v : a7.toNat = a2.toNat / 2 := by rw [ha7]; simp
+  have hs0b : (s0).val < 2^64 := s0.hBounds
+  have hs1b : (s1).val < 2^64 := s1.hBounds
+  have hs2b : (s2).val < 2^64 := s2.hBounds
+  have hs3b : (s3).val < 2^64 := s3.hBounds
+  have hw0b : (w0).val < 2^64 := w0.hBounds
+  have hw1b : (w1).val < 2^64 := w1.hBounds
+  have hw2b : (w2).val < 2^64 := w2.hBounds
+  have hw3b : (w3).val < 2^64 := w3.hBounds
+  have hsv256 : u_sub_v.toNat < 2^256 := Uint4.toNat_lt u_sub_v
+  have hu256 : u.toNat < 2^256 := Uint4.toNat_lt u
+  have hv256 : v.toNat < 2^256 := Uint4.toNat_lt v
+  have ha256 : a.toNat < 2^256 := Uint4.toNat_lt a
+  have hb256 : b.toNat < 2^256 := Uint4.toNat_lt b
+  have hd256 : a_sub_b1.toNat < 2^256 := Uint4.toNat_lt a_sub_b1
+  have hdd256 : a_diff_b.toNat < 2^256 := Uint4.toNat_lt a_diff_b
+  -- parity of the wrapped difference is the parity of its low limb
+  have hspar : u_sub_v.toNat % 2 = s0.val % 2 := by omega
+  -- ==== dichotomies for the three logical conditions ====
+  have hval_odd : a.toNat % 2 = a_is_odd.val := by
+    rw [hodd]
+    have h1 : ((1#u64) : Std.U64).val = 1 := by simp
+    simp only [UScalar.val_and, h1, Nat.and_one_is_mod]
+    rw [hl]
+    exact Uint4.toNat_mod_two_eq_limb0 a
+  have hpar_a : (a_is_odd1.val = 0 ∧ a.toNat % 2 = 0) ∨
+      (a_is_odd1.val = 2^64 - 1 ∧ a.toNat % 2 = 1) := by
+    rcases hmask_odd with hh | hh
+    · left; refine ⟨hh, ?_⟩
+      rw [hh] at hodd1
+      rw [hval_odd]
+      omega
+    · right; refine ⟨hh, ?_⟩
+      rw [hh] at hodd1
+      rw [hval_odd]
+      omega
+  have hltb_dich : (a_lt_b.val = 0 ∧ borrow1.val = 0 ∧ b.toNat ≤ a.toNat) ∨
+      (a_lt_b.val = 2^64 - 1 ∧ borrow1.val = 1 ∧ a.toNat < b.toNat) := by
+    rcases hmask_ltb with hh | hh
+    · left
+      rw [hh] at hltb
+      refine ⟨hh, ?_, ?_⟩ <;> omega
+    · right
+      rw [hh] at hltb
+      refine ⟨hh, ?_, ?_⟩ <;> omega
+  -- Trim the context before the master case analysis: `omega` case-splits on every
+  -- disjunctive hypothesis, and the ~10 `IsMask` disjunctions would multiply every
+  -- leaf call by 2^10.  Everything cleared here has already been consumed.
+  clear hmask_odd hmask_ltb hmask_both hmask_sn hmask_usvn hmask_vu hmask_rio hmask_l4
+  clear hmask_at hmask_ao hsubset hodd hoddbv hodd1 hltb hcarry hcarry' hcar1 hval_odd
+  clear hasb ha1 hl hborrow hb1le hi hi1 hi1v
+  clear hu4 ha7 hl2 hl3 ha3 huval hsval hu1val hu2val
+  clear husumN
+  -- ==== the master case analysis (12 leaves) ====
+  -- Each disjunct records the mask values, the exact a-side identity, `u' ≤ p`, and
+  -- the exact u-side identity `2u' + (v or u or 0) = (u or v) + k·p`, `k ≤ 2`.
+  have hcases :
+      (a_is_odd1.val = 0 ∧ both.val = 0 ∧
+        2 * a7.toNat = a.toNat ∧ u4.toNat ≤ p ∧
+        (∃ k, k ≤ 2 ∧ 2 * u4.toNat + 0 = u.toNat + k * p)) ∨
+      (a_is_odd1.val = 2^64 - 1 ∧ a_lt_b.val = 0 ∧ both.val = 0 ∧
+        a.toNat % 2 = 1 ∧ b.toNat ≤ a.toNat ∧
+        2 * a7.toNat + b.toNat = a.toNat ∧ u4.toNat ≤ p ∧
+        (∃ k, k ≤ 2 ∧ 2 * u4.toNat + v.toNat = u.toNat + k * p)) ∨
+      (a_is_odd1.val = 2^64 - 1 ∧ a_lt_b.val = 2^64 - 1 ∧ both.val ≠ 0 ∧
+        a.toNat % 2 = 1 ∧ a.toNat < b.toNat ∧
+        2 * a7.toNat + a.toNat = b.toNat ∧ u4.toNat ≤ p ∧
+        (∃ k, k ≤ 2 ∧ 2 * u4.toNat + u.toNat = v.toNat + k * p)) := by
+    rcases hpar_a with ⟨hm0, hpar0⟩ | ⟨hm1, hpar1⟩
+    · -- ===== CASE E : `a` even =====
+      left
+      have hboth0 : both.val = 0 := by rw [hboth, hm0]; exact Nat.zero_and _
+      have hsn0 : should_negate.val = 0 := by rw [hsn, hm0]; exact Nat.zero_and _
+      have ha2v : a2.toNat = a.toNat := by rw [ha2sel, if_pos hm0]
+      have h2a7 : 2 * a7.toNat = a.toNat := by
+        rw [ha7v, ha2v]
+        omega
+      clear hdiff_id hdiff_neg hb1sum ha2sel ha2v ha7v
+      rw [if_pos hm0] at hs2sum
+      have hb20 : borrow2.val = 0 := by omega
+      have husvn0 : u_sub_v_neg.val = 0 := by rw [husvn]; omega
+      have hvu0 : v_u.val = 0 := by
+        rw [hvu, husvn0, hsn0]
+        exact Nat.xor_self 0
+      have hat0 : add_two.val = 0 := by rw [hat, hvu0]; exact Nat.zero_and _
+      have haov : add_one.val = result_is_odd.val := by
+        rw [hao, hvu0]; exact Nat.zero_or _
+      have hcar10 : carry1.val = 0 := by rw [hcar1', if_pos hsn0]
+      rw [if_pos hsn0] at hu1sum hu2sum
+      rcases Nat.mod_two_eq_zero_or_one s0.val with hpar | hpar
+      · -- `u` even: halve directly (k = 0)
+        have hrio0 : result_is_odd.val = 0 := by rw [hrio, hl3v]; omega
+        have hao0 : add_one.val = 0 := by rw [haov, hrio0]
+        rw [if_pos hao0] at hu1sum hu2sum
+        refine ⟨hm0, hboth0, h2a7, ?_, 0, by norm_num, ?_⟩ <;> omega
+      · -- `u` odd: add one modulus (k = 1)
+        have hrio1 : result_is_odd.val = 2^64 - 1 := by rw [hrio, hl3v]; omega
+        have hao1 : add_one.val = 2^64 - 1 := by rw [haov, hrio1]
+        rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+          if_pos hat0] at hu1sum
+        rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+          if_pos hat0] at hu2sum
+        refine ⟨hm0, hboth0, h2a7, ?_, 1, by norm_num, ?_⟩ <;> omega
+    · rcases hltb_dich with ⟨hlt0, hbor10, hble_a⟩ | ⟨hlt1, hbor11, halt_b⟩
+      · -- ===== CASE OG : `a` odd, `a ≥ b` =====
+        right; left
+        have hboth0 : both.val = 0 := by rw [hboth, hlt0]; exact Nat.and_zero _
+        have hsn0 : should_negate.val = 0 := by rw [hsn, hlt0]; exact Nat.and_zero _
+        have hd_id : a_diff_b.toNat = a_sub_b1.toNat := hdiff_id hlt0
+        have ha2v : a2.toNat = a_diff_b.toNat := by
+          rw [ha2sel, if_neg (show ¬ a_is_odd1.val = 0 by rw [hm1]; norm_num)]
+        have h2a7 : 2 * a7.toNat + b.toNat = a.toNat := by
+          rw [ha7v, ha2v, hd_id]
+          omega
+        clear hdiff_id hdiff_neg hb1sum ha2sel ha2v ha7v hd_id
+        rw [if_neg (show ¬ a_is_odd1.val = 0 by rw [hm1]; norm_num)] at hs2sum
+        have hcar10 : carry1.val = 0 := by rw [hcar1', if_pos hsn0]
+        rw [if_pos hsn0] at hu1sum hu2sum
+        rcases show borrow2.val = 0 ∨ borrow2.val = 1 by omega with hb20 | hb21
+        · -- β = 0 : `u ≥ v`, no add-two
+          have husvn0 : u_sub_v_neg.val = 0 := by rw [husvn]; omega
+          have hvu0 : v_u.val = 0 := by
+            rw [hvu, husvn0, hsn0]
+            exact Nat.xor_self 0
+          have hat0 : add_two.val = 0 := by rw [hat, hvu0]; exact Nat.zero_and _
+          have haov : add_one.val = result_is_odd.val := by
+            rw [hao, hvu0]; exact Nat.zero_or _
+          rcases Nat.mod_two_eq_zero_or_one s0.val with hpar | hpar
+          · have hrio0 : result_is_odd.val = 0 := by rw [hrio, hl3v]; omega
+            have hao0 : add_one.val = 0 := by rw [haov, hrio0]
+            rw [if_pos hao0] at hu1sum hu2sum
+            refine ⟨hm1, hlt0, hboth0, hpar1, hble_a, h2a7, ?_, 0, by norm_num, ?_⟩ <;>
+              omega
+          · have hrio1 : result_is_odd.val = 2^64 - 1 := by rw [hrio, hl3v]; omega
+            have hao1 : add_one.val = 2^64 - 1 := by rw [haov, hrio1]
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_pos hat0] at hu1sum
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_pos hat0] at hu2sum
+            refine ⟨hm1, hlt0, hboth0, hpar1, hble_a, h2a7, ?_, 1, by norm_num, ?_⟩ <;>
+              omega
+        · -- β = 1 : `u < v`
+          have husvn1 : u_sub_v_neg.val = 2^64 - 1 := by rw [husvn]; omega
+          have hvu1 : v_u.val = 2^64 - 1 := by
+            rw [hvu, husvn1, hsn0, Nat.xor_zero]
+          rcases Nat.mod_two_eq_zero_or_one s0.val with hpar | hpar
+          · -- difference even: add two moduli through the full carry chain
+            have hrio0 : result_is_odd.val = 0 := by rw [hrio, hl3v]; omega
+            have hl4v : l4.val = 2^64 - 1 := by rw [hl4]; omega
+            have hat1 : add_two.val = 2^64 - 1 := by
+              rw [hat, hvu1, hl4v, Nat.and_self]
+            have hao1 : add_one.val = 2^64 - 1 := by
+              rw [hao, hvu1, hrio0, Nat.or_zero]
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_neg (show ¬ add_two.val = 0 by rw [hat1]; norm_num)] at hu1sum
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_neg (show ¬ add_two.val = 0 by rw [hat1]; norm_num)] at hu2sum
+            refine ⟨hm1, hlt0, hboth0, hpar1, hble_a, h2a7, ?_, 2, by norm_num, ?_⟩ <;>
+              omega
+          · -- difference odd: add one modulus, the wrap supplies the sign
+            have hrio1 : result_is_odd.val = 2^64 - 1 := by rw [hrio, hl3v]; omega
+            have hl4v : l4.val = 0 := by rw [hl4]; omega
+            have hat0 : add_two.val = 0 := by
+              rw [hat, hvu1, hl4v]; exact Nat.and_zero _
+            have hao1 : add_one.val = 2^64 - 1 := by
+              rw [hao, hvu1, hrio1, Nat.or_self]
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_pos hat0] at hu1sum
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_pos hat0] at hu2sum
+            refine ⟨hm1, hlt0, hboth0, hpar1, hble_a, h2a7, ?_, 1, by norm_num, ?_⟩ <;>
+              omega
+      · -- ===== CASE OL : `a` odd, `a < b` (swap) =====
+        right; right
+        have hboth1 : both.val = 2^64 - 1 := by
+          rw [hboth, hm1, hlt1]; exact Nat.and_self _
+        have hsn1 : should_negate.val = 2^64 - 1 := by
+          rw [hsn, hm1, hlt1]; exact Nat.and_self _
+        have hd_neg := hdiff_neg (show a_lt_b.val ≠ 0 by rw [hlt1]; norm_num)
+        have ha2v : a2.toNat = a_diff_b.toNat := by
+          rw [ha2sel, if_neg (show ¬ a_is_odd1.val = 0 by rw [hm1]; norm_num)]
+        have h2a7 : 2 * a7.toNat + a.toNat = b.toNat := by
+          rw [ha7v, ha2v]
+          omega
+        clear hdiff_id hdiff_neg hb1sum ha2sel ha2v ha7v hd_neg
+        rw [if_neg (show ¬ a_is_odd1.val = 0 by rw [hm1]; norm_num)] at hs2sum
+        have hcar11 : carry1.val = 1 := by
+          rw [hcar1', if_neg (show ¬ should_negate.val = 0 by rw [hsn1]; norm_num)]
+        rw [if_neg (show ¬ should_negate.val = 0 by rw [hsn1]; norm_num)]
+          at hu1sum hu2sum
+        rcases show borrow2.val = 0 ∨ borrow2.val = 1 by omega with hb20 | hb21
+        · -- β = 0 : `u ≥ v`, negation makes the value nonpositive
+          have husvn0 : u_sub_v_neg.val = 0 := by rw [husvn]; omega
+          have hvu1 : v_u.val = 2^64 - 1 := by
+            rw [hvu, husvn0, hsn1, Nat.zero_xor]
+          rcases Nat.mod_two_eq_zero_or_one s0.val with hpar | hpar
+          · -- difference even: add two moduli through the full carry chain
+            have hrio0 : result_is_odd.val = 0 := by rw [hrio, hl3v]; omega
+            have hl4v : l4.val = 2^64 - 1 := by rw [hl4]; omega
+            have hat1 : add_two.val = 2^64 - 1 := by
+              rw [hat, hvu1, hl4v, Nat.and_self]
+            have hao1 : add_one.val = 2^64 - 1 := by
+              rw [hao, hvu1, hrio0, Nat.or_zero]
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_neg (show ¬ add_two.val = 0 by rw [hat1]; norm_num)] at hu1sum
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_neg (show ¬ add_two.val = 0 by rw [hat1]; norm_num)] at hu2sum
+            refine ⟨hm1, hlt1, by rw [hboth1]; norm_num, hpar1, halt_b, h2a7, ?_,
+              2, by norm_num, ?_⟩ <;> omega
+          · -- difference odd
+            have hrio1 : result_is_odd.val = 2^64 - 1 := by rw [hrio, hl3v]; omega
+            have hl4v : l4.val = 0 := by rw [hl4]; omega
+            have hat0 : add_two.val = 0 := by
+              rw [hat, hvu1, hl4v]; exact Nat.and_zero _
+            have hao1 : add_one.val = 2^64 - 1 := by
+              rw [hao, hvu1, hrio1, Nat.or_self]
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_pos hat0] at hu1sum
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_pos hat0] at hu2sum
+            refine ⟨hm1, hlt1, by rw [hboth1]; norm_num, hpar1, halt_b, h2a7, ?_,
+              1, by norm_num, ?_⟩ <;> omega
+        · -- β = 1 : `u < v`, wrap and negation cancel
+          have husvn1 : u_sub_v_neg.val = 2^64 - 1 := by rw [husvn]; omega
+          have hvu0 : v_u.val = 0 := by
+            rw [hvu, husvn1, hsn1]
+            exact Nat.xor_self _
+          have hat0 : add_two.val = 0 := by rw [hat, hvu0]; exact Nat.zero_and _
+          have haov : add_one.val = result_is_odd.val := by
+            rw [hao, hvu0]; exact Nat.zero_or _
+          rcases Nat.mod_two_eq_zero_or_one s0.val with hpar | hpar
+          · have hrio0 : result_is_odd.val = 0 := by rw [hrio, hl3v]; omega
+            have hao0 : add_one.val = 0 := by rw [haov, hrio0]
+            rw [if_pos hao0] at hu1sum hu2sum
+            refine ⟨hm1, hlt1, by rw [hboth1]; norm_num, hpar1, halt_b, h2a7, ?_,
+              0, by norm_num, ?_⟩ <;> omega
+          · have hrio1 : result_is_odd.val = 2^64 - 1 := by rw [hrio, hl3v]; omega
+            have hao1 : add_one.val = 2^64 - 1 := by rw [haov, hrio1]
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_pos hat0] at hu1sum
+            rw [if_neg (show ¬ add_one.val = 0 by rw [hao1]; norm_num),
+              if_pos hat0] at hu2sum
+            refine ⟨hm1, hlt1, by rw [hboth1]; norm_num, hpar1, halt_b, h2a7, ?_,
+              1, by norm_num, ?_⟩ <;> omega
+  -- ==== discharge the invariant and potential conjuncts ====
+  refine ⟨?_, ?_⟩
+  · -- The strengthened arithmetic invariant on `(a', b', u', v') = (a7, b1, u4, v1)`.
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · -- `b'` odd:  `b' = if both = 0 then b else a`, both odd.
+      rw [hb1sel]
+      split
+      · exact hbodd
+      · next hne => exact ha_par hne
+    · -- `u' ≤ p` — from the chain ledger, in every case.
+      rcases hcases with ⟨_, _, _, hup, _⟩ | ⟨_, _, _, _, _, _, hup, _⟩ |
+        ⟨_, _, _, _, _, _, hup, _⟩ <;> exact hup
+    · -- `v' ≤ p`:  `v' = if both = 0 then v else u`, both `≤ p`.
+      rw [hv1sel]
+      split
+      · exact hvle
+      · exact hule
+    · -- `a' ≡ u'·y (mod p)` — the parametric cancel-2 argument, per case.
+      rcases hcases with ⟨_, _, h2a, _, k, _, h2u⟩ |
+        ⟨_, _, _, _, _, h2a, _, k, _, h2u⟩ | ⟨_, _, _, _, _, h2a, _, k, _, h2u⟩
+      · exact cong_of_double y a.toNat 0 u.toNat 0 a7.toNat u4.toNat k hacong
+          (by push_cast; ring) (by omega) h2u
+      · exact cong_of_double y a.toNat b.toNat u.toNat v.toNat a7.toNat u4.toNat k
+          hacong hbcong h2a h2u
+      · exact cong_of_double y b.toNat a.toNat v.toNat u.toNat a7.toNat u4.toNat k
+          hbcong hacong h2a h2u
+    · -- `b' ≡ v'·y (mod p)`:  `(b', v') = (b, v)` or `(a, u)`.
+      rw [hb1sel, hv1sel]
+      by_cases hb0 : both.val = 0
+      · rw [if_pos hb0, if_pos hb0]; exact hbcong
+      · rw [if_neg hb0, if_neg hb0]; exact hacong
+    · -- `gcd a' b' = gcd y p` — halving/subtraction/swap steps of `Nat.gcd`.
+      rcases hcases with ⟨_, hboth0, h2a, _⟩ | ⟨_, _, hboth0, _, hble_a, h2a, _⟩ |
+        ⟨_, _, hbothne, hodd_a, halt_b, h2a, _⟩
+      · rw [hb1sel, if_pos hboth0]
+        have ha7h : a7.toNat = a.toNat / 2 := by omega
+        rw [ha7h, gcd_half_of_even_odd a.toNat b.toNat (by omega) hbodd]
+        exact hgcd
+      · rw [hb1sel, if_pos hboth0]
+        have ha7h : a7.toNat = (a.toNat - b.toNat) / 2 := by omega
+        rw [ha7h, gcd_half_of_even_odd (a.toNat - b.toNat) b.toNat (by omega) hbodd,
+          Nat.gcd_sub_self_left hble_a]
+        exact hgcd
+      · rw [hb1sel, if_neg hbothne]
+        have ha7h : a7.toNat = (b.toNat - a.toNat) / 2 := by omega
+        rw [ha7h, gcd_half_of_even_odd (b.toNat - a.toNat) a.toNat (by omega) hodd_a,
+          Nat.gcd_sub_self_left halt_b.le, Nat.gcd_comm]
+        exact hgcd
+    · -- `a' ≤ p` — the a-side halves.
+      rcases hcases with ⟨_, _, h2a, _⟩ | ⟨_, _, _, _, _, h2a, _⟩ |
+        ⟨_, _, _, _, _, h2a, _⟩ <;> omega
+    · -- `b' ≤ p`:  `b' = if both = 0 then b else a`, both `≤ p`.
+      rw [hb1sel]
+      split
+      · exact hble
+      · exact hale
+  · -- Potential halving `2·a'·b' ≤ a·b`.
+    rcases hcases with ⟨_, hboth0, h2a, _⟩ | ⟨_, _, hboth0, _, hble_a, h2a, _⟩ |
+      ⟨_, _, hbothne, _, halt_b, h2a, _⟩
+    · rw [hb1sel, if_pos hboth0]
+      have heq : 2 * (a7.toNat * b.toNat) = a.toNat * b.toNat := by
+        calc 2 * (a7.toNat * b.toNat) = (2 * a7.toNat) * b.toNat := by ring
+          _ = a.toNat * b.toNat := by rw [h2a]
+      omega
+    · rw [hb1sel, if_pos hboth0]
+      have h2 : 2 * a7.toNat = a.toNat - b.toNat := by omega
+      calc 2 * (a7.toNat * b.toNat) = (2 * a7.toNat) * b.toNat := by ring
+        _ = (a.toNat - b.toNat) * b.toNat := by rw [h2]
+        _ ≤ a.toNat * b.toNat := Nat.mul_le_mul (Nat.sub_le _ _) (le_refl _)
+    · rw [hb1sel, if_neg hbothne]
+      have h2 : 2 * a7.toNat = b.toNat - a.toNat := by omega
+      calc 2 * (a7.toNat * a.toNat) = (2 * a7.toNat) * a.toNat := by ring
+        _ = (b.toNat - a.toNat) * a.toNat := by rw [h2]
+        _ ≤ b.toNat * a.toNat := Nat.mul_le_mul (Nat.sub_le _ _) (le_refl _)
+        _ = a.toNat * b.toNat := Nat.mul_comm _ _
 
 /-- Conjunction of two Hoare specs on the same computation. -/
 theorem spec_and {α : Type u} {m : Result α} {P Q : α → Prop}
@@ -1127,7 +2546,7 @@ theorem invert_loop1_spec (y : ℕ) (iter : core.ops.range.Range Std.Usize)
         have hz : iter.«end».val - it.start.val = 0 := by
           rw [← hite]; omega
         rw [hz, pow_zero, Nat.lt_one_iff] at hpot'
-        obtain ⟨hodd, hu, hv, hca, hcb, hgcd⟩ := hinv'.invA
+        obtain ⟨hodd, hu, hv, hca, hcb, hgcd, _hap, _hbp⟩ := hinv'.invA
         have hbb : bb.toNat ≠ 0 := by omega
         have haa : aa.toNat = 0 := by
           rcases Nat.mul_eq_zero.mp hpot' with h | h
@@ -1173,9 +2592,8 @@ open Invert in
 /-- **Contract.** `invert` never fails; on reduced input `a < p` it returns the canonical
     inverse (with the validity flag cleared exactly on the non-invertible input 0).
 
-    Depends on the single `sorry` in `Invert.step_congruence` (the per-step Algorithm-1
-    invariant); everything else — totality, the loop inductions over all 510 iterations,
-    the final reduction and flag computation — is proved. -/
+    The per-step Algorithm-1 invariant, all 510 loop iterations, final reduction and flag
+    computation are proved from the generated machine model. -/
 theorem invert_ok (a : Uint4) (ha : a.toNat < p) :
     ∃ r flag, field.verified.invert.invert a = .ok (r, flag) ∧ r.toNat < p ∧
       (flag = true ↔ a.toNat ≠ 0) ∧ (a.toNat = 0 → r.toNat = 0) ∧
@@ -1192,13 +2610,15 @@ theorem invert_ok (a : Uint4) (ha : a.toNat < p) :
     step as ⟨iter, hits, hite, hitex⟩
     have hpodd : p % 2 = 1 := by norm_num [p]
     have hinv0 : Inv a.toNat a b u v := by
-      refine ⟨⟨?_, ?_, ?_, ?_, ?_, ?_⟩, ?_⟩
+      refine ⟨⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩, ?_⟩
       · rw [hbm]; exact hpodd
       · rw [hu1]; exact one_lt_p.le
       · rw [hv0]; exact Nat.zero_le p
       · rw [hu1, Nat.cast_one, one_mul]
       · rw [hbm, hv0, Nat.cast_zero, zero_mul, ZMod.natCast_self]
       · rw [hbm]
+      · exact ha.le
+      · exact le_of_eq hbm
       · intro hy
         exact ⟨hy, hv0⟩
     have hpass : passes iter = 3 := by

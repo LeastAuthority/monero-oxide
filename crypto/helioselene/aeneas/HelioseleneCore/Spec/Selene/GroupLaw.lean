@@ -1453,8 +1453,8 @@ gen_nonsingular, W_delta_ne_zero :
 ```
 
 * **NO `sorryAx` anywhere in this file's cone** (in particular the group law does
-  not depend on `Invert.step_congruence` or `sqrt_complete`, the two remaining
-  Spec-tree obligations).
+  not depend on the historically separate `Invert.step_congruence` or
+  `sqrt_complete` obligations, both of which are now proved).
 * No `Lean.ofReduceBool`/`native_decide`. The `…._native.decide.ax_1` axioms are
   the string-length side conditions baked into the generated constant
   DEFINITIONS in `Funs.lean`: `field.MODULUS` / `MODULUS_255_DISTANCE` /

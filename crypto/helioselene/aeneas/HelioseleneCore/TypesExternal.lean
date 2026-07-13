@@ -116,17 +116,17 @@ def crypto_bigint.ct_choice.CtChoice : Type := Bool
       every translated Helios group-law function constructs and consumes values of it, and
       this `ZMod` identification is **load-bearing** for the whole Helios group law — the
       `rfl`-lemmas of `Spec/Helios/Ops.lean` (`fadd_def`/`fmul_def`/...) hold definitionally
-      only because of this `def`, and 26 of the dalek items are concrete definitional models
+      only because of this `def`, and 28 of the dalek items are concrete definitional models
       over it (FunsExternal.lean, dalek boundary section).
 
     Model: `ZMod (2 ^ 255 - 19)` — the field itself. The representation details of the Rust
     struct (a canonical Montgomery residue, kept reduced) are NOT modeled: the model
     identifies a `FieldElement` with its VALUE. For the Helios scope this identification —
-    together with the fidelity of the 26 concrete operation models to crypto-bigint 0.5.5's
+    together with the fidelity of the 28 concrete operation models to crypto-bigint 0.5.5's
     `Residue` arithmetic — is a per-item human audit obligation (the Helios assumptions
     ledger, `human_audit_assumptions_helios.txt`, is its home); the up-to-cardinality
     reading suffices only for the remaining existence-only items (`sqrt`, `invert`,
-    `random`, `from_repr`/`to_repr`/`is_odd`, the `PrimeField` constants, ... — 24 axioms,
+    `random`, `from_repr`/`is_odd`, the `PrimeField` constants, ... — 23 axioms,
     outside every Helios proof cone). -/
 @[rust_type "dalek_ff_group::field::FieldElement"]
 def dalek_ff_group.field.FieldElement : Type := ZMod (2 ^ 255 - 19)

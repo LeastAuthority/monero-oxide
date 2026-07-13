@@ -991,8 +991,9 @@ end SanityChecks
       the crate sources exactly like the models above.
     * **Axioms** for externals that are referenced only as trait-instance evidence
       (the opaque `dalek_ff_group::FieldElement` methods/constants, `Debug::fmt`,
-      the deliberately-untranslated `SelenePoint` scalar-mul ladder, `Sum`,
-      `Zeroize` and `Group::random`). These postulate only the *existence* of a
+      the then-untranslated `SelenePoint` scalar-mul ladder, `Sum`, `Zeroize`
+      and `Group::random`). The scalar ladder remained in this category through
+      the fourth run but is concrete since the fifth run. These axioms postulate only the *existence* of a
       function of the given type (all such types are inhabited, e.g. by
       `fun _ => fail .panic`, so each axiom is a conservative extension); they make
       no behavioural claim. No goal-scope function depends on any of them — see the
@@ -1016,13 +1017,21 @@ end SanityChecks
     surface carries the one `ZMod` semantics. Together with the third-run
     additions (`from_u256` and the `&`-`Neg`), the concrete dalek surface is
     **23 operational models** (26 concrete `def`s counting the `toZMod`/`ofZMod`
-    identity helpers and the derived-`Eq` marker). The remaining 24 dalek items
+    identity helpers and the derived-`Eq` marker). At that stage, the remaining 24 dalek items
     (`sqrt`, `sqrt_ratio`, `invert`, `random`, `from_repr`/`to_repr`/`is_odd`,
     the `PrimeField` constants, `Clone`, `PartialEq`, `Default`, `Debug`,
     `Sum`/`Product`) are still existence-only axioms, and no Helios goal-scope
     function depends on them (axiom audit: `Spec/Helios/GroupLaw.lean` §9). See
     the appended 2026-07-08 section at the end of this file for the new
     externals of that run. -/
+
+/-! **2026-07-10 fifth-run update (scalar ladders).** Dalek `to_repr` below is
+    now a concrete canonical little-endian model, and derived dalek zeroization
+    is concrete as well, bringing the dalek surface to 28 definitions and 23
+    residual axioms. The newly required `usize::ct_eq`, blanket zeroization,
+    and array zeroization are also concrete. Both point scalar ladders now live
+    in generated `Funs.lean`; their former eight axioms have been removed. The
+    package totals are 92 top-level definitions and 39 existence-only axioms. -/
 
 /-- **Rust:** `<crypto_bigint::Uint<LIMBS> as subtle::ConstantTimeEq>::ct_eq` — trait-impl
     method (foreign: crypto-bigint 0.5.5)
@@ -1206,6 +1215,20 @@ axiom dalek_ff_group.field.FieldElement.Insts.CoreFmtDebug.fmt
   :
   dalek_ff_group.field.FieldElement → core.fmt.Formatter → Result
     ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as zeroize::Zeroize>::zeroize` —
+    derived zeroization (foreign: dalek-ff-group 0.5.0 / zeroize 1.9.0).
+
+    `FieldElement` derives `Zeroize`; its canonical field value is overwritten with zero.
+    The Lean boundary models `FieldElement` by `ZMod (2^255 - 19)`, so the functional
+    effect is exactly replacement by that field's zero. Compiler fences and volatile writes
+    have no additional functional content in the Aeneas model. -/
+@[rust_fun
+  "dalek_ff_group::field::{zeroize::Zeroize<dalek_ff_group::field::FieldElement>}::zeroize"]
+def dalek_ff_group.field.FieldElement.Insts.ZeroizeZeroize.zeroize
+  : dalek_ff_group.field.FieldElement → Result
+      dalek_ff_group.field.FieldElement :=
+  fun _ => ok (.ofZMod 0)
 
 /-- **Rust:** `<dalek_ff_group::field::FieldElement as core::convert::From<u64>>::from` —
     trait-impl method (foreign: dalek-ff-group 0.5.0)
@@ -1852,14 +1875,23 @@ def dalek_ff_group.field.FieldElement.Insts.FfField.is_zero
 axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.is_odd
   : dalek_ff_group.field.FieldElement → Result subtle.Choice
 
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::to_repr]:
-    Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 194:2-194:31
-    Name pattern: [dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::to_repr]
-    Visibility: public -/
+/-- **Rust:** `<dalek_ff_group::field::FieldElement as ff::PrimeField>::to_repr` —
+    canonical scalar encoding (foreign: dalek-ff-group 0.5.0), `field.rs:194`.
+
+    Rust calls `self.retrieve().to_le_bytes()`: it leaves Montgomery form, obtains the
+    canonical integer in `[0, 2^255 - 19)`, and serializes that integer as 32 little-endian
+    bytes. `FieldElement` is modeled here by the corresponding `ZMod` value, whose `.val`
+    is exactly that canonical representative. Byte `i` is therefore bits
+    `[8*i, 8*i+8)` of `.val`. This concrete model is load-bearing for the translated
+    Selene scalar-multiplication ladder. -/
 @[rust_fun
   "dalek_ff_group::field::{ff::PrimeField<dalek_ff_group::field::FieldElement, [u8; 32]>}::to_repr"]
-axiom dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.to_repr
-  : dalek_ff_group.field.FieldElement → Result (Array Std.U8 32#usize)
+def dalek_ff_group.field.FieldElement.Insts.FfPrimeFieldArrayU832.to_repr
+  : dalek_ff_group.field.FieldElement → Result (Array Std.U8 32#usize) :=
+  fun x =>
+    ok (Array.make 32#usize
+      (List.ofFn (fun (i : Fin 32) =>
+        HelioseleneModel.byteOfNat (x.toZMod.val >>> (8 * i.val)))))
 
 /-- **Axiom** (existence-only; outside the goal scope, kept abstract). [dalek_ff_group::field::{impl ff::PrimeField<[u8; 32usize]> for dalek_ff_group::field::FieldElement}::from_repr]:
     Source: '/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dalek-ff-group-0.5.0/src/field.rs', lines 190:2-190:49
@@ -2079,6 +2111,14 @@ def subtle.Choice.Insts.SubtleConstantTimeEq.ct_eq
   : subtle.Choice → subtle.Choice → Result subtle.Choice :=
   fun a b => ok (a == b)
 
+/-- **Rust:** `<usize as subtle::ConstantTimeEq>::ct_eq` — constant-time integer equality
+    (foreign: subtle 2.6.1). The Rust implementation reduces all xor bits to a `Choice`;
+    functionally it is true exactly when the two machine integers are equal. -/
+@[rust_fun "subtle::{subtle::ConstantTimeEq<usize>}::ct_eq"]
+def Usize.Insts.SubtleConstantTimeEq.ct_eq
+  : Std.Usize → Std.Usize → Result subtle.Choice :=
+  fun a b => ok (a == b)
+
 /-- **Rust:** `<u8 as subtle::ConditionallySelectable>::conditional_select` — trait-impl
     method (foreign: subtle 2.6.1)
     subtle 2.6.1, src/lib.rs:505-520 (macro-generated impl for `u8`; `generate_integer_
@@ -2224,6 +2264,23 @@ def subtle.CtOption.Insts.SubtleConditionallySelectable.conditional_select
     let v ← ConditionallySelectableInst.conditional_select a.1 b.1 c
     ok (v, if c then b.2 else a.2)
 
+/-- **Rust:** blanket `Zeroize` implementation for `DefaultIsZeroes` values (foreign:
+    zeroize 1.9.0). Functionally the volatile overwrite and compiler fence replace the
+    value with `Default::default()`; those machine-level barriers add no Lean state. -/
+@[rust_fun "zeroize::{zeroize::Zeroize<@Z>}::zeroize"]
+def zeroize.Zeroize.Blanket.zeroize
+  {Z : Type} (DefaultIsZeroesInst : zeroize.DefaultIsZeroes Z) : Z → Result Z :=
+  fun _ => DefaultIsZeroesInst.coredefaultDefaultInst.default
+
+/-- **Rust:** array `Zeroize` implementation (foreign: zeroize 1.9.0). Apply the element
+    implementation in order while preserving the fixed array length. `Array.clone` is the
+    Aeneas library's effectful, length-preserving array traversal helper. -/
+@[rust_fun "zeroize::{zeroize::Zeroize<[@Z; @N]>}::zeroize"]
+def Array.Insts.ZeroizeZeroize.zeroize
+  {Z : Type} {N : Std.Usize} (ZeroizeInst : zeroize.Zeroize Z) :
+  Array Z N → Result (Array Z N) :=
+  Array.clone ZeroizeInst.zeroize
+
 /-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl zeroize::Zeroize for helioselene::point::selene::SelenePoint}::zeroize]:
     Source: 'src/point.rs', lines 55:6-63:7
     Visibility: public -/
@@ -2246,38 +2303,6 @@ axiom point.selene.SelenePoint.Insts.ZeroizeZeroize.zeroize
 def point.selene.SelenePoint.Insts.CoreCmpEq.assert_fields_are_eq
   : point.selene.SelenePoint → Result Unit :=
   fun _ => ok ()
-
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::ops::arith::MulAssign<&'_0 dalek_ff_group::field::FieldElement> for helioselene::point::selene::SelenePoint}::mul_assign]:
-    Source: 'src/point.rs', lines 341:6-343:7
-    Visibility: public -/
-axiom point.selene.SelenePoint.Insts.CoreOpsArithMulAssignShared0FieldElement.mul_assign
-  :
-  point.selene.SelenePoint → dalek_ff_group.field.FieldElement → Result
-    point.selene.SelenePoint
-
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::ops::arith::Mul<&'_0 dalek_ff_group::field::FieldElement, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::mul]:
-    Source: 'src/point.rs', lines 335:6-337:7
-    Visibility: public -/
-axiom point.selene.SelenePoint.Insts.CoreOpsArithMulShared0FieldElementSelenePoint.mul
-  :
-  point.selene.SelenePoint → dalek_ff_group.field.FieldElement → Result
-    point.selene.SelenePoint
-
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::ops::arith::MulAssign<dalek_ff_group::field::FieldElement> for helioselene::point::selene::SelenePoint}::mul_assign]:
-    Source: 'src/point.rs', lines 328:6-330:7
-    Visibility: public -/
-axiom point.selene.SelenePoint.Insts.CoreOpsArithMulAssignFieldElement.mul_assign
-  :
-  point.selene.SelenePoint → dalek_ff_group.field.FieldElement → Result
-    point.selene.SelenePoint
-
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::ops::arith::Mul<dalek_ff_group::field::FieldElement, helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::mul]:
-    Source: 'src/point.rs', lines 279:6-324:7
-    Visibility: public -/
-axiom point.selene.SelenePoint.Insts.CoreOpsArithMulFieldElementSelenePoint.mul
-  :
-  point.selene.SelenePoint → dalek_ff_group.field.FieldElement → Result
-    point.selene.SelenePoint
 
 /-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::selene::{impl core::iter::traits::accum::Sum<&'a helioselene::point::selene::SelenePoint> for helioselene::point::selene::SelenePoint}::sum]:
     Source: 'src/point.rs', lines 272:6-274:7
@@ -2324,8 +2349,10 @@ axiom point.selene.SelenePoint.Insts.GroupGroupFieldElementArrayU832.random
     `HelioseleneField`'s derived `PartialEq` / `From<u64>` field-layer evidence),
     the `HelioseleneField` `Sum`/`Product` items (opaque since the first run; they
     now surface because the `ff.Field HelioseleneField` record must be stated) and
-    `sqrt_ratio` (above), and the deliberately-untranslated `HeliosPoint`
-    scalar-mul ladder, `Sum`, `Zeroize` and `Group::random`. Every axiom's type is
+    `sqrt_ratio` (above), and the then-untranslated `HeliosPoint`
+    scalar-mul ladder, `Sum`, `Zeroize` and `Group::random`. The scalar ladder
+    moved to `Funs.lean` in the fifth run; the other three categories remain.
+    Every axiom's type is
     inhabited (e.g. by `fun _ => fail .panic`), so each is a conservative
     extension; the axiom audit in `Spec/Helios/GroupLaw.lean` §9 (kernel
     `#print axioms` on every headline theorem, summarized in README §7) verifies
@@ -2494,42 +2521,6 @@ axiom point.helios.HeliosPoint.Insts.ZeroizeZeroize.zeroize
 def point.helios.HeliosPoint.Insts.CoreCmpEq.assert_fields_are_eq
   : point.helios.HeliosPoint → Result Unit :=
   fun _ => ok ()
-
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::ops::arith::MulAssign<&'_0 helioselene::field::HelioseleneField> for helioselene::point::helios::HeliosPoint}::mul_assign]:
-    Source: 'src/point.rs', lines 341:6-343:7
-    Visibility: public -/
-axiom
-  point.helios.HeliosPoint.Insts.CoreOpsArithMulAssignShared0HelioseleneField.mul_assign
-  :
-  point.helios.HeliosPoint → field.HelioseleneField → Result
-    point.helios.HeliosPoint
-
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::ops::arith::Mul<&'_0 helioselene::field::HelioseleneField, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::mul]:
-    Source: 'src/point.rs', lines 335:6-337:7
-    Visibility: public -/
-axiom
-  point.helios.HeliosPoint.Insts.CoreOpsArithMulShared0HelioseleneFieldHeliosPoint.mul
-  :
-  point.helios.HeliosPoint → field.HelioseleneField → Result
-    point.helios.HeliosPoint
-
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::ops::arith::MulAssign<helioselene::field::HelioseleneField> for helioselene::point::helios::HeliosPoint}::mul_assign]:
-    Source: 'src/point.rs', lines 328:6-330:7
-    Visibility: public -/
-axiom
-  point.helios.HeliosPoint.Insts.CoreOpsArithMulAssignHelioseleneField.mul_assign
-  :
-  point.helios.HeliosPoint → field.HelioseleneField → Result
-    point.helios.HeliosPoint
-
-/-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::ops::arith::Mul<helioselene::field::HelioseleneField, helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::mul]:
-    Source: 'src/point.rs', lines 279:6-324:7
-    Visibility: public -/
-axiom
-  point.helios.HeliosPoint.Insts.CoreOpsArithMulHelioseleneFieldHeliosPoint.mul
-  :
-  point.helios.HeliosPoint → field.HelioseleneField → Result
-    point.helios.HeliosPoint
 
 /-- **Axiom** (existence-only; outside the goal scope, kept abstract). [helioselene::point::helios::{impl core::iter::traits::accum::Sum<&'a helioselene::point::helios::HeliosPoint> for helioselene::point::helios::HeliosPoint}::sum]:
     Source: 'src/point.rs', lines 272:6-274:7
